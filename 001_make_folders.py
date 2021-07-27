@@ -41,7 +41,7 @@ start_time = time.time()
 #root
 my_folder = os.getcwd()
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/study_002'
+root.path = my_folder + '/study_000'
 root.template_path = my_folder + '/templates'
 root.log_file = root.path + "/log.json"
 
