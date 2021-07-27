@@ -15,7 +15,7 @@ import time
 start = time.time()
 
 
-my_study='/home_old/HPC/sterbini/study_001'
+my_study='./study_000'
 
 try:
     root=tree_maker.tree_from_json(
