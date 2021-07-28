@@ -68,7 +68,7 @@ for node in root.root.generation(0):
                            path=f"{node.path}/{child:03}",
                            template_path = root.template_path+'/000_machine_model',
                            #submit_command = f'python {root.template_path}/sum_it/run.py &',
-                           submit_command = f'bsub -q hpc_acc -e %J.err -o %J.out {root.template_path}/000_machine_model/run.sh &',
+                           submit_command = f'bsub -J {child:03} -q hpc_acc -e %J.err -o %J.out {root.template_path}/000_machine_model/run.sh &',
                            log_file=f"{node.path}/{child:03}/log.json",
                            dictionary={'qx0':float(myq1), 
                                        'qy0':float(myq2)
@@ -93,7 +93,7 @@ for node in root.root.generation(1):
                            path = f"{node.path}/{child:03}",
                            template_path = f'{root.template_path}/001_prepare_tracking_jobs',
                            #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
-                           submit_command = f'bsub -q hpc_acc -e %J.err -o %J.out {root.template_path}/001_prepare_tracking_jobs/run.sh &',
+                           submit_command = f'bsub -J {node.name}.{child:03} -q hpc_acc -e %J.err -o %J.out {root.template_path}/001_prepare_tracking_jobs/run.sh &',
                            #submit_command = f'python {root.template_path}/multiply_it/run.py &',
                            log_file=f"{node.path}/{child:03}/log.json",
                            dictionary={'particle_file': f'{distributions_folder}/{child:03}.parquet',
