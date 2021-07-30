@@ -12,11 +12,11 @@ def from_normal_to_physical_space(df, egeom_1, egeom_2, ptau_max, W=None, invW=N
     init_canonical_6D[0,4] = 0.
     init_canonical_6D[0,5] = ptau_max
     init_normalized_6D_temp = np.tensordot(invW, init_canonical_6D, [1,1]).T
-    
-    r_list = df['normalized amplitude in xy-plane'].values 
+
+    r_list = df['normalized amplitude in xy-plane'].values
     theta_list = df['angle in xy-plane [deg]'].values*np.pi/180 # [rad]
 
-    A1_A2_in_sigma = np.array((r_list*np.cos(theta_list),r_list*np.sin(theta_list)))    
+    A1_A2_in_sigma = np.array((r_list*np.cos(theta_list),r_list*np.sin(theta_list)))
     n_particles = len(A1_A2_in_sigma[0])
 
     A1_A2_in_sigma_unrolled = A1_A2_in_sigma.reshape(n_particles, 2)
@@ -46,7 +46,7 @@ def get_particles_distribution(egeom_1, egeom_2, ptau_max, r_list, theta_list, W
     init_normalized_6D_temp = np.tensordot(invW, init_canonical_6D, [1,1]).T
 
 
-    A1_A2_in_sigma = np.array([[(r*np.cos(theta),r*np.sin(theta)) for r in r_list] for theta in theta_list])    
+    A1_A2_in_sigma = np.array([[(r*np.cos(theta),r*np.sin(theta)) for r in r_list] for theta in theta_list])
     n_particles = len(theta_list)*len(r_list)
 
     A1_A2_in_sigma_unrolled = A1_A2_in_sigma.reshape(n_particles, 2)
@@ -83,7 +83,7 @@ def get_DA_distribution(n_sigma, ptau_max, egeom_1, egeom_2, r_N=1144, theta_N=1
     r_max = n_sigma
 
     A1_A2_in_sigma = np.array([[(r*np.cos(theta),r*np.sin(theta)) for r in np.linspace(r_min,r_max,r_N)] for theta in np.linspace(theta_min,theta_max,theta_N)])
-    
+
     n_particles = theta_N*r_N
 
     A1_A2_in_sigma_unrolled = A1_A2_in_sigma.reshape(n_particles, 2)
@@ -101,7 +101,7 @@ def get_DA_distribution(n_sigma, ptau_max, egeom_1, egeom_2, r_N=1144, theta_N=1
 
     return init_canonical_coordinates, A1_A2_in_sigma, n_particles
 
-def add_to_closed_orbit(init_canonical_6D, partCO, partid=None):
+def add_to_closed_orbit(init_canonical_6D, partCO, particle_id=None):
     pp = partCO.copy()
     pp.x += init_canonical_6D[:,0]
     pp.px += init_canonical_6D[:,1]
@@ -109,11 +109,11 @@ def add_to_closed_orbit(init_canonical_6D, partCO, partid=None):
     pp.py += init_canonical_6D[:,3]
     pp.zeta += init_canonical_6D[:,4]
     pp.delta += init_canonical_6D[:,5]
-    if partid is None:
-         pp.partid = np.arange(len(pp.x), dtype=np.int64)
+    if particle_id is None:
+         pp.particle_id = np.arange(len(pp.x), dtype=np.int64)
     else:
-         pp.partid = np.int64(partid)
-    return pp 
+         pp.particle_id = np.int64(particle_id)
+    return pp
 
 def apply_closed_orbit(init_canonical_coordinates, partCO):
     for ii in range(6):
@@ -125,13 +125,13 @@ def J1_J2_from_canonical(canonical_coordinates, invW, partCO):
     coords = canonical_coordinates.copy()
     for ii in range(6):
         coords[:,ii] -= partCO[ii]
-   
+
     normalized_coords = np.tensordot(invW, coords, [1,1]).T
     J1 = 0.5*(normalized_coords[:,0]**2 + normalized_coords[:,1]**2)
     J2 = 0.5*(normalized_coords[:,2]**2 + normalized_coords[:,3]**2)
-    
+
     return J1, J2
-    
+
 #def get_xtrack_particle_set(init_canonical_coordinates, p0c_eV):
 #    n_part = init_canonical_coordinates.shape[0]
 #
@@ -148,7 +148,7 @@ def J1_J2_from_canonical(canonical_coordinates, invW, partCO):
 #        part.tau  = init_canonical_coordinates[i_part, 4]
 #        part.ptau = init_canonical_coordinates[i_part, 5]
 #
-#        part.partid = i_part
+#        part.particle_id = i_part
 #        part.state  = 1
 #        part.elemid = 0
 #        part.turn   = 0
