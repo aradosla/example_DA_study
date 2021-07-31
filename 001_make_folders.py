@@ -43,7 +43,7 @@ start_time = time.time()
 #root
 my_folder = os.getcwd()
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/full_tune_scan'
+root.path = my_folder + '/full_tune_scan_wfix'
 root.template_path = my_folder + '/templates'
 root.log_file = root.path + "/log.json"
 
