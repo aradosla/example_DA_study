@@ -19,7 +19,7 @@ def from_normal_to_physical_space(df, egeom_1, egeom_2, ptau_max, W=None, invW=N
     A1_A2_in_sigma = np.array((r_list*np.cos(theta_list),r_list*np.sin(theta_list)))
     n_particles = len(A1_A2_in_sigma[0])
 
-    A1_A2_in_sigma_unrolled = A1_A2_in_sigma.reshape(n_particles, 2)
+    A1_A2_in_sigma_unrolled = A1_A2_in_sigma.T
 
     init_normalized_6D = np.empty([n_particles, 6])
     init_normalized_6D[:,0] = A1_A2_in_sigma_unrolled[:,0] * np.sqrt(egeom_1)

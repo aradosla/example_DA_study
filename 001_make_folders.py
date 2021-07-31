@@ -16,10 +16,10 @@ import pandas as pd
 # 4. postprocessing
 
 # machine parameters scans
-#qx0 = np.linspace(62.305, 62.330, 21)
-#qy0 = np.linspace(60.305, 60.330, 21)
-qx0 = np.array([62.314, 62.315])
-qy0 = np.array([60.318, 60.319])
+qx0 = np.linspace(62.305, 62.330, 21)
+qy0 = np.linspace(60.305, 60.330, 21)
+#qx0 = np.array([62.314, 62.315])
+#qy0 = np.array([60.318, 60.319])
 
 
 # tracking scans
@@ -43,7 +43,7 @@ start_time = time.time()
 #root
 my_folder = os.getcwd()
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/study_000'
+root.path = my_folder + '/full_tune_scan'
 root.template_path = my_folder + '/templates'
 root.log_file = root.path + "/log.json"
 
