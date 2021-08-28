@@ -18,20 +18,28 @@ import pandas as pd
 # machine parameters scans
 qx0 = np.linspace(62.305, 62.330, 21)
 qy0 = np.linspace(60.305, 60.330, 21)
+
 #qx0 = np.array([62.314, 62.315])
 #qy0 = np.array([60.318, 60.319])
+
+# same as sixtrack
+qx0 = np.arange(62.305, 62.330, 0.001)
+qy0 = np.arange(60.305, 60.330, 0.001)
 
 
 # tracking scans
 r_min = 2
 r_max = 10
-radial_list = np.linspace(r_min, r_max, 16*(r_max-r_min), endpoint=False)
+#radial_list = np.linspace(r_min, r_max, 16*(r_max-r_min), endpoint=False)
+radial_list = np.linspace(r_min, r_max, 2*16*(r_max-r_min), endpoint=False)
+
 
 n_angles = 5
 theta_list = np.linspace(0, 90, n_angles+2)[1:-1]
 
 particle_list = [(particle_id, ii[0], ii[1]) for particle_id, ii in enumerate(itertools.product(radial_list, theta_list))]
 particle_list = list(np.array_split(particle_list, 15))
+
 
 # %%
 """
@@ -43,7 +51,7 @@ start_time = time.time()
 #root
 my_folder = os.getcwd()
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/full_tune_scan_wfix'
+root.path = my_folder + '/full_tune_scan_wfix_more_particles_tunes_as_sixt'
 root.template_path = my_folder + '/templates'
 root.log_file = root.path + "/log.json"
 
