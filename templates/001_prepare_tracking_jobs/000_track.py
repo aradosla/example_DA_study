@@ -5,7 +5,7 @@ import pandas as pd
 import xline as xl
 import xtrack as xt
 import sys
-sys.path.append('/home/HPC/sterbini/DA_study_example/templates/001_prepare_tracking_jobs/')
+sys.path.append('/home/HPC/giadarol/20210728_DA_study_test/DA_study_example/templates/001_prepare_tracking_jobs/')
 import help_functions as hf
 import tree_maker
 
@@ -39,7 +39,7 @@ init_canonical_6D, A1_A2_in_sigma, number_of_particles = hf.from_normal_to_physi
     invW=invWW,
 )
 
-pp = hf.add_to_closed_orbit(init_canonical_6D, p_co, partid=particle_df['particle_id'].values)
+pp = hf.add_to_closed_orbit(init_canonical_6D, p_co, particle_id=particle_df['particle_id'].values)
 
 line.remove_inactive_multipoles(inplace=True)
 line.remove_zero_length_drifts(inplace=True)
