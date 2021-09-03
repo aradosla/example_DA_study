@@ -49,14 +49,14 @@ start_time = time.time()
 
 # %%
 #root
-my_folder = os.getcwd()
+my_folder = os.getcwd() + '/study_XYZ'
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/full_tune_scan_wfix_more_particles_tunes_as_sixt'
-root.template_path = my_folder + '/templates'
-root.log_file = root.path + "/log.json"
+root.path = ''
+root.dictionary = {'abs_path': my_folder}
+#root.template_path = '../templates'
+#root.log_file = "log.json"
 
-
-distributions_folder = root.template_path + '/particle_distributions'
+distributions_folder = '../templates/particle_distributions'
 os.makedirs(distributions_folder, exist_ok=True)
 for ii, my_list in enumerate(particle_list):
    pd.DataFrame(my_list,
@@ -73,17 +73,26 @@ for ii, my_list in enumerate(particle_list):
 #first generation
 
 for node in root.root.generation(0):
-    node.children=[NodeJob(name=f"{child:03}",
-                           parent=node,
-                           path=f"{node.path}/{child:03}",
-                           template_path = root.template_path+'/000_machine_model',
-                           #submit_command = f'python {root.template_path}/sum_it/run.py &',
-                           submit_command = f'bsub -q hpc_acc -e %J.err -o %J.out {root.template_path}/000_machine_model/run.sh &',
-                           log_file=f"{node.path}/{child:03}/log.json",
-                           dictionary={'qx0':float(myq1),
-                                       'qy0':float(myq2)
-                                      })
-                   for child, (myq1, myq2) in enumerate(itertools.product(qx0, qy0))]
+    children_list = []
+    for child, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
+        path = f"{child:03}"    	
+        template_path_rel = '../../templates/000_machine_model'
+        children_list.append(NodeJob(name=f"{child:03}",
+                             parent=node,
+                             # these paths are relative to root
+                             path=path,
+                             template_path=template_path_rel,
+                             # these paths are relative to the child path
+                             # local run: submit_command=f'python {template_path_rel}/run.py &',
+                             submit_command=f'bsub -J {child:03} -q hpc_acc -e %J.err -o %J.out {template_path_rel}/run.sh &',
+                             #log_file='log.json',
+                             dictionary={'qx0':float(myq1), 
+                                         'qy0':float(myq2),
+                                        }))   
+
+    
+    node.children = children_list
+
 
 # To combine different lists one can use the product or the zip functions    
 #import itertools
@@ -98,21 +107,26 @@ for node in root.root.generation(0):
 # %%
 #second generation
 for node in root.root.generation(1):
-    node.children=[NodeJob(name=f"{child:03}",
-                           parent=node,
-                           path = f"{node.path}/{child:03}",
-                           template_path = f'{root.template_path}/001_prepare_tracking_jobs',
-                           #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
-                           submit_command = f'bsub -q hpc_acc -e %J.err -o %J.out {root.template_path}/001_prepare_tracking_jobs/run.sh &',
-                           #submit_command = f'python {root.template_path}/multiply_it/run.py &',
-                           log_file=f"{node.path}/{child:03}/log.json",
-                           dictionary={'particle_file': f'{distributions_folder}/{child:03}.parquet',
-                                       'xline_json': f'{node.path}/xlines/line_bb_for_tracking.json',
-                                       'n_turns': 1e6
-                                      })
-                   for child, my_particle in enumerate(particle_list)]
+    children_list = []
+    for child, my_particle in enumerate(particle_list):
+        path = f"{node.path}/{child:03}"    	
+        template_path_rel = '../../../templates/001_prepare_tracking_jobs'
+        distributions_folder_rel = os.path.relpath(distributions_folder, path)   
+        children_list.append(NodeJob(name=f"{child:03}",
+                             parent=node,
+                             path=path,
+                             template_path=template_path_rel,
+                             #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
+                             submit_command = f'bsub -J {node.name}/{child:03} -q hpc_acc -e %J.err -o %J.out {template_path_rel}/run.sh &',
+                             #submit_command = f'python {root.template_path}/multiply_it/run.py &',
+                             #log_file = 'log.json', 
+                             dictionary={'particle_file': f'{distributions_folder_rel}/{child:03}.parquet',
+                                         'xline_json': f'../xlines/line_bb_for_tracking.json',
+                                         'n_turns': 1e6,
+                                      }))
+    node.children = children_list
+root.to_json('tree.json')
 
-root.to_json()
 
 
 print('Done with the tree creation.')
@@ -140,3 +154,11 @@ for depth in range(root.height):
 root.tag_as('cloned')
 print('The tree structure is moved to the file system.')
 print("--- %s seconds ---" % (time.time() - start_time))
+
+start_time = time.time() 
+Parallel(n_jobs=8)(delayed(node.mutate)() for node in root.descendants)
+#for node in root.descendants:
+#   node.mutate()
+print('The tree structure is mutated.')
+print("--- %s seconds ---" % (time.time() - start_time))
+
