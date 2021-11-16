@@ -2,8 +2,8 @@ import json
 import yaml
 import time
 import pandas as pd
-import xline as xl
 import xtrack as xt
+import xpart as xp
 import sys
 sys.path.append('/home/HPC/giadarol/20210728_DA_study_test/DA_study_example/templates/001_prepare_tracking_jobs/')
 import help_functions as hf
@@ -21,8 +21,8 @@ WW = dd['WW_finite_diffs']
 invWW = dd['WWInv_finite_diffs']
 closed_orbit = dd['particle_on_tracker_co']
 
-p_co = xl.Particles.from_dict(dd['particle_on_tracker_co'])
-line = xl.Line.from_dict(dd)
+p_co = xp.Particles.from_dict(dd['particle_on_tracker_co'])
+line = xt.Line.from_dict(dd)
 
 
 egeom_1 = config['epsn_1'] / p_co.gamma0 / p_co.beta0
@@ -47,7 +47,7 @@ line.merge_consecutive_drifts(inplace=True)
 line.merge_consecutive_multipoles(inplace=True)
 
 tracker = xt.Tracker(sequence=line)
-particles = xt.Particles(**pp.to_dict())
+particles = xp.Particles(**pp.to_dict())
 pd.DataFrame(particles.to_dict()).to_parquet('input_particles.parquet')
 
 num_turns = config['n_turns']

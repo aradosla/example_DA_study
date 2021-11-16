@@ -1,7 +1,7 @@
 # Links to be made for tools and scripts
 links:  
   tracking_tools: '/afs/cern.ch/eng/tracking-tools'
-  modules: '/home/HPC/giadarol/20210721_xsuite_dev/lhcmask'
+  modules: '/home/HPC/sterbini/lhcmask'
   tools: 'tracking_tools/tools'
   beambeam_macros: 'tracking_tools/beambeam_macros'
   errors: 'tracking_tools/errors'
