@@ -15,10 +15,10 @@ import time
 start = time.time()
 
 
-my_study='./study_000'
-my_study='./full_tune_scan_wfix'
-my_study='./full_tune_scan_wfix_more_particles'
-my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
+my_study='./study_XYZ'
+#my_study='./full_tune_scan_wfix'
+#my_study='./full_tune_scan_wfix_more_particles'
+#my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
 
 try:
     root=tree_maker.tree_from_json(

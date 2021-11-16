@@ -34,10 +34,7 @@ def get_list_descendant(root, operation='completed'):
 # %%
 # Load the tree from a yaml
 if __name__=='__main__':
-    #root = load_tree('./full_tune_scan_wfix_more_particles/tree.json')
-    root = load_tree('./full_tune_scan_wfix_more_particles_tunes_as_sixt/tree.json')
-    #root = load_tree('./full_tune_scan_wfix/tree.json')
-    #root = load_tree('./study_000/tree.json')
+    root = load_tree('./study_XYZ/tree.json')
     if root.has_been('completed'):
         print('All descendants of root are completed!')
     else:

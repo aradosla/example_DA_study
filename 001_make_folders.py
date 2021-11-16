@@ -156,9 +156,9 @@ print('The tree structure is moved to the file system.')
 print("--- %s seconds ---" % (time.time() - start_time))
 
 start_time = time.time() 
-Parallel(n_jobs=8)(delayed(node.mutate)() for node in root.descendants)
-#for node in root.descendants:
-#   node.mutate()
+#Parallel(n_jobs=8)(delayed(node.mutate)() for node in root.descendants)
+for node in root.descendants:
+   node.mutate()
 print('The tree structure is mutated.')
 print("--- %s seconds ---" % (time.time() - start_time))
 

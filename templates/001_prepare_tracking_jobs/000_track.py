@@ -5,12 +5,12 @@ import pandas as pd
 import xtrack as xt
 import xpart as xp
 import sys
-sys.path.append('/home/HPC/giadarol/20210728_DA_study_test/DA_study_example/templates/001_prepare_tracking_jobs/')
+sys.path.append('/home/HPC/sterbini/2021_11_16/DA_study_example/templates/001_prepare_tracking_jobs/')
 import help_functions as hf
 import tree_maker
 
 with open('config.yaml','r') as fid:
-    config=yaml.load(fid)
+    config=yaml.safe_load(fid)
 
 tree_maker.tag_json.tag_it(config['log_file'], 'started')
 
@@ -46,7 +46,7 @@ line.remove_zero_length_drifts(inplace=True)
 line.merge_consecutive_drifts(inplace=True)
 line.merge_consecutive_multipoles(inplace=True)
 
-tracker = xt.Tracker(sequence=line)
+tracker = xt.Tracker(line=line)
 particles = xp.Particles(**pp.to_dict())
 pd.DataFrame(particles.to_dict()).to_parquet('input_particles.parquet')
 
@@ -56,7 +56,7 @@ tracker.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
 b=time.time()  
 
 print(f'Elapsed time: {b-a} s')
-print(f'Elapsed time per particle per turn: {(b-a)/particles.num_particles/num_turns*1e6} us')
+print(f'Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us')
 
 pd.DataFrame(particles.to_dict()).to_parquet('output_particles.parquet')
 tree_maker.tag_json.tag_it(config['log_file'], 'completed')

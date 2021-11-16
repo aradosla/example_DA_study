@@ -1,6 +1,6 @@
 import numpy as np
-import xline
-import xtrack
+import xtrack as xt
+import xpart as xp
 
 def from_normal_to_physical_space(df, egeom_1, egeom_2, ptau_max, W=None, invW=None):
 
@@ -103,12 +103,14 @@ def get_DA_distribution(n_sigma, ptau_max, egeom_1, egeom_2, r_N=1144, theta_N=1
 
 def add_to_closed_orbit(init_canonical_6D, partCO, particle_id=None):
     pp = partCO.copy()
-    pp.x += init_canonical_6D[:,0]
-    pp.px += init_canonical_6D[:,1]
-    pp.y += init_canonical_6D[:,2]
-    pp.py += init_canonical_6D[:,3]
-    pp.zeta += init_canonical_6D[:,4]
-    pp.delta += init_canonical_6D[:,5]
+    pp = xp.build_particles(particle_ref=partCO,
+        x = init_canonical_6D[:,0],
+        px = init_canonical_6D[:,1],
+        y = init_canonical_6D[:,2],
+        py = init_canonical_6D[:,3],
+        zeta = init_canonical_6D[:,4],
+        delta = init_canonical_6D[:,5])
+
     if particle_id is None:
          pp.particle_id = np.arange(len(pp.x), dtype=np.int64)
     else:
@@ -158,7 +160,7 @@ def J1_J2_from_canonical(canonical_coordinates, invW, partCO):
 #    return p
 
 def get_xtrack_particle_set(context, init_canonical_coordinates, p0c_eV):
-    particles = xtrack.Particles(_context=context,
+    particles = xp.Particles(_context=context,
             p0c  = p0c_eV,
             x    = init_canonical_coordinates[:, 0],
             px   = init_canonical_coordinates[:, 1],
