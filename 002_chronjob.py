@@ -34,7 +34,7 @@ def get_list_descendant(root, operation='completed'):
 # %%
 # Load the tree from a yaml
 if __name__=='__main__':
-    root = load_tree('./study_XYZ/tree.json')
+    root = load_tree('./study_001/tree.json')
     if root.has_been('completed'):
         print('All descendants of root are completed!')
     else:
@@ -43,4 +43,8 @@ if __name__=='__main__':
         if all([descendant.has_been('completed') for descendant in root.descendants]):
             root.tag_as('completed')
             print('All descendants of root are completed!')
+        else:
+            for descendant in root.descendants:
+                if descendant.has_not_been('completed'):
+                     print(descendant.path)
 
