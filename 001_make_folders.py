@@ -16,29 +16,8 @@ import pandas as pd
 # 4. postprocessing
 
 # machine parameters scans
-qx0 = np.linspace(62.305, 62.330, 21)
-qy0 = np.linspace(60.305, 60.330, 21)
-
-#qx0 = np.array([62.314, 62.315])
-#qy0 = np.array([60.318, 60.319])
-
-# same as sixtrack
-
 qx0 = np.arange(62.305, 62.330, 0.001)
 qy0 = np.arange(60.305, 60.330, 0.001)
-
-# tracking scans
-r_min = 2
-r_max = 10
-#radial_list = np.linspace(r_min, r_max, 16*(r_max-r_min), endpoint=False)
-radial_list = np.linspace(r_min, r_max, 2*16*(r_max-r_min), endpoint=False)
-
-
-n_angles = 5
-theta_list = np.linspace(0, 90, n_angles+2)[1:-1]
-
-particle_list = [(particle_id, ii[0], ii[1]) for particle_id, ii in enumerate(itertools.product(radial_list, theta_list))]
-particle_list = list(np.array_split(particle_list, 15))
 
 
 # %%
@@ -56,14 +35,6 @@ root.dictionary = {'abs_path': my_folder}
 #root.template_path = '../templates'
 #root.log_file = "log.json"
 
-distributions_folder = './templates/particle_distributions'
-os.makedirs(distributions_folder, exist_ok=True)
-for ii, my_list in enumerate(particle_list):
-   pd.DataFrame(my_list,
-                columns=['particle_id','normalized amplitude in xy-plane',
-                         'angle in xy-plane [deg]'])\
-     .to_parquet(f'{distributions_folder}/{ii:03}.parquet')
-
 # %%
 """
 #### First generation of nodes
@@ -75,7 +46,7 @@ for ii, my_list in enumerate(particle_list):
 for node in root.root.generation(0):
     children_list = []
     for child, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
-        path = f"{child:03}"    	
+        path = f"{child:03}"
         template_path_rel = '../../templates/000_machine_model'
         children_list.append(NodeJob(name=f"{child:03}",
                              parent=node,
