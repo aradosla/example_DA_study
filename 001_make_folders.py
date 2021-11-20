@@ -150,6 +150,8 @@ with open(script_run_first_gen_path, 'w') as fid:
     fid.write(script_run_first_gen_content)
 with open(script_run_second_gen_path, 'w') as fid:
     fid.write(script_run_second_gen_content)
+os.system(f"chmod u+x {script_run_first_gen_path}")
+os.system(f"chmod u+x {script_run_second_gen_path}")
 
 start_time = time.time() 
 #Parallel(n_jobs=8)(delayed(node.mutate)() for node in root.descendants)
