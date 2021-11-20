@@ -28,11 +28,11 @@ start_time = time.time()
 
 # %%
 #root
-my_folder = os.getcwd()
+my_folder = os.getcwd() + '/study_001'
 root = NodeJob(name='root', parent=None)
-root.path = my_folder + '/study_001'
-root.template_path = my_folder + '/master_codes'
+root.path = ''
 root.dictionary = {'abs_path': my_folder}
+
 
 # %%
 """
@@ -46,6 +46,7 @@ for node in root.root.generation(0):
     children_list = []
     for child, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
         path = f"{child:03}"
+        template_path_rel = '../../master_codes/000_machine_model'
         children_list.append(NodeJob(name=f"{child:03}",
                              parent=node,
                              # these paths are relative to root
@@ -58,6 +59,7 @@ for node in root.root.generation(0):
                              dictionary={'qx0':float(myq1),
                                          'qy0':float(myq2),
                                         }))
+
     node.children = children_list
 
 
@@ -70,18 +72,16 @@ for node in root.root.generation(0):
 """
 #### Second generation of nodes
 """
-
-# Path is relative to the job location
-distributions_folder_rel = '../../../master_codes/001_make_part_distribution/distrib_abc'
-n_distrib_files = 15 # TODO: to be automatized
-
+distributions_folder = './master_codes/001_make_part_distribution/distrib_abc'
+n_distrib_files = 15 # TODO to be automatized
 # %%
 #second generation
 for node in root.root.generation(1):
     children_list = []
     for child in range(n_distrib_files):
         path = f"{node.path}/{child:03}"
-        template_path_rel = 'master_codes/002_tracking_job'
+        template_path_rel = '../../../master_codes/002_tracking_job'
+        distributions_folder_rel = os.path.relpath(distributions_folder, path)
         children_list.append(NodeJob(name=f"{child:03}",
                              parent=node,
                              path=path,
@@ -89,9 +89,8 @@ for node in root.root.generation(1):
                              #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
                              submit_command = f'bsub -J {node.name}/{child:03} -q hpc_acc -e %J.err -o %J.out {template_path_rel}/run.sh &',
                              #submit_command = f'python {root.template_path}/multiply_it/run.py &',
-                             #log_file 'log.json', 
-                             dictionary={'particle_file':
-                                 f'{distributions_folder_rel}/{child:03}.parquet',
+                             #log_file = 'log.json', 
+                             dictionary={'particle_file': f'../{distributions_folder_rel}/{child:03}.parquet',
                                          'xline_json': f'../xlines/line_bb_for_tracking.json',
                                          'n_turns': 1e6,
                                       }))
@@ -118,8 +117,8 @@ root.rm_children_folders()
 from joblib import Parallel, delayed
 
 for depth in range(root.height):
-    [x.clone_children() for x in root.generation(depth)]
-    #Parallel(n_jobs=8)(delayed(x.clone_children)() for x in root.generation(depth))
+#    [x.clone_children() for x in root.generation(depth)]
+     Parallel(n_jobs=8)(delayed(x.clone_children)() for x in root.generation(depth))
 
 # VERY IMPORTANT, tagging
 root.tag_as('cloned')
