@@ -5,7 +5,6 @@ import pandas as pd
 import xtrack as xt
 import xpart as xp
 import sys
-sys.path.append('/home/HPC/sterbini/2021_11_16/DA_study_example/templates/001_prepare_tracking_jobs/')
 import help_functions as hf
 import tree_maker
 
