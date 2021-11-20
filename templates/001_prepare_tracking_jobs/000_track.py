@@ -52,7 +52,7 @@ pd.DataFrame(particles.to_dict()).to_parquet('input_particles.parquet')
 num_turns = config['n_turns']
 a=time.time()
 tracker.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
-b=time.time()  
+b=time.time()
 
 print(f'Elapsed time: {b-a} s')
 print(f'Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us')

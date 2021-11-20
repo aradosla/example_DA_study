@@ -3,7 +3,7 @@
 xline_json :    '../000_machine_model/xlines/line_bb_for_tracking.json'
 
 # distribution in the normalized xy space
-particle_file:  './000.parquet'
+particle_file:  '../000b_make_part_distribution/distrib/000.parquet'
 
 # metric
 epsn_1     :    2.5e-6   # normalised emittance x
