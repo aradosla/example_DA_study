@@ -3,6 +3,7 @@ import tree_maker
 from tree_maker import NodeJob
 import time
 import os
+from pathlib import Path
 import itertools
 import numpy as np
 import pandas as pd
@@ -14,6 +15,8 @@ import pandas as pd
 # 2. Tracking for FMA and or DA studies
 # 3. simulation baby-sitting and
 # 4. postprocessing
+
+setup_env_script = '/home/HPC/giadarol/miniconda3/bin/activate'
 
 # machine parameters scans
 qx0 = np.arange(62.305, 62.330, 0.001)[::20]
@@ -41,6 +44,12 @@ root.dictionary = {'abs_path': my_folder}
 
 # %%
 #first generation
+python_executable_first_gen = './master_codes/000_machine_model/000_pymask.py'
+script_run_first_gen_path = my_folder + '/run_first_gen.sh'
+script_run_first_gen_content = '\n'.join([
+    f"source {setup_env_script}",
+    f"python {Path(python_executable_first_gen).absolute()}"
+    ])
 
 for node in root.root.generation(0):
     children_list = []
@@ -54,7 +63,10 @@ for node in root.root.generation(0):
                              template_path=template_path_rel,
                              # these paths are relative to the child path
                              # local run: submit_command=f'python {template_path_rel}/run.py &',
-                             submit_command=f'bsub -J {child:03} -n 2 -q hpc_acc -e %J.err -o %J.out {template_path_rel}/run.sh &',
+                             submit_command=(
+                                 f"bsub -J {child:03} -n 2 -q hpc_acc"
+                                 "-e %J.err -o %J.out"
+                                 f"{Path(script_run_first_gen_path).absolute()} &"),
                              #log_file='log.json',
                              dictionary={'qx0':float(myq1),
                                          'qy0':float(myq2),
@@ -72,6 +84,13 @@ for node in root.root.generation(0):
 """
 #### Second generation of nodes
 """
+python_executable_second_gen = './master_codes/002_tracking_job/000_track.py'
+script_run_second_gen_path = my_folder + '/run_second_gen.sh'
+script_run_second_gen_content = '\n'.join([
+    f"source {setup_env_script}",
+    f"python {Path(python_executable_second_gen).absolute()}"
+    ])
+
 distributions_folder = './master_codes/001_make_part_distribution/distrib_abc'
 n_distrib_files = 15 # TODO to be automatized
 # %%
@@ -87,7 +106,9 @@ for node in root.root.generation(1):
                              path=path,
                              template_path=template_path_rel,
                              #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
-                             submit_command = f'bsub -J {node.name}/{child:03} -q hpc_acc -e %J.err -o %J.out {template_path_rel}/run.sh &',
+                             submit_command = (f'bsub -J {node.name}/{child:03}'
+                                 '-q hpc_acc -e %J.err -o %J.out'
+                                 f'{script_run_second_gen_path} &'),
                              #submit_command = f'python {root.template_path}/multiply_it/run.py &',
                              #log_file = 'log.json', 
                              dictionary={'particle_file': f'../{distributions_folder_rel}/{child:03}.parquet',
@@ -124,6 +145,11 @@ for depth in range(root.height):
 root.tag_as('cloned')
 print('The tree structure is moved to the file system.')
 print("--- %s seconds ---" % (time.time() - start_time))
+
+with open(script_run_first_gen_path, 'w') as fid:
+    fid.write(script_run_first_gen_content)
+with open(script_run_second_gen_path, 'w') as fid:
+    fid.write(script_run_second_gen_content)
 
 start_time = time.time() 
 #Parallel(n_jobs=8)(delayed(node.mutate)() for node in root.descendants)
