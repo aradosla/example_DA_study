@@ -64,8 +64,8 @@ for node in root.root.generation(0):
                              # these paths are relative to the child path
                              # local run: submit_command=f'python {template_path_rel}/run.py &',
                              submit_command=(
-                                 f"bsub -J {child:03} -n 2 -q hpc_acc"
-                                 "-e %J.err -o %J.out"
+                                 f"bsub -J {child:03} -n 2 -q hpc_acc "
+                                 "-e %J.err -o %J.out "
                                  f"{Path(script_run_first_gen_path).absolute()} &"),
                              #log_file='log.json',
                              dictionary={'qx0':float(myq1),
@@ -106,8 +106,8 @@ for node in root.root.generation(1):
                              path=path,
                              template_path=template_path_rel,
                              #bsub -q hpc_acc -e %J.err -o %J.out cd $PWD && ./run.sh
-                             submit_command = (f'bsub -J {node.name}/{child:03}'
-                                 '-q hpc_acc -e %J.err -o %J.out'
+                             submit_command = (f'bsub -J {node.name}/{child:03} '
+                                 '-q hpc_acc -e %J.err -o %J.out '
                                  f'{script_run_second_gen_path} &'),
                              #submit_command = f'python {root.template_path}/multiply_it/run.py &',
                              #log_file = 'log.json', 
