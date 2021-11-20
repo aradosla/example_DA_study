@@ -1,53 +1,91 @@
 import json
 import yaml
 import time
+import logging
+
+import numpy as np
 import pandas as pd
+
 import xtrack as xt
 import xpart as xp
-import sys
-import help_functions as hf
-import tree_maker
+
+####################
+# Read config file #
+####################
 
 with open('config.yaml','r') as fid:
     config=yaml.safe_load(fid)
 
-tree_maker.tag_json.tag_it(config['log_file'], 'started')
+######################
+# Tag job as started #
+######################
+
+try:
+    import tree_maker
+    tree_maker.tag_json.tag_it(config['log_file'], 'started')
+except ImportError:
+    logging.warning('tree_maker not available')
+    tree_maker = None
+
+##########################################
+# Read line, part_on_co, one-turn matrix #
+##########################################
 
 with open(config['xline_json']) as fid:
     dd=json.load(fid)
 
-WW = dd['WW_finite_diffs']
-invWW = dd['WWInv_finite_diffs']
-closed_orbit = dd['particle_on_tracker_co']
-
 p_co = xp.Particles.from_dict(dd['particle_on_tracker_co'])
 line = xt.Line.from_dict(dd)
+R_matrix = dd['RR_finite_diffs']
 
-
-egeom_1 = config['epsn_1'] / p_co.gamma0 / p_co.beta0
-egeom_2 = config['epsn_2'] / p_co.gamma0 / p_co.beta0
+#####################################################
+# Get normalized coordinateds of particles to track #
+#####################################################
 
 particle_df=pd.read_parquet(config['particle_file'])
 
-init_canonical_6D, A1_A2_in_sigma, number_of_particles = hf.from_normal_to_physical_space(
-    particle_df,
-    egeom_1=egeom_1,
-    egeom_2=egeom_2,
-    ptau_max=config['ptau_max'],
-    W=WW,
-    invW=invWW,
-)
+r_vect = particle_df['normalized amplitude in xy-plane'].values
+theta_vect = particle_df['angle in xy-plane [deg]'].values*np.pi/180 # [rad]
 
-pp = hf.add_to_closed_orbit(init_canonical_6D, p_co, particle_id=particle_df['particle_id'].values)
+A1_in_sigma = r_vect * np.cos(theta_vect)
+A2_in_sigma = r_vect * np.sin(theta_vect)
+
+####################################################
+# Generate particles object (physical coordinates) #
+####################################################
+
+particles = xp.build_particles(
+        particle_ref=p_co,
+        x_norm=A1_in_sigma, y_norm=A2_in_sigma,
+        delta = config['ptau_max'], # TODO: to be fixed!!!!!
+        R_matrix=R_matrix,
+        scale_with_transverse_norm_emitt=(config['epsn_1'], config['epsn_2']))
+particles.particle_id = particle_df.particle_id.values
+
+#################
+# Symplify line #
+#################
 
 line.remove_inactive_multipoles(inplace=True)
 line.remove_zero_length_drifts(inplace=True)
 line.merge_consecutive_drifts(inplace=True)
 line.merge_consecutive_multipoles(inplace=True)
 
+#################
+# Build tracker #
+#################
+
 tracker = xt.Tracker(line=line)
-particles = xp.Particles(**pp.to_dict())
+
+############################
+# Save initial coordinates # 
+############################
+
 pd.DataFrame(particles.to_dict()).to_parquet('input_particles.parquet')
+
+##########
+# Track! #
+##########
 
 num_turns = config['n_turns']
 a=time.time()
@@ -57,5 +95,11 @@ b=time.time()
 print(f'Elapsed time: {b-a} s')
 print(f'Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us')
 
+##########################
+# Save final coordinates # 
+##########################
+
 pd.DataFrame(particles.to_dict()).to_parquet('output_particles.parquet')
-tree_maker.tag_json.tag_it(config['log_file'], 'completed')
+
+if tree_maker is not None:
+    tree_maker.tag_json.tag_it(config['log_file'], 'completed')
