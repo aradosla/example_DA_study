@@ -55,7 +55,7 @@ A2_in_sigma = r_vect * np.sin(theta_vect)
 ####################################################
 
 particles = xp.build_particles(
-        particle_ref=p_co,
+        particle_on_co=p_co,
         x_norm=A1_in_sigma, y_norm=A2_in_sigma,
         delta = config['ptau_max'], # TODO: to be fixed!!!!!
         R_matrix=R_matrix,
