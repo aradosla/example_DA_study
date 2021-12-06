@@ -1,9 +1,9 @@
 ---
 # Description of the xline
-xline_json :    '/home/HPC/sterbini/DA_study_example/templates/000_test/xlines/line_bb_for_tracking.json'
+xline_json :    '../000_machine_model/xlines/line_bb_for_tracking.json'
 
 # distribution in the normalized xy space
-particle_file:  '/home/HPC/sterbini/DA_study_example/templates/001_prepare_tracking_jobs/000.parquet'
+particle_file:  '../001_make_part_distribution/distrib_abc/001.parquet'
 
 # metric
 epsn_1     :    2.5e-6   # normalised emittance x

@@ -12,7 +12,7 @@ import tree_maker
 #from config import configuration
 
 with open('config.yaml','r') as fid:
-   configuration = yaml.load(fid)
+   configuration = yaml.safe_load(fid)
 
 tree_maker.tag_json.tag_it(configuration['log_file'], 'started')
 
@@ -34,6 +34,10 @@ knob_names = configuration['knob_names']
 
 
 # Make links
+if links['tracking_tools'] == 'auto':
+    import pymask as pm
+    links['tracking_tools'] = str(pm._pkg_root.parent.parent.absolute())
+
 for kk in links.keys():
     if os.path.exists(kk):
         os.remove(kk)
@@ -535,7 +539,7 @@ with open('./optics_orbit_at_start_ring_from_madx.json', 'w') as fid:
 if enable_bb_legacy:
     print('xline is not generated with bb legacy macros')
 else:
-    pm.generate_xline(mad_track, sequence_to_track, bb_df_track,
+    pm.generate_xsuite_line(mad_track, sequence_to_track, bb_df_track,
                     optics_and_co_at_start_ring_from_madx,
                     folder_name = './xlines',
                     skip_mad_use=True,

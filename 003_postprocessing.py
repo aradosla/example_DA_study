@@ -15,10 +15,10 @@ import time
 start = time.time()
 
 
-my_study='./study_000'
-my_study='./full_tune_scan_wfix'
-my_study='./full_tune_scan_wfix_more_particles'
-my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
+my_study='./study_001'
+#my_study='./full_tune_scan_wfix'
+#my_study='./full_tune_scan_wfix_more_particles'
+#my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
 
 try:
     root=tree_maker.tree_from_json(
@@ -31,17 +31,17 @@ my_list=[]
 if root.has_been('completed'):
     print('All descendants of root are completed!')
     for node in root.generation(1):
-        node_df = pd.read_parquet(f'{node.path}/final_summ_BBOFF.parquet')
-        with open(f'{node.path}/config.yaml','r') as fid:
+        node_df = pd.read_parquet(f'{my_study}/{node.path}/final_summ_BBOFF.parquet')
+        with open(f'{my_study}/{node.path}/config.yaml','r') as fid:
             config_parent=yaml.load(fid) 
         node_df['path']= f'{node.path}'
         for node_child in node.children:
         #os.sytem(f'bsub cd {node.path} &&  {node.path_template} ')
         #my_list.append(pd.read_parquet(f'{node.path}/test.parquet', columns=['x']).iloc[-1].x)
-            with open(f'{node_child.path}/config.yaml','r') as fid:
+            with open(f'{my_study}/{node_child.path}/config.yaml','r') as fid:
                  config=yaml.load(fid) 
-            particle=pd.read_parquet(config['particle_file'])
-            df=pd.read_parquet(f'{node_child.path}/output_particles.parquet')
+            particle=pd.read_parquet(config['particle_file'][7:])
+            df=pd.read_parquet(f'{my_study}/{node_child.path}/output_particles.parquet')
             df['path 1']= f'{node.path}' 
             df['name 1']= f'{node.name}' 
             df['path 2']= f'{node_child.path}' 
