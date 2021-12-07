@@ -112,7 +112,7 @@ for node in root.root.generation(1):
                              #submit_command = f'python {root.template_path}/multiply_it/run.py &',
                              #log_file = 'log.json', 
                              dictionary={'particle_file': f'../{distributions_folder_rel}/{child:03}.parquet',
-                                         'xline_json': f'../xlines/line_bb_for_tracking.json',
+                                         'xline_json': f'../xsuite_lines/line_bb_for_tracking.json',
                                          'n_turns': 1e3,
                                       }))
     node.children = children_list
