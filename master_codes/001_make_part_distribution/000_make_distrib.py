@@ -13,7 +13,8 @@ radial_list = np.linspace(r_min, r_max, 2*16*(r_max-r_min), endpoint=False)
 n_angles = 5
 theta_list = np.linspace(0, 90, n_angles+2)[1:-1]
 
-particle_list = [(particle_id, ii[0], ii[1]) for particle_id, ii in enumerate(itertools.product(radial_list, theta_list))]
+particle_list = [(particle_id, ii[0], ii[1]) for particle_id, ii in
+                 enumerate(itertools.product(radial_list, theta_list))]
 particle_list = list(np.array_split(particle_list, 15))
 
 distributions_folder = './distrib_abc'

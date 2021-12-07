@@ -57,7 +57,7 @@ A2_in_sigma = r_vect * np.sin(theta_vect)
 particles = xp.build_particles(
         particle_on_co=p_co,
         x_norm=A1_in_sigma, y_norm=A2_in_sigma,
-        delta = config['ptau_max'], # TODO: to be fixed!!!!!
+        delta = config['delta_max'],
         R_matrix=R_matrix,
         scale_with_transverse_norm_emitt=(config['epsn_1'], config['epsn_2']))
 particles.particle_id = particle_df.particle_id.values
