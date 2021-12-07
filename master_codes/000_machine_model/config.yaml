@@ -29,6 +29,8 @@ mode: 'b1_with_bb'
 
 # Optics file
 optics_file: 'optics_repository/HLLHCV1.5/round/opt_round_200_1500_thin.madx' # 15 cm
+# Optics version
+optics_version: '1.5'
 
 # Enable checks
 check_betas_at_ips: true

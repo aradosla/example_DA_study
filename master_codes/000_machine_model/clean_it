@@ -1,3 +1,5 @@
+rm 000_pymask.py
+rm optics_specific_tools.py
 rm twiss_*
 rm final_*
 rm fc.*
