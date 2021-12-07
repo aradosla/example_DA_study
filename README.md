@@ -1,5 +1,18 @@
 # Some simple steps
 
+### Installation instructions
+
+```bash 
+# install miniconda, then:
+pip install xsuite
+pip install cpymad
+git clone https://github.com/xsuite/tree_maker.git
+pip install -e tree_maker/
+git clone https://github.com/lhcopt/lhcmask.git
+pip install -e lhcmask/
+git clone https://github.com/lhcopt/lhctoolkit.git
+git clone https://github.com/lhcopt/lhcerrors.git
+```
 
 ### Connecting to the cnaf.infn.it
 Go to the the hpc-201-11-01-a machine.
