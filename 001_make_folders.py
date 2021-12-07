@@ -16,7 +16,7 @@ import pandas as pd
 # 3. simulation baby-sitting and
 # 4. postprocessing
 
-setup_env_script = '/home/HPC/giadarol/miniconda3/bin/activate'
+setup_env_script = '/home/HPC/skostogl/workspace_Dec21/miniconda3/bin/activate'
 
 # machine parameters scans
 qx0 = np.arange(62.305, 62.330, 0.001)[::20]
@@ -113,7 +113,7 @@ for node in root.root.generation(1):
                              #log_file = 'log.json', 
                              dictionary={'particle_file': f'../{distributions_folder_rel}/{child:03}.parquet',
                                          'xline_json': f'../xlines/line_bb_for_tracking.json',
-                                         'n_turns': 1e6,
+                                         'n_turns': 1e3,
                                       }))
     node.children = children_list
 root.to_json('tree.json')
