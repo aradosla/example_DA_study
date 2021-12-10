@@ -210,4 +210,4 @@ pars_for_legacy_bb_macros:
   par_b_t_dist             : 25.         # bunch spacing [ns]
   par_n_inside_D1          : 5           # n. parasitic encounters inside D1
 
-log_file: 'log.json'
+log_file: 'tree_maker.log'

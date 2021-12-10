@@ -15,7 +15,7 @@ import time
 start = time.time()
 
 
-my_study='./study_001'
+my_study='./study_002'
 #my_study='./full_tune_scan_wfix'
 #my_study='./full_tune_scan_wfix_more_particles'
 #my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
@@ -33,13 +33,13 @@ if root.has_been('completed'):
     for node in root.generation(1):
         node_df = pd.read_parquet(f'{my_study}/{node.path}/final_summ_BBOFF.parquet')
         with open(f'{my_study}/{node.path}/config.yaml','r') as fid:
-            config_parent=yaml.load(fid) 
+            config_parent=yaml.safe_load(fid) 
         node_df['path']= f'{node.path}'
         for node_child in node.children:
         #os.sytem(f'bsub cd {node.path} &&  {node.path_template} ')
         #my_list.append(pd.read_parquet(f'{node.path}/test.parquet', columns=['x']).iloc[-1].x)
             with open(f'{my_study}/{node_child.path}/config.yaml','r') as fid:
-                 config=yaml.load(fid) 
+                 config=yaml.safe_load(fid) 
             particle=pd.read_parquet(config['particle_file'][7:])
             df=pd.read_parquet(f'{my_study}/{node_child.path}/output_particles.parquet')
             df['path 1']= f'{node.path}' 

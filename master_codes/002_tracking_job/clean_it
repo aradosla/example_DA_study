@@ -1,2 +1,0 @@
-rm *parquet
-rm -r __pycache__

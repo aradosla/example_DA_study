@@ -13,5 +13,4 @@ delta_max  :    27.e-5   # initial off-momentum
 # tracking
 n_turns    :    1000     # number of turns to track
 
-
-log_file   :    'log.json'
+log_file   :    'tree_maker.log'

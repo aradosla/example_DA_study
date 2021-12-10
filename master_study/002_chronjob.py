@@ -22,19 +22,19 @@ def get_info(root):
         my_dict = tree_maker.from_json(node.log_file)
         my_dict['parent'] = node.parent
         my_dict['name'] = node.name
-        my_dict['path'] = node.path
+        #my_dict['path'] = node.path
         my_list.append(my_dict)
     return pd.DataFrame(my_list)
 
 def get_list_descendant(root, operation='completed'):
     for node in root.descendants:
         if node.has_not_been(operation):
-            print(node.path)
+            print(node.get_absolute_path())
 
 # %%
 # Load the tree from a yaml
 if __name__=='__main__':
-    root = load_tree('./study_001/tree.json')
+    root = load_tree('tree.json')
     if root.has_been('completed'):
         print('All descendants of root are completed!')
     else:
@@ -47,5 +47,5 @@ if __name__=='__main__':
         else:
             for descendant in root.descendants:
                 if descendant.has_not_been('completed'):
-                     print(descendant.path)
+                     print("To be completed: "+ descendant.get_absolute_path())
 

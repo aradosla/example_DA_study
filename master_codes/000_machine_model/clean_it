@@ -1,9 +1,0 @@
-rm 000_pymask.py
-rm optics_specific_tools.py
-rm twiss_*
-rm final_*
-rm fc.*
-rm *.log
-rm *json
-rm -r temp __pycache__ xsuite_lines
-rm tools tracking_tools optics_toolkit errors beambeam_macros modules optics_repository
