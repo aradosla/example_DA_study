@@ -26,6 +26,23 @@ config=yaml.safe_load(open('config.yaml'))
 qx0 = np.arange(62.305, 62.330, 0.001)[::20]
 qy0 = np.arange(60.305, 60.330, 0.001)[::20]
 
+children={}
+for optics_job, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
+    optics_children={}
+    children[f'{optics_job:03}'] = {
+                                    'qx0':float(myq1),
+                                    'qy0':float(myq2),
+                                    'children':optics_children}
+    for track_job in range(15):
+        optics_children[f'{track_job:03}'] = {
+                    'particle_file': ('../../../master_jobs/'
+                                   '001_make_part_distribution/'
+                                   f'distrib_abc/{track_job:03}.parquet'),
+                    'xline_json': ('../xsuite_lines/'
+                                  'line_bb_for_tracking.json'),
+                    'n_turns': int(1000)}
+
+config['root']['children'] = children
 # %%
 """
 #### The root of the tree
