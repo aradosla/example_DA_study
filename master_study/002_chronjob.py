@@ -64,8 +64,8 @@ class cluster():
                     print(f'{node.get_abs_path()} is queuing.')
                 else:
                     if self.run_on == 'local_pc':
-                        fid.write(node.get_abs_path()
-                                  +f'/run.sh &\n')
+                        fid.write('bash ' + node.get_abs_path()
+                                  +'/run.sh &\n')
                     elif self.run_on == 'lsf':
                         fid.write("bsub -n 2 -q hpc_acc "
                                 # "-e error.txt -o output.txt "
