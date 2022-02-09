@@ -7,45 +7,139 @@ Example of a chronjob
 import pandas as pd
 import tree_maker
 from tree_maker import NodeJob
+import os
+#def load_tree(filename):
+#    try:
+#        root=tree_maker.tree_from_json(filename)
+#        return root
+#    except Exception as e:
+#        print(e)
+#        print('Probably you forgot to edit the address of you json file...')
 
-def load_tree(filename):
-    try:
-        root=tree_maker.tree_from_json(filename)
-        return root
-    except Exception as e:
-        print(e)
-        print('Probably you forgot to edit the address of you json file...')
+#def get_info(root):
+#    my_list = []
+#    for node in root.descendants:
+#        my_dict = tree_maker.from_json(node.log_file)
+#        my_dict['parent'] = node.parent
+#        my_dict['name'] = node.name
+#        #my_dict['path'] = node.path
+#        my_list.append(my_dict)
+#    return pd.DataFrame(my_list)
 
-def get_info(root):
-    my_list = []
-    for node in root.descendants:
-        my_dict = tree_maker.from_json(node.log_file)
-        my_dict['parent'] = node.parent
-        my_dict['name'] = node.name
-        #my_dict['path'] = node.path
-        my_list.append(my_dict)
-    return pd.DataFrame(my_list)
+#def get_list_descendant(root, operation='completed'):
+#    for node in root.descendants:
+#        if node.has_not_been(operation):
+#            print(node.get_absolute_path())
 
-def get_list_descendant(root, operation='completed'):
-    for node in root.descendants:
-        if node.has_not_been(operation):
-            print(node.get_absolute_path())
+class cluster():
+
+    def __init__(self, run_on='local_pc'):
+        self.run_on=run_on
+
+    def create_sub_file(self, list_of_nodes, filename='file.sub'):
+        running_jobs=self.running_jobs()
+        queuing_jobs=self.queuing_jobs()
+        with open(filename, 'w') as fid:
+            # head
+            if self.run_on == 'local_pc':
+                #python_env = (list_of_nodes[0]
+                #              .root
+                #              .parameters["setup_env_script"])
+                #fid.write(f'source {python_env}\n')
+                fid.write('# Running on local pc\n')
+            elif self.run_on == 'lsf':
+                fid.write('# Running on LSF \n')
+            elif self.run_on == 'htc':
+                fid.write('# This is a HTCondor submission file\n')
+                fid.write('error  = error.txt\n')
+                fid.write('output = output.txt\n')
+                fid.write('log  = log.txt\n')
+
+            for node in list_of_nodes:
+                if node.has_been('completed'):
+                    print(f'{node.get_abs_path()} is completed.')
+                elif node in running_jobs:
+                    print(f'{node.get_abs_path()} is running.')
+                elif node in queuing_jobs:
+                    print(f'{node.get_abs_path()} is queuing.')
+                else:
+                    if self.run_on == 'local_pc':
+                        fid.write(node.get_abs_path()
+                                  +f'/run.sh &\n')
+                    elif self.run_on == 'lsf':
+                        fid.write("bsub -n 2 -q hpc_acc "
+                                # "-e error.txt -o output.txt "
+                                 f"{node.get_abs_path()}/run.sh\n")
+                    elif self.run_on == 'htc':
+                        fid.write( "executable = "
+                                  f"{node.get_abs_path()}/run.sh\n"
+                                   "queue\n" )
+            # tail
+            if self.run_on == 'local_pc':
+                fid.write(f'#{self.run_on}\n')
+            elif self.run_on == 'lsf':
+                fid.write(f'#{self.run_on}\n')
+            elif self.run_on == 'htc':
+                pass
+
+    def submit(self, filename):
+        if self.run_on == 'local_pc':
+            os.system(f'bash {filename}')
+        elif self.run_on == 'lsf':
+            os.system(f'bash {filename}')
+        elif self.run_on == 'htc':
+            pass
+
+    def running_jobs(self):
+        # for local jobs
+        # ps -ef | grep "run.sh" | grep -v grep
+        if self.run_on == 'local_pc':
+            #os.system(f'bash {filename}')
+            return []
+        elif self.run_on == 'lsf':
+            return []
+        elif self.run_on == 'htc':
+            return []
+
+    def queuing_jobs(self):
+        return []
+
+
 
 # %%
 # Load the tree from a yaml
 if __name__=='__main__':
-    root = load_tree('tree.json')
+    root = tree_maker.tree_from_json('tree_maker.json')
     if root.has_been('completed'):
         print('All descendants of root are completed!')
     else:
-        for node in root.descendants:
-            node.smart_run()
+        my_run_on = cluster(root
+                            .parameters['generations']['1']['run_on'])
+        my_file = 'first_generation.sub'
+        my_run_on.create_sub_file(root.generation(1), my_file)
+        my_run_on.submit(my_file)
+        if all([node.has_been('completed') for
+                node in root.generation(1)]):
+            my_run_on = cluster(root
+                                .parameters['generations']['2']['run_on'])
+            my_file = 'second_generation.sub'
+            my_run_on.create_sub_file(root.generation(2), my_file)
+            my_run_on.submit(my_file)
+            if all([node.has_been('completed') for
+                   node in root.generation(2)]):
+                my_run_on = cluster(root
+                                    .parameters['generations']['3']['run_on'])
+                my_file = 'third_generation.sub'
+                my_run_on.create_sub_file(root.generation(3),
+                                           'third_generation.sub')
+                my_run_on.submit(my_file)
+#          node.smart_run()
         if all([descendant.has_been('completed')
                 for descendant in root.descendants]):
             root.tag_as('completed')
             print('All descendants of root are completed!')
-        else:
-            for descendant in root.descendants:
-                if descendant.has_not_been('completed'):
-                     print("To be completed: "+ descendant.get_absolute_path())
+#        else:
+#            for descendant in root.descendants:
+#                if descendant.has_not_been('completed'):
+#                     print("To be completed: "+ descendant.get_abs_path())
 

@@ -8,18 +8,13 @@ from pathlib import Path
 import itertools
 import numpy as np
 import yaml
-from udf import string_run
+from user_defined_functions import generate_run_sh
 
-# %%
-# Clearly for this easy task on can do all in the very same python kernel
-# BUT here we want to mimic the typical flow
-# 1. MADX for optics matching/error seeding
-# 2. Tracking for FMA and or DA studies
-# 3. simulation baby-sitting and
-# 4. postprocessing
-
+# Import the configuration
 config=yaml.safe_load(open('config.yaml'))
 
+
+# The user defines the variable to scan
 # machine parameters scans
 qx0 = np.arange(62.305, 62.330, 0.001)[::20]
 qy0 = np.arange(60.305, 60.330, 0.001)[::20]
@@ -39,37 +34,17 @@ for optics_job, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
                                   'line_bb_for_tracking.json'),
                     'n_turns': int(1000)}
 
-#config['root']['children'] = children
+if config['root']['use_yaml_children']== False:
+    config['root']['children'] = children
 
-# %%
-"""
-#### The root of the tree
-"""
+# Create tree object
 start_time = time.time()
 root = initialize(config)
 print('Done with the tree creation.')
 print("--- %s seconds ---" % (time.time() - start_time))
 
-# %%
-"""
-### Cloning the templates of the nodes
-From python objects we move the nodes to the file-system.
-"""
+# From python objects we move the nodes to the file-system.
 start_time = time.time()
-root.clone()
-print('The tree structure is moved to the file system.')
-print("--- %s seconds ---" % (time.time() - start_time))
-
-# %%
-# Mutation
-start_time = time.time() 
-root.mutate_descendants()
-print('The tree structure is mutated.')
-print("--- %s seconds ---" % (time.time() - start_time))
-
-# %%
-# Prepare the run.sh
-start_time = time.time() 
-root.write_run_files(string_run)
-print('The excutables are ready.')
+root.make_folders(generate_run_sh)
+print('The tree folders are ready.')
 print("--- %s seconds ---" % (time.time() - start_time))

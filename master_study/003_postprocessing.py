@@ -15,14 +15,13 @@ import time
 start = time.time()
 
 
-my_study='./study_002'
+my_study='.'
 #my_study='./full_tune_scan_wfix'
 #my_study='./full_tune_scan_wfix_more_particles'
 #my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
 
 try:
-    root=tree_maker.tree_from_json(
-    f'{my_study}/tree.json')
+    root=tree_maker.tree_from_json(f'{my_study}/tree_maker.json')
 except Exception as e:
     print(e)
     print('Probably you forgot to edit the address of you json file...')
@@ -30,24 +29,26 @@ except Exception as e:
 my_list=[]
 if root.has_been('completed'):
     print('All descendants of root are completed!')
-    for node in root.generation(1):
-        node_df = pd.read_parquet(f'{my_study}/{node.path}/final_summ_BBOFF.parquet')
-        with open(f'{my_study}/{node.path}/config.yaml','r') as fid:
-            config_parent=yaml.safe_load(fid) 
-        node_df['path']= f'{node.path}'
+    for node in root.generation(2):
+        node_df = pd.read_parquet(f'{node.get_abs_path()}/final_summ_BBOFF.parquet')
+        with open(f'{node.get_abs_path()}/config.yaml','r') as fid:
+            config_parent=yaml.safe_load(fid)
+        node_df['path']= f'{node.get_abs_path()}'
         for node_child in node.children:
         #os.sytem(f'bsub cd {node.path} &&  {node.path_template} ')
         #my_list.append(pd.read_parquet(f'{node.path}/test.parquet', columns=['x']).iloc[-1].x)
-            with open(f'{my_study}/{node_child.path}/config.yaml','r') as fid:
-                 config=yaml.safe_load(fid) 
-            particle=pd.read_parquet(config['particle_file'][7:])
-            df=pd.read_parquet(f'{my_study}/{node_child.path}/output_particles.parquet')
-            df['path 1']= f'{node.path}' 
-            df['name 1']= f'{node.name}' 
-            df['path 2']= f'{node_child.path}' 
-            df['name 2']= f'{node_child.name}' 
-            df['q1 final']=node_df['q1'].values[0] 
-            df['q2 final']=node_df['q2'].values[0] 
+            with open(f'{node_child.get_abs_path()}/config.yaml','r') as fid:
+                 config=yaml.safe_load(fid)
+            particle=pd.read_parquet(
+                     f"{node_child.get_abs_path()}/{config['particle_file']}")
+            df=pd.read_parquet(
+                     f'{node_child.get_abs_path()}/output_particles.parquet')
+            df['path 1']= f'{node.get_abs_path()}'
+            df['name 1']= f'{node.name}'
+            df['path 2']= f'{node_child.get_abs_path()}'
+            df['name 2']= f'{node_child.name}'
+            df['q1 final']=node_df['q1'].values[0]
+            df['q2 final']=node_df['q2'].values[0]
             df['q1']=config_parent['qx0']
             df['q2']=config_parent['qy0']
             df=pd.merge(df, particle, on=["particle_id"])
