@@ -2,7 +2,7 @@ import subprocess
 import os
 
 # from (https://github.com/broadinstitute/catch/blob/
-#  2fedca15f921116f580de8b2ae7ac9972932e59e/catch/utils/version.py#L43)
+#       2fedca15f921116f580de8b2ae7ac9972932e59e/catch/utils/version.py#L43)
 def get_version_from_git_describe(path=None):
     """Determine a version according to git.
     This calls 'git describe', if git is available.
@@ -26,3 +26,13 @@ def get_version_from_git_describe(path=None):
         ver = None
         os.chdir(cwd)
     return ver
+
+# from (https://stackoverflow.com/questions/31304041/
+#       how-to-retrieve-pip-requirements-freeze-within-python)
+def get_pip_freeze():
+    try:
+        from pip._internal.operations import freeze
+    except ImportError:  # pip < 10.0
+        from pip.operations import freeze
+    x = freeze.freeze()
+    return [ii for ii in x]

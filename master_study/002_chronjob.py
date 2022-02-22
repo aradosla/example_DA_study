@@ -4,10 +4,15 @@ Example of a chronjob
 """
 
 # %%
+
+import pdb
 import pandas as pd
 import tree_maker
 from tree_maker import NodeJob
 import os
+import psutil
+from pathlib import Path
+
 #def load_tree(filename):
 #    try:
 #        root=tree_maker.tree_from_json(filename)
@@ -38,7 +43,9 @@ class cluster():
 
     def create_sub_file(self, list_of_nodes, filename='file.sub'):
         running_jobs=self.running_jobs()
+        print(f"running: {running_jobs}")
         queuing_jobs=self.queuing_jobs()
+        print(f"queuing: {queuing_jobs}")
         with open(filename, 'w') as fid:
             # head
             if self.run_on == 'local_pc':
@@ -58,7 +65,7 @@ class cluster():
             for node in list_of_nodes:
                 if node.has_been('completed'):
                     print(f'{node.get_abs_path()} is completed.')
-                elif node in running_jobs:
+                elif node.get_abs_path() in running_jobs:
                     print(f'{node.get_abs_path()} is running.')
                 elif node in queuing_jobs:
                     print(f'{node.get_abs_path()} is queuing.')
@@ -93,9 +100,19 @@ class cluster():
     def running_jobs(self):
         # for local jobs
         # ps -ef | grep "run.sh" | grep -v grep
+        my_list = []
         if self.run_on == 'local_pc':
-            #os.system(f'bash {filename}')
-            return []
+            for ps in psutil.pids():
+                aux=psutil.Process(ps).cmdline()
+                if len(aux)>1:
+                    if 'run.sh' in aux[-1]:
+                        my_list.append(str(Path(psutil
+                                                .Process(ps)
+                                                .cmdline()[-1])
+                                           .parent))
+
+
+            return my_list
         elif self.run_on == 'lsf':
             return []
         elif self.run_on == 'htc':
