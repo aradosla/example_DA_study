@@ -36,6 +36,7 @@ for optics_job, (myq1, myq2) in enumerate(itertools.product(qx0, qy0)):
 
 if config['root']['use_yaml_children']== False:
     config['root']['children'] = children
+config['root']['setup_env_script'] = os.getcwd() + '/../miniconda/bin/activate'
 
 # Create tree object
 start_time = time.time()
