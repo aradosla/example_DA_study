@@ -22,7 +22,7 @@
         - clean_it.sh
       run_on: 'htc'
       htc_job_flavor: 'tomorrow' # optional parameter to define job flavor, default is espress
-  use_yaml_children: true
+  use_yaml_children: false
   # first generation
   children:
     '000_make_particle':

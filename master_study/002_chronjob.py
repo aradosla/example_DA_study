@@ -37,9 +37,12 @@ from pathlib import Path
 #            print(node.get_absolute_path())
 
 class cluster():
-
     def __init__(self, run_on='local_pc'):
-        self.run_on=run_on
+       if run_on in ['local_pc', 'htc', 'slurm']:
+            self.run_on=run_on
+       else:
+            import sys
+            sys.exit('Error: Submission mode specified is not yet implemented')
 
     def create_sub_file(self, list_of_nodes, filename='file.sub'):
         running_jobs=self.running_jobs()
@@ -56,6 +59,8 @@ class cluster():
                 fid.write('# Running on local pc\n')
             elif self.run_on == 'lsf':
                 fid.write('# Running on LSF \n')
+            elif self.run_on == 'slurm':
+                fid.write('# Running on SLURM \n')
             elif self.run_on == 'htc':
                 fid.write('# This is a HTCondor submission file\n')
                 fid.write('error  = error.txt\n')
@@ -82,6 +87,9 @@ class cluster():
                         fid.write("bsub -n 2 -q hpc_acc "
                                 # "-e error.txt -o output.txt "
                                  f"{node.get_abs_path()}/run.sh\n")
+                    elif self.run_on == 'slurm':
+                        fid.write("sbatch --ntasks=2 --partition=slurm_hpc_acc --output=output.txt "
+                                 f"{node.get_abs_path()}/run.sh\n")
                     elif self.run_on == 'htc':
                         # initialdir is needed so that each job has it own output, error and log.txt
                         fid.write( "initialdir = "
@@ -94,6 +102,8 @@ class cluster():
                 fid.write(f'#{self.run_on}\n')
             elif self.run_on == 'lsf':
                 fid.write(f'#{self.run_on}\n')
+            elif self.run_on == 'slurm':
+                fid.write(f'#{self.run_on}\n')
             elif self.run_on == 'htc':
                 fid.write(f'#{self.run_on}\n')
 
@@ -101,6 +111,8 @@ class cluster():
         if self.run_on == 'local_pc':
             os.system(f'bash {filename}')
         elif self.run_on == 'lsf':
+            os.system(f'bash {filename}')
+        elif self.run_on == 'slurm':
             os.system(f'bash {filename}')
         elif self.run_on == 'htc':
             os.system(f'condor_submit {filename}')
@@ -123,6 +135,8 @@ class cluster():
 
             return my_list
         elif self.run_on == 'lsf':
+            return []
+        elif self.run_on == 'slurm':
             return []
         elif self.run_on == 'htc':
             return []

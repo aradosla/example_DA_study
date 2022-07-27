@@ -66,9 +66,9 @@ particles.particle_id = particle_df.particle_id.values
 # Symplify line #
 #################
 
-#line.remove_inactive_multipoles(inplace=True)
-#line.remove_zero_length_drifts(inplace=True)
-#line.merge_consecutive_drifts(inplace=True)
+line.remove_inactive_multipoles(inplace=True)
+line.remove_zero_length_drifts(inplace=True)
+line.merge_consecutive_drifts(inplace=True)
 #line.merge_consecutive_multipoles(inplace=True)
 
 #################
