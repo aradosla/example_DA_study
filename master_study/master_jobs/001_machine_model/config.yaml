@@ -5,7 +5,7 @@ links:
   tools: 'tracking_tools/lhctoolkit'
   #  beambeam_macros: null 
   errors: 'tracking_tools/lhcerrors'
-  optics_repository: '/afs/cern.ch/eng/lhc/optics'
+  optics_repository: 'tracking_tools/hllhc15'
   
 # Mode - choose between:
 
@@ -28,7 +28,7 @@ mode: 'b1_with_bb'
 #   on_sep2: 0.14471680504084292
 
 # Optics file
-optics_file: 'optics_repository/HLLHCV1.5/round/opt_round_200_1500_thin.madx' # 15 cm
+optics_file: 'optics_repository/round/opt_round_200_1500_thin.madx' # 15 cm
 # Optics version
 optics_version: '1.5'
 
