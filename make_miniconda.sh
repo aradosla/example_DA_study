@@ -8,6 +8,8 @@ git clone git@github.com:lhcopt/lhcmask.git -b release/v1.3.3
 python -m pip install -e lhcmask
 git clone git@github.com:lhcopt/lhcerrors.git
 git clone git@github.com:lhcopt/lhctoolkit.git
+git clone git@github.com:lhcopt/hllhc15.git
+git clone $(whoami)@lxplus.cern.ch:/afs/cern.ch/eng/lhc/optics/runIII
 cd master_study/master_jobs/001_machine_model/
 python 001_copy_from_pymask_examples.py
 cd ../../../
