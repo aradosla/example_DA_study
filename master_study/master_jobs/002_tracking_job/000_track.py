@@ -36,7 +36,7 @@ with open(config['xline_json']) as fid:
 
 p_co = xp.Particles.from_dict(dd['particle_on_tracker_co'])
 line = xt.Line.from_dict(dd)
-R_matrix = dd['RR_finite_diffs']
+R_matrix = np.array(dd['RR_finite_diffs'])
 
 #####################################################
 # Get normalized coordinateds of particles to track #
@@ -69,7 +69,7 @@ particles.particle_id = particle_df.particle_id.values
 line.remove_inactive_multipoles(inplace=True)
 line.remove_zero_length_drifts(inplace=True)
 line.merge_consecutive_drifts(inplace=True)
-line.merge_consecutive_multipoles(inplace=True)
+#line.merge_consecutive_multipoles(inplace=True)
 
 #################
 # Build tracker #

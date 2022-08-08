@@ -35,7 +35,7 @@ optics_version: '1.5'
 # Enable checks
 check_betas_at_ips: true
 check_separations_at_ips: true
-save_intermediate_twiss: true
+save_intermediate_twiss: false
 
 # Tolerances for checks [ip1, ip2, ip5, ip8]
 tol_beta: 
