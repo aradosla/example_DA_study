@@ -2,6 +2,23 @@
 
 ### Installation instructions
 
+Do 
+```
+git clone git@github.com:xsuite/example_DA_study.git -b release/v0.1.0
+```
+
+then 
+
+```
+cd example_DA_study
+source make_miniconda.sh
+```
+
+This will install the needed python distributions.
+
+### OLD
+
+
 ```bash 
 # install miniconda, then:
 pip install xsuite
