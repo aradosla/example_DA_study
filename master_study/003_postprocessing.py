@@ -15,10 +15,7 @@ import time
 start = time.time()
 
 
-my_study='HL_tunescan_20cm'
-#my_study='./full_tune_scan_wfix'
-#my_study='./full_tune_scan_wfix_more_particles'
-#my_study='./full_tune_scan_wfix_more_particles_tunes_as_sixt'
+my_study='.'
 problematic = []
 try:
     root=tree_maker.tree_from_json(f'tree_maker.json')
