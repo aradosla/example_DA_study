@@ -17,8 +17,8 @@ config=yaml.safe_load(open('config.yaml'))
 
 # The user defines the variable to scan
 # machine parameters scans
-qx0 = np.arange(62.305, 62.330, 0.001)[:]
-qy0 = np.arange(60.305, 60.330, 0.001)[:]
+qx0 = np.arange(62.305, 62.330, 0.001)
+qy0 = np.arange(60.305, 60.330, 0.001)
 
 study_name = "HL_tunescan_20cm"
 
