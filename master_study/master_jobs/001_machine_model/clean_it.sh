@@ -1,5 +1,4 @@
-#rm 000_pymask.py
-#rm optics_specific_tools.py
+# ! To update 
 rm -f twiss_*
 rm -f final_*
 rm -f fc.*
