@@ -6,8 +6,11 @@ mkdir modules
 cd modules
 git clone -b release/v0.1.0 git@github.com:xsuite/tree_maker.git
 python -m pip install -e tree_maker
-# git clone https://github.com/PyCOMPLETE/FillingPatterns.git
-# python -m pip install ./FillingPatterns
-cd master_study/master_jobs/001_machine_model/
-python 001_copy_from_pymask_examples.py
-cd ../../../
+git clone https://github.com/xsuite/xmask.git
+cd xmask
+git submodule init
+git submodule update
+pip install -e .
+cd ../../
+xsuite-prebuild
+
