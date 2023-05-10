@@ -118,7 +118,7 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ---Levelling
 # ==================================================================================================
 # Build trackers
-collider.build_trackers()
+# collider.build_trackers()
 
 # Read knobs and tuning settings from config file
 config_lumi_leveling = config["config_lumi_leveling"]
@@ -150,7 +150,7 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ---Configure beam-beam
 # ==================================================================================================
 
-collider.build_trackers()
+# collider.build_trackers()
 
 # Configure beam-beam lenses
 print("Configuring beam-beam lenses...")

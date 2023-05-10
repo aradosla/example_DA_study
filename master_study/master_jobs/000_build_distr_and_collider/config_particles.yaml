@@ -1,0 +1,6 @@
+log_file: 'tree_maker.log'
+r_min: 2.0
+r_max: 10.0
+n_r: 256
+n_angles: 5
+n_split: 15
