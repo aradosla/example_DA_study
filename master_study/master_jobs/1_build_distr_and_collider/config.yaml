@@ -97,8 +97,8 @@ config_collider:
       i_oct_b2: 60. # [A]
 
     closed_orbit_correction:
-      lhcb1: tools/corr_co_lhcb1.json
-      lhcb2: tools/corr_co_lhcb2.json
+      lhcb1: correction/corr_co_lhcb1.json
+      lhcb2: correction/corr_co_lhcb2.json
 
     # Tunes and chromaticities
     qx:

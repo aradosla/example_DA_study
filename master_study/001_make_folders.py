@@ -35,7 +35,7 @@ n_split = 15
 # Path for the collider config: master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
 # ==================================================================================================
 # Optic file path (round or flat)
-optics_file = "acc-models-lhc/flatcc/opt_flatvh_75_180_1500_thin.madx"
+optics_file = "acc-models-lhc/flatcc/opt_flatvh_75_180_1500_thin.xtrack"
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -176,14 +176,14 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     # Ignore conditions below the upper diagonal as this can't exist in the real machine
     if qy < (qx - 2 + 0.005):
         continue
-    children[study_name]["children"][f"madx_{idx_job:04}"] = {
-        "qx0": float(qx),
-        "qy0": float(qy),
+    children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
+        "qx": float(qx),
+        "qy": float(qy),
         "particle_file": f"../../particles/{track:02}.parquet",
         "collider_file": f"../../collider.json",
         "n_turns": n_turns,
         "delta_max": delta_max,
-        "log_file": f"{os.getcwd()}/{study_name}/madx_{idx_job:04}/tree_maker.log",
+        "log_file": f"{os.getcwd()}/{study_name}/xtrack_{idx_job:04}/tree_maker.log",
     }
 
 # ==================================================================================================
