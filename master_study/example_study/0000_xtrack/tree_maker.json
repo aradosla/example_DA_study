@@ -1,0 +1,10 @@
+{
+  "name": "root",
+  "parameters": {
+    "n_turns": 1000,
+    "particle_file": "../particles/000.parquet",
+    "qx0": 62.31,
+    "qy0": 60.32,
+    "xline_json": "../collider/collider_tuned_and_leveled_bb_on.json"
+  }
+}

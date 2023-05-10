@@ -1,16 +1,16 @@
----
-# Description of the xline
-xline_json :    '../001_machine_model/xsuite_lines/line_bb_for_tracking.json'
+# Collider file
+collider_json :    '../1_build_distr_and_collider/collider/collider_tuned_and_leveled_bb_on.json'
 
-# distribution in the normalized xy space
-particle_file:  '../000_make_part_distribution/particles/000.parquet'
+# Distribution in the normalized xy space
+particle_file:  '../1_build_distr_and_collider/particles/000.parquet'
 
-# metric
+# Metric
 epsn_1     :    2.5e-6   # normalised emittance x
 epsn_2     :    2.5e-6   # normalised emittance y
 delta_max  :    27.e-5   # initial off-momentum
 
-# tracking
+# Tracking
 n_turns    :    1000     # number of turns to track
 
+# Log
 log_file   :    'tree_maker.log'

@@ -3,13 +3,13 @@
   generations:
     1: # Build the particle distribution and base collider
       job_folder: 'master_jobs/1_build_distr_and_collider'
-      job_executable: 000_build_distr_and_collider.py # has to be a python file
+      job_executable: 1_build_distr_and_collider.py # has to be a python file
       files_to_clone: # relative to the template folder
         - clean_it.sh
         - gen_config_orbit_correction.py
         - optics_specific_tools_hlhc15.py
       run_on: 'local_pc'
-    2: # Launch the pymask and prepare the xlines
+    2: # Launch the pymask and prepare the colliders
       job_folder: 'master_jobs/2_tune_and_track'
       job_executable: 2_tune_and_track.py # has to be a python file
       files_to_clone: # relative to the template folder
@@ -21,24 +21,15 @@
   children:
     'example_study':
       children:
-        '000_madx':
+        '0000_xtrack':
           qx0: 62.31
           qy0: 60.32
-          test: 'test'
-          children:
-            '000_xsuite':
-              particle_file: '../../particles/000.parquet' 
-              xline_json:  '../xsuite_lines/line_bb_for_tracking.json'
-              n_turns: 1000
-            '001_xsuite':
-              particle_file: '../../particles/000.parquet' 
-              xline_json:  '../xsuite_lines/line_bb_for_tracking.json'
-              n_turns: 2000
-        '001_madx':
+          particle_file: '../particles/000.parquet' 
+          collider_json:  '../collider/collider_tuned_and_leveled_bb_on.json'
+          n_turns: 1000
+        '0001_xtrack':
           qx0: 62.313
           qy0: 60.318
-          children:
-            '000_xsuite':
-              particle_file: '../../particles/000.parquet' 
-              xline_json:  '../xsuite_lines/line_bb_for_tracking.json'
-              n_turns: 1000
+          particle_file: '../particles/000.parquet' 
+          collider_json:  '../collider/collider_tuned_and_leveled_bb_on.json'
+          n_turns: 1000
