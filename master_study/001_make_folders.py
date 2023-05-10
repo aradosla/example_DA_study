@@ -179,12 +179,15 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
         "qx": float(qx),
         "qy": float(qy),
-        "particle_file": f"../../particles/{track:02}.parquet",
-        "collider_file": f"../../collider.json",
+        "particle_file": f"../particles/{track:02}.parquet",
+        "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,
         "delta_max": delta_max,
         "log_file": f"{os.getcwd()}/{study_name}/xtrack_{idx_job:04}/tree_maker.log",
     }
+    # ! Fix this by adding the parameters to scan in a children of the collider... Check all the possible parameters to scan
+    # ! in the file 2_tune_and_track.py
+
 
 # ==================================================================================================
 # --- Simulation configuration
