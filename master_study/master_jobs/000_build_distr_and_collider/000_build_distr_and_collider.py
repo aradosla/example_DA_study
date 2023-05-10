@@ -8,18 +8,64 @@ import xmask as xm
 import xmask.lhc as xlhc
 import shutil
 import json
+import yaml
+import tree_maker
+import numpy as np
+import itertools
+import pandas as pd
 
 # Import user-defined optics-specific tools
 from tools import optics_specific_tools_hlhc15 as ost
 
 # ==================================================================================================
-# --- Build collider from mad model
+# --- Load configuration file
+# ==================================================================================================
+# Load configuration
+with open("config.yaml", "r") as fid:
+    configuration = yaml.safe_load(fid)
+config_particles = configuration["particles"]
+config_collider = configuration["collider"]
+
+# Start tree_maker logging if log_file is present in config
+if tree_maker is not None and "log_file" in configuration:
+    tree_maker.tag_json.tag_it(configuration["log_file"], "started")
+# ==================================================================================================
+# --- Build particle distribution
 # ==================================================================================================
 
-# Read config file
-with open("config.yaml", "r") as fid:
-    config = xm.yaml.load(fid)
-config_mad_model = config["config_mad"]
+# Define radius distribution
+r_min = config_collider["r_min"]
+r_max = config_collider["r_max"]
+n_r = config_collider["n_r"]
+radial_list = np.linspace(r_min, r_max, n_r, endpoint=False)
+
+# Define angle distribution
+n_angles = config_collider["n_angles"]
+theta_list = np.linspace(0, 90, n_angles + 2)[1:-1]
+
+# Define particle distribution as a cartesian product of the above
+particle_list = [
+    (particle_id, ii[0], ii[1])
+    for particle_id, ii in enumerate(itertools.product(radial_list, theta_list))
+]
+
+# Split distribution into several chunks for parallelization
+n_split = config_collider["n_split"]
+particle_list = list(np.array_split(particle_list, n_split))
+
+# Write distribution to parquet files
+distributions_folder = "./particles"
+os.makedirs(distributions_folder, exist_ok=True)
+for idx_chunk, my_list in enumerate(particle_list):
+    pd.DataFrame(
+        my_list,
+        columns=["particle_id", "normalized amplitude in xy-plane", "angle in xy-plane [deg]"],
+    ).to_parquet(f"{distributions_folder}/{idx_chunk:02}.parquet")
+
+# ==================================================================================================
+# --- Build collider from mad model
+# ==================================================================================================
+config_mad_model = config_collider["config_mad"]
 
 # Make mad environment
 xm.make_mad_environment(links=config_mad_model["links"])
@@ -60,7 +106,7 @@ os.unlink("acc-models-lhc")
 # ==================================================================================================
 # --- Install beam-beam
 # ==================================================================================================
-config_bb = config["config_beambeam"]
+config_bb = config_collider["config_beambeam"]
 
 # Install beam-beam lenses (inactive and not configured)
 collider.install_beambeam_interactions(
@@ -78,13 +124,8 @@ collider.install_beambeam_interactions(
 # ==================================================================================================
 # ---Knobs and tuning
 # ==================================================================================================
-# Build trackers
-collider.build_trackers()
-
 # Read knobs and tuning settings from config file
-with open("config.yaml", "r") as fid:
-    config = xm.yaml.load(fid)
-conf_knobs_and_tuning = config["config_knobs_and_tuning"]
+conf_knobs_and_tuning = config_collider["config_knobs_and_tuning"]
 
 # Set all knobs (crossing angles, dispersion correction, rf, crab cavities,
 # experimental magnets, etc.)
@@ -117,19 +158,14 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ==================================================================================================
 # ---Levelling
 # ==================================================================================================
-# Build trackers
-# collider.build_trackers()
-
 # Read knobs and tuning settings from config file
-config_lumi_leveling = config["config_lumi_leveling"]
+config_lumi_leveling = config_collider["config_lumi_leveling"]
 
 xlhc.luminosity_leveling(
     collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
 )
 
 # Re-match tunes, and chromaticities
-conf_knobs_and_tuning = config["config_knobs_and_tuning"]
-
 for line_name in ["lhcb1", "lhcb2"]:
     knob_names = conf_knobs_and_tuning["knob_names"][line_name]
     targets = {
@@ -145,13 +181,10 @@ for line_name in ["lhcb1", "lhcb2"]:
         knob_names=knob_names,
         targets=targets,
     )
-    
+
 # ==================================================================================================
 # ---Configure beam-beam
 # ==================================================================================================
-
-# collider.build_trackers()
-
 # Configure beam-beam lenses
 print("Configuring beam-beam lenses...")
 collider.configure_beambeam_interactions(
@@ -173,8 +206,11 @@ if "mask_with_filling_pattern" in config_bb:
         i_bunch_cw=i_bunch_cw,
         i_bunch_acw=i_bunch_acw,
     )
-    
+
 # ==================================================================================================
-# ---Save to json
+# ---Save to json and log result
 # ==================================================================================================
 collider.to_json("collider/collider_tuned_and_leveled_bb_on.json")
+
+if tree_maker is not None:
+    tree_maker.tag_json.tag_it(configuration["log_file"], "completed")

@@ -13,29 +13,6 @@ import os
 import psutil
 from pathlib import Path
 
-#def load_tree(filename):
-#    try:
-#        root=tree_maker.tree_from_json(filename)
-#        return root
-#    except Exception as e:
-#        print(e)
-#        print('Probably you forgot to edit the address of you json file...')
-
-#def get_info(root):
-#    my_list = []
-#    for node in root.descendants:
-#        my_dict = tree_maker.from_json(node.log_file)
-#        my_dict['parent'] = node.parent
-#        my_dict['name'] = node.name
-#        #my_dict['path'] = node.path
-#        my_list.append(my_dict)
-#    return pd.DataFrame(my_list)
-
-#def get_list_descendant(root, operation='completed'):
-#    for node in root.descendants:
-#        if node.has_not_been(operation):
-#            print(node.get_absolute_path())
-
 class cluster():
     def __init__(self, run_on='local_pc'):
        if run_on in ['local_pc', 'htc', 'slurm']:
@@ -52,10 +29,6 @@ class cluster():
         with open(filename, 'w') as fid:
             # head
             if self.run_on == 'local_pc':
-                #python_env = (list_of_nodes[0]
-                #              .root
-                #              .parameters["setup_env_script"])
-                #fid.write(f'source {python_env}\n')
                 fid.write('# Running on local pc\n')
             elif self.run_on == 'lsf':
                 fid.write('# Running on LSF \n')
