@@ -4,7 +4,7 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
-  
+
 config_collider:
   config_mad:
     # Links to be made for tools and scripts
@@ -12,7 +12,7 @@ config_collider:
       acc-models-lhc: /afs/cern.ch/eng/lhc/optics/HLLHCV1.5
 
     # Optics file
-    optics_file: acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx # round/opt_round_150_1500_thin.madx #
+    optics_file: acc-models-lhc/flatcc/opt_flatvh_75_180_1500_thin.xtrack # round/opt_round_150_1500_thin.madx #
 
     # Beam parameters
     beam_config:
@@ -34,7 +34,7 @@ config_collider:
     # Optics version, for choice of correction algorithms
     # (ver_lhc_run or ver_hllhc_optics)
     ver_hllhc_optics: 1.5
-    ver_lhc_run: null
+    ver_lhc_run:
 
     # Parameters for machine imperfections
     pars_for_imperfections:
@@ -151,64 +151,64 @@ config_collider:
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
-      plane: "x"
+      plane: x
       impose_separation_orthogonal_to_crossing: false
       knobs:
-        - on_sep2
+      - on_sep2
       bump_range:
         lhcb1:
-          - e.ds.l2.b1
-          - s.ds.r2.b1
+        - e.ds.l2.b1
+        - s.ds.r2.b1
         lhcb2:
-          - s.ds.r2.b2
-          - e.ds.l2.b2
+        - s.ds.r2.b2
+        - e.ds.l2.b2
       preserve_angles_at_ip: true
       preserve_bump_closure: true
       corrector_knob_names:
         # to preserve angles at ip
-        - corr_co_acbyvs4.l2b1
-        - corr_co_acbyhs4.l2b1
-        - corr_co_acbyvs4.r2b2
-        - corr_co_acbyhs4.r2b2
+      - corr_co_acbyvs4.l2b1
+      - corr_co_acbyhs4.l2b1
+      - corr_co_acbyvs4.r2b2
+      - corr_co_acbyhs4.r2b2
         # to close the bumps
-        - corr_co_acbyvs4.l2b2
-        - corr_co_acbyhs4.l2b2
-        - corr_co_acbyvs4.r2b1
-        - corr_co_acbyhs4.r2b1
-        - corr_co_acbyhs5.l2b2
-        - corr_co_acbyvs5.l2b2
-        - corr_co_acbchs5.r2b1
-        - corr_co_acbcvs5.r2b1
+      - corr_co_acbyvs4.l2b2
+      - corr_co_acbyhs4.l2b2
+      - corr_co_acbyvs4.r2b1
+      - corr_co_acbyhs4.r2b1
+      - corr_co_acbyhs5.l2b2
+      - corr_co_acbyvs5.l2b2
+      - corr_co_acbchs5.r2b1
+      - corr_co_acbcvs5.r2b1
 
     ip8:
       luminosity: 2.0e+33
       num_colliding_bunches: 1886
       impose_separation_orthogonal_to_crossing: true
       knobs:
-        - on_sep8h
-        - on_sep8v
+      - on_sep8h
+      - on_sep8v
       bump_range:
         lhcb1:
-          - e.ds.l8.b1
-          - s.ds.r8.b1
+        - e.ds.l8.b1
+        - s.ds.r8.b1
         lhcb2:
-          - s.ds.r8.b2
-          - e.ds.l8.b2
+        - s.ds.r8.b2
+        - e.ds.l8.b2
       preserve_angles_at_ip: true
       preserve_bump_closure: true
       corrector_knob_names:
         # to preserve angles at ip
-        - corr_co_acbyvs4.l8b1
-        - corr_co_acbyhs4.l8b1
-        - corr_co_acbyvs4.r8b2
-        - corr_co_acbyhs4.r8b2
+      - corr_co_acbyvs4.l8b1
+      - corr_co_acbyhs4.l8b1
+      - corr_co_acbyvs4.r8b2
+      - corr_co_acbyhs4.r8b2
         # to close the bumps
-        - corr_co_acbyvs4.l8b2
-        - corr_co_acbyhs4.l8b2
-        - corr_co_acbyvs4.r8b1
-        - corr_co_acbyhs4.r8b1
-        - corr_co_acbcvs5.l8b2
-        - corr_co_acbchs5.l8b2
-        - corr_co_acbyvs5.r8b1
-        - corr_co_acbyhs5.r8b1
-log_file: 'tree_maker.log'
+      - corr_co_acbyvs4.l8b2
+      - corr_co_acbyhs4.l8b2
+      - corr_co_acbyvs4.r8b1
+      - corr_co_acbyhs4.r8b1
+      - corr_co_acbcvs5.l8b2
+      - corr_co_acbchs5.l8b2
+      - corr_co_acbyvs5.r8b1
+      - corr_co_acbyhs5.r8b1
+log_file: tree_maker.log

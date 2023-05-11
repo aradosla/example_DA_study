@@ -16,7 +16,7 @@
         - clean_it.sh
       run_on: 'local_pc' #'htc'
       htc_job_flavor: 'tomorrw' # optional parameter to define job flavor, default is espresso
-  use_yaml_children: true
+  use_yaml_children: false
   # Example of first generation (potentially overwritten when running 001_make_folders.py)
   children:
     'example_study':
