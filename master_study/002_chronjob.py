@@ -132,7 +132,8 @@ class cluster:
 # %%
 # Load the tree from a yaml
 if __name__ == "__main__":
-    root = tree_maker.tree_from_json("tree_maker_example_HL_tunescan.json")
+    # root = tree_maker.tree_from_json("tree_maker_example_HL_tunescan.json")
+    root = tree_maker.tree_from_json("tree_maker_opt_flathv_75_1500_withBB_chroma15_1p4.json")
     if root.has_been("completed"):
         print("All descendants of root are completed!")
     else:

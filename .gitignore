@@ -1,7 +1,7 @@
 stud*
 out*
 templates/particle_distributions
-master_study/000_make_particle
+master_study/opt_*
 master_study/__pycache__/
 master_study/*.parquet
 master_study/*.sub
