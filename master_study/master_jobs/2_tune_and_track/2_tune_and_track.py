@@ -10,6 +10,8 @@ import pandas as pd
 import xtrack as xt
 import xpart as xp
 import tree_maker
+import xmask as xm
+import xmask.lhc as xlhc
 
 # ==================================================================================================
 # --- Read configuration files and tag start of the job
@@ -139,23 +141,10 @@ if "mask_with_filling_pattern" in config_bb:
         i_bunch_acw=i_bunch_acw,
     )
 
-
-##########################################
-# Read line, part_on_co, one-turn matrix #
-##########################################
-
-with open(config["xline_json"]) as fid:
-    dd = json.load(fid)
-
-p_co = xp.Particles.from_dict(dd["particle_on_tracker_co"])
-line = xt.Line.from_dict(dd)
-R_matrix = np.array(dd["RR_finite_diffs"])
-
-#####################################################
-# Get normalized coordinateds of particles to track #
-#####################################################
-
-particle_df = pd.read_parquet(config["particle_file"])
+# ==================================================================================================
+# --- Prepare particles distribution for tracking
+# ==================================================================================================
+particle_df = pd.read_parquet(configuration_sim["particle_file"])
 
 r_vect = particle_df["normalized amplitude in xy-plane"].values
 theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad]
@@ -163,46 +152,31 @@ theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad
 A1_in_sigma = r_vect * np.cos(theta_vect)
 A2_in_sigma = r_vect * np.sin(theta_vect)
 
-####################################################
-# Generate particles object (physical coordinates) #
-####################################################
-
-particles = xp.build_particles(
-    particle_on_co=p_co,
+particles = collider.lhcb1.build_particles(
     x_norm=A1_in_sigma,
     y_norm=A2_in_sigma,
-    delta=config["delta_max"],
-    R_matrix=R_matrix,
-    scale_with_transverse_norm_emitt=(config["epsn_1"], config["epsn_2"]),
+    delta=configuration_sim["delta_max"],
+    scale_with_transverse_norm_emitt=(configuration_sim["epsn_1"], configuration_sim["epsn_2"]),
 )
 particles.particle_id = particle_df.particle_id.values
 
-#################
-# Symplify line #
-#################
 
-# line.remove_inactive_multipoles(inplace=True)
-# line.remove_zero_length_drifts(inplace=True)
-# line.merge_consecutive_drifts(inplace=True)
-# line.merge_consecutive_multipoles(inplace=True)
+# ==================================================================================================
+# --- Build tracker and track
+# ==================================================================================================
+# Build tracker and optimize
+tracker = xt.Tracker(
+    line=collider.lhcb1,
+    extra_headers=["#define XTRACK_MULTIPOLE_NO_SYNRAD"],
+)
+tracker.optimize_for_tracking()
 
-#################
-# Build tracker #
-#################
-
-tracker = xt.Tracker(line=line)
-
-############################
-# Save initial coordinates #
-############################
-
+# Save initial coordinates
 pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
 
-##########
-# Track! #
-##########
 
-num_turns = config["n_turns"]
+# Track
+num_turns = configuration_sim["n_turns"]
 a = time.time()
 tracker.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
 b = time.time()
@@ -210,11 +184,10 @@ b = time.time()
 print(f"Elapsed time: {b-a} s")
 print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us")
 
-##########################
-# Save final coordinates #
-##########################
-
+# ==================================================================================================
+# --- Save output
+# ==================================================================================================
 pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
 
-if tree_maker is not None:
-    tree_maker.tag_json.tag_it(config["log_file"], "completed")
+if tree_maker is not None and "log_file" in configuration_sim:
+    tree_maker.tag_json.tag_it(configuration_sim["log_file"], "completed")
