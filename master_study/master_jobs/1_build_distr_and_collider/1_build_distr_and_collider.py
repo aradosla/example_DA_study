@@ -34,13 +34,13 @@ if tree_maker is not None and "log_file" in configuration:
 # ==================================================================================================
 
 # Define radius distribution
-r_min = config_collider["r_min"]
-r_max = config_collider["r_max"]
-n_r = config_collider["n_r"]
+r_min = config_particles["r_min"]
+r_max = config_particles["r_max"]
+n_r = config_particles["n_r"]
 radial_list = np.linspace(r_min, r_max, n_r, endpoint=False)
 
 # Define angle distribution
-n_angles = config_collider["n_angles"]
+n_angles = config_particles["n_angles"]
 theta_list = np.linspace(0, 90, n_angles + 2)[1:-1]
 
 # Define particle distribution as a cartesian product of the above
@@ -50,7 +50,7 @@ particle_list = [
 ]
 
 # Split distribution into several chunks for parallelization
-n_split = config_collider["n_split"]
+n_split = config_particles["n_split"]
 particle_list = list(np.array_split(particle_list, n_split))
 
 # Write distribution to parquet files
@@ -133,6 +133,9 @@ collider.install_beambeam_interactions(
 # ==================================================================================================
 # ---Knobs and tuning
 # ==================================================================================================
+# Build trackers
+collider.build_trackers()
+
 # Read knobs and tuning settings from config file
 conf_knobs_and_tuning = config_collider["config_knobs_and_tuning"]
 

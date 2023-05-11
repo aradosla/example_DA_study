@@ -16,20 +16,6 @@
         - clean_it.sh
       run_on: 'local_pc' #'htc'
       htc_job_flavor: 'tomorrw' # optional parameter to define job flavor, default is espresso
-  use_yaml_children: false
-  # Example of first generation (potentially overwritten when running 001_make_folders.py)
+  # Children will be added below in the script 001_make_folders.py
   children:
-    'example_study':
-      children:
-        '0000_xtrack':
-          qx0: 62.31
-          qy0: 60.32
-          particle_file: '../particles/000.parquet' 
-          collider_json:  '../collider/collider_tuned_and_leveled_bb_on.json'
-          n_turns: 1000
-        '0001_xtrack':
-          qx0: 62.313
-          qy0: 60.318
-          particle_file: '../particles/000.parquet' 
-          collider_json:  '../collider/collider_tuned_and_leveled_bb_on.json'
-          n_turns: 1000
+

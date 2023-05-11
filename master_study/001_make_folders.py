@@ -7,6 +7,7 @@ import os
 import itertools
 import numpy as np
 import yaml
+import shutil
 from user_defined_functions import generate_run_sh_htc
 
 # ==================================================================================================
@@ -24,7 +25,7 @@ n_r = 2 * 16 * (r_max - r_min)
 n_angles = 5
 
 # Number of split for parallelization
-n_split = 15
+n_split = 5
 
 # ==================================================================================================
 # --- Base collider parameters
@@ -35,7 +36,7 @@ n_split = 15
 # Path for the collider config: master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
 # ==================================================================================================
 # Optic file path (round or flat)
-optics_file = "acc-models-lhc/flatcc/opt_flatvh_75_180_1500_thin.xtrack"
+optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
 # ! number of colliding bunches at IP8 accordingly)
@@ -78,6 +79,10 @@ nemitt_y = 2.5e-6
 separation_in_sigma_ip2 = 5
 luminosity_ip8 = 2.0e33
 
+# Value to be added to linear coupling knobs
+delta_cmr: 0.001
+delta_cmi: 0.0
+
 # ==================================================================================================
 # --- Machine parameters being scanned
 #
@@ -85,15 +90,15 @@ luminosity_ip8 = 2.0e33
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.arange(62.305, 62.330, 0.001)[:7]
-array_qy = np.arange(60.305, 60.330, 0.001)[:7]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:7]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:7]
 
 # ==================================================================================================
 # --- Tracking parameters
 #
 # Below, the user defines the parameters for the tracking.
 # ==================================================================================================
-n_turns = 1000000
+n_turns = 1000
 delta_max = 27.0e-5  # initial off-momentum
 
 # ==================================================================================================
@@ -223,7 +228,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     if qy < (qx - 2 + 0.005):
         continue
     children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
-        "parameters_scanned": {"group_1": {"qx": float(qx), "qy": float(qy)}},
+        "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
         "particle_file": f"../particles/{track:02}.parquet",
         "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,
@@ -237,11 +242,11 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 # Load the tree_maker simulation configuration
 config = yaml.safe_load(open("config.yaml"))
 
-# Set the root children to the ones defined above, or to the default one
-if config["root"]["use_yaml_children"] == False:
-    config["root"]["children"] = children
-else:
-    print("The default simulation configuration will be used.")
+# # Set the root children to the ones defined above, or to the default one
+# if config["root"]["use_yaml_children"] == False:
+config["root"]["children"] = children
+# else:
+#     print("The default simulation configuration will be used.")
 
 # Set miniconda environment path in the config
 config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
@@ -260,3 +265,7 @@ start_time = time.time()
 root.make_folders(generate_run_sh_htc)
 print("The tree folders are ready.")
 print("--- %s seconds ---" % (time.time() - start_time))
+
+# Rename log files according to study
+shutil.move("tree_maker.json", f"tree_maker_{study_name}.json")
+shutil.move("tree_maker.log", f"tree_maker_{study_name}.log")

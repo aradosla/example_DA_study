@@ -1,8 +1,8 @@
 # Collider file
-collider_json :    '../1_build_distr_and_collider/collider/collider.json'
+collider_file :    '../collider/collider.json'
 
 # Distribution in the normalized xy space
-particle_file:  '../1_build_distr_and_collider/particles/000.parquet'
+particle_file:  '../particles/000.parquet'
 
 # Metric
 epsn_1     :    2.5e-6   # normalised emittance x

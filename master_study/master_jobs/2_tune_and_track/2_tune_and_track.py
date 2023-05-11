@@ -22,7 +22,7 @@ with open("config.yaml", "r") as fid:
 
 # Read base collider configuration (one generation above)
 with open("../config.yaml", "r") as fid:
-    configuration_collider = yaml.safe_load(fid)
+    configuration_collider = yaml.safe_load(fid)["config_collider"]
 
 # Start tree_maker logging if log_file is present in config
 if tree_maker is not None and "log_file" in configuration_sim:
@@ -44,7 +44,7 @@ config_bb = configuration_collider["config_beambeam"]
 
 # Check if some parameters involve recomputing levelling (group 1)
 start_from_levelling = False
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"]:
+for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"].items():
     if value is not None:
         if parameter_name in conf_knobs_and_tuning["knob_settings"]:
             conf_knobs_and_tuning["knob_settings"][parameter_name] = value
@@ -56,13 +56,17 @@ for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"]:
             )
 # Check if some parameters involve redoing the tuning (group 2)
 start_from_tuning = False
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"]:
+for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"].items():
     if value is not None:
         if parameter_name in conf_knobs_and_tuning["knob_settings"]:
             conf_knobs_and_tuning["knob_settings"][parameter_name] = value
             start_from_tuning = True
         elif parameter_name in conf_knobs_and_tuning:
-            conf_knobs_and_tuning[parameter_name] = value
+            if "lhcb1" in conf_knobs_and_tuning[parameter_name]:
+                conf_knobs_and_tuning[parameter_name]["lhcb1"] = value
+                conf_knobs_and_tuning[parameter_name]["lhcb2"] = value
+            else:
+                conf_knobs_and_tuning[parameter_name] = value
             start_from_tuning = True
         else:
             raise ValueError(
@@ -72,7 +76,7 @@ for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"]:
             )
 
 # Check if some parameters involve resetting the beam-beam mask (group 3)
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_3"]:
+for parameter_name, value in configuration_sim["parameters_scanned"]["group_3"].items():
     if value is not None:
         if parameter_name in config_bb["mask_with_filling_pattern"]:
             config_bb["mask_with_filling_pattern"][parameter_name] = value
@@ -86,7 +90,7 @@ for parameter_name, value in configuration_sim["parameters_scanned"]["group_3"]:
 # --- Rebuild and tune collider
 # ==================================================================================================
 # Load collider and build trackers
-collider = xt.Multiline.from_json(configuration_sim["collider_json"])
+collider = xt.Multiline.from_json(configuration_sim["collider_file"])
 collider.build_trackers()
 
 if start_from_levelling:
@@ -118,6 +122,10 @@ if start_from_levelling or start_from_tuning:
             knob_names=knob_names,
             targets=targets,
         )
+
+# Add linear coupling (# ! To be checked)
+collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 
 ### Configure beam-beam
 print("Configuring beam-beam lenses...")
@@ -151,6 +159,15 @@ theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad
 
 A1_in_sigma = r_vect * np.cos(theta_vect)
 A2_in_sigma = r_vect * np.sin(theta_vect)
+
+# Assess that emittances in collider and in simulation configuration files are identical
+if not np.allclose(
+    configuration_sim["epsn_1"], config_bb["nemitt_x"], rtol=1e-3
+) or not np.allclose(configuration_sim["epsn_2"], config_bb["nemitt_y"], rtol=1e-3):
+    raise ValueError(
+        "The emittances in the simulation configuration file and in the beam-beam configuration"
+        " file are not identical. Please update script accordingly."
+    )
 
 particles = collider.lhcb1.build_particles(
     x_norm=A1_in_sigma,

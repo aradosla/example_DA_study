@@ -4,7 +4,7 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
-  
+
 config_collider:
   config_mad:
     # Links to be made for tools and scripts
@@ -114,6 +114,10 @@ config_collider:
     dqy:
       lhcb1: 15
       lhcb2: 15
+    
+    # Linear coupling
+    delta_cmr: 0.001
+    delta_cmi: 0.0
 
     knob_names:
       lhcb1:
