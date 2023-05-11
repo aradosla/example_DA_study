@@ -12,10 +12,9 @@ import tree_maker
 import numpy as np
 import itertools
 import pandas as pd
-from pathlib import Path
 
 # Import user-defined optics-specific tools
-from tools import optics_specific_tools_hlhc15 as ost
+import optics_specific_tools_hlhc15 as ost
 from gen_config_orbit_correction import generate_orbit_correction_setup
 
 # ==================================================================================================
@@ -67,7 +66,7 @@ for idx_chunk, my_list in enumerate(particle_list):
 # --- Generate config correction files
 # ==================================================================================================
 correction_setup = generate_orbit_correction_setup()
-Path("correction").mkdir(parents=True, exist_ok=True)
+os.makedirs("correction", exist_ok=True)
 for nn in ["lhcb1", "lhcb2"]:
     with open(f"correction/corr_co_{nn}.json", "w") as fid:
         json.dump(correction_setup[nn], fid, indent=4)
@@ -195,33 +194,15 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ==================================================================================================
 # ---Configure beam-beam
 # ==================================================================================================
-# Configure beam-beam lenses
-print("Configuring beam-beam lenses...")
-collider.configure_beambeam_interactions(
-    num_particles=config_bb["num_particles_per_bunch"],
-    nemitt_x=config_bb["nemitt_x"],
-    nemitt_y=config_bb["nemitt_y"],
-)
 
-if "mask_with_filling_pattern" in config_bb:
-    fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
-    i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]
-    i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
-    with open(fname, "r") as fid:
-        filling = json.load(fid)
-
-    collider.apply_filling_pattern(
-        filling_pattern_cw=filling["beam1"],
-        filling_pattern_acw=filling["beam2"],
-        i_bunch_cw=i_bunch_cw,
-        i_bunch_acw=i_bunch_acw,
-    )
+# The beam-beam configuration will be done in 2_tune_and_track.py, as the collider may have to be
+# retuned for parameter scanning.
 
 # ==================================================================================================
 # ---Save to json and log result
 # ==================================================================================================
 os.makedirs("collider", exist_ok=True)
-collider.to_json("collider/collider_tuned_and_leveled_bb_on.json")
+collider.to_json("collider/collider.json")
 
 if tree_maker is not None:
     tree_maker.tag_json.tag_it(configuration["log_file"], "completed")

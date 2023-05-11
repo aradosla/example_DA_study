@@ -4,6 +4,7 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
+
 config_collider:
   config_mad:
     # Links to be made for tools and scripts
@@ -142,6 +143,10 @@ config_collider:
     num_particles_per_bunch: 1.4e11
     nemitt_x: 2.5e-6
     nemitt_y: 2.5e-6
+    mask_with_filling_pattern:
+      pattern_fname: /afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json
+      i_bunch_b1: 1963
+      i_bunch_b2: 1963
 
   config_lumi_leveling:
     ip2:

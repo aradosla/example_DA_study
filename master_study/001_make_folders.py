@@ -37,6 +37,13 @@ n_split = 15
 # Optic file path (round or flat)
 optics_file = "acc-models-lhc/flatcc/opt_flatvh_75_180_1500_thin.xtrack"
 
+# Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
+# ! number of colliding bunches at IP8 accordingly)
+pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+i_bunch_b1 = 1963
+i_bunch_b2 = 1963
+num_colliding_bunches_ip8 = 1886
+
 # Beam energy (for both beams)
 beam_energy_tot = 7000
 
@@ -70,7 +77,6 @@ nemitt_x = 2.5e-6
 nemitt_y = 2.5e-6
 separation_in_sigma_ip2 = 5
 luminosity_ip8 = 2.0e33
-num_colliding_bunches_ip8 = 1886
 
 # ==================================================================================================
 # --- Machine parameters being scanned
@@ -151,13 +157,7 @@ for beam in ["lhcb1", "lhcb2"]:
     children[study_name]["collider"]["config_knobs_and_tuning"]["dqx"][beam] = dqx
     children[study_name]["collider"]["config_knobs_and_tuning"]["dqy"][beam] = dqy
 
-# Add luminosity and particles configuration to the first generation
-children[study_name]["collider"]["config_beambeam"] = {}
-children[study_name]["collider"]["config_beambeam"][
-    "num_particles_per_bunch"
-] = num_particles_per_bunch
-children[study_name]["collider"]["config_beambeam"]["nemitt_x"] = nemitt_x
-children[study_name]["collider"]["config_beambeam"]["nemitt_y"] = nemitt_y
+# Add luminosity configuration to the first generation
 children[study_name]["collider"]["config_lumi_leveling"] = {"ip2": {}, "ip8": {}}
 children[study_name]["collider"]["config_lumi_leveling"]["ip2"][
     "separation_in_sigmas"
@@ -167,9 +167,35 @@ children[study_name]["collider"]["config_lumi_leveling"]["ip8"][
     "num_colliding_bunches"
 ] = num_colliding_bunches_ip8
 
+# Add beam beam configuration to the first generation
+children[study_name]["collider"]["config_beambeam"] = {"mask_with_filling_pattern": {}}
+children[study_name]["collider"]["config_beambeam"][
+    "num_particles_per_bunch"
+] = num_particles_per_bunch
+children[study_name]["collider"]["config_beambeam"]["nemitt_x"] = nemitt_x
+children[study_name]["collider"]["config_beambeam"]["nemitt_y"] = nemitt_y
+children[study_name]["collider"]["config_beambeam"]["mask_with_filling_pattern"][
+    "pattern_fname"
+] = pattern_fname
+children[study_name]["collider"]["config_beambeam"]["mask_with_filling_pattern"][
+    "i_bunch_b1"
+] = i_bunch_b1
+children[study_name]["collider"]["config_beambeam"]["mask_with_filling_pattern"][
+    "i_bunch_b2"
+] = i_bunch_b2
+
 # ==================================================================================================
 # --- Generate second generation of the tree, with the machine parameters being scanned, and
 # tracking parameters being set.
+# Parameters are separated in three groups, depending how they affect the configuration of the
+# collider:
+# - group_1: parameters that require to retune and redo the levelling, and retune again
+#            (e.g. crossing angle)
+# - group_2: parameters that require to retune
+#            (e.g. chromaticity, octupoles)
+# - group_3: parameters that require to reconfigure bb lenses
+#            (e.g. bunch_nb)
+# Collider lines composition can not be reconfigured at this step, at least for now.
 # ==================================================================================================
 track_array = np.arange(n_split)
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
@@ -177,17 +203,13 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     if qy < (qx - 2 + 0.005):
         continue
     children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
-        "qx": float(qx),
-        "qy": float(qy),
+        "group_1": {"qx": float(qx), "qy": float(qy)},
         "particle_file": f"../particles/{track:02}.parquet",
         "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,
         "delta_max": delta_max,
         "log_file": f"{os.getcwd()}/{study_name}/xtrack_{idx_job:04}/tree_maker.log",
     }
-    # ! Fix this by adding the parameters to scan in a children of the collider... Check all the possible parameters to scan
-    # ! in the file 2_tune_and_track.py
-
 
 # ==================================================================================================
 # --- Simulation configuration

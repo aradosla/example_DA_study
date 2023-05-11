@@ -1,5 +1,5 @@
 # Collider file
-collider_json :    '../1_build_distr_and_collider/collider/collider_tuned_and_leveled_bb_on.json'
+collider_json :    '../1_build_distr_and_collider/collider/collider.json'
 
 # Distribution in the normalized xy space
 particle_file:  '../1_build_distr_and_collider/particles/000.parquet'
@@ -11,6 +11,23 @@ delta_max  :    27.e-5   # initial off-momentum
 
 # Tracking
 n_turns    :    1000     # number of turns to track
+
+# Parameters that can be scanned are added below. Each group yields a different sets of operation
+# on the resulting collider (e.g. retune, recompute luminosity, etc).
+parameters_scanned :
+  group_1:
+    on_x1 : null
+    on_x5 : null
+  group_2:
+    qx : null
+    qy : null
+    dqx : null
+    dqy : null
+    i_oct_b1 : null
+    i_oct_b2 : null
+  group_3:
+    i_bunch_nb_b1 : null
+    i_bunch_nb_b2 : null
 
 # Log
 log_file   :    'tree_maker.log'
