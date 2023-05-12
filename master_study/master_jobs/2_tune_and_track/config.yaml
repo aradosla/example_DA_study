@@ -26,8 +26,8 @@ parameters_scanned :
     i_oct_b1 : null
     i_oct_b2 : null
   group_3:
-    i_bunch_nb_b1 : null
-    i_bunch_nb_b2 : null
+    i_bunch_b1 : null
+    i_bunch_b2 : null
 
 # Log
 log_file   :    'tree_maker.log'

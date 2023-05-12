@@ -101,7 +101,7 @@ if start_from_levelling:
 
 if start_from_levelling or start_from_tuning:
     # Reset knobs that have been modified (for now, only octupoles are concerned)
-    # ! Other knobs may require to recompute luminoisty leveling
+    # ! Other knobs may require to recompute luminosity leveling
     for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
         if kk in configuration_sim["parameters_scanned"]["group_1"]:
             collider.vars[kk] = vv

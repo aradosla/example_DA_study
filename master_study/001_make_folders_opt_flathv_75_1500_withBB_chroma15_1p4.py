@@ -110,7 +110,7 @@ delta_max = 27.0e-5  # initial off-momentum
 # distribution, and the parameters of the base machine which will later be used for simulations.
 # ==================================================================================================
 # Define study name
-study_name = f"opt_flathv_75_1500_withBB_chroma15_1p4"
+study_name = f"opt_flathv_75_1500_withBB_chroma15_1p444"
 
 # Build empty tree: first generation (later added to the root), and second generation
 children = {study_name: {"config_particles": {}, "config_collider": {}, "children": {}}}
@@ -135,8 +135,14 @@ children[study_name]["config_collider"]["config_mad"]["beam_config"]["lhcb2"][
     "beam_energy_tot"
 ] = beam_energy_tot
 
-# Add all knobs to the first generation
-children[study_name]["config_collider"]["config_knobs_and_tuning"] = {"knob_settings": {}}
+# Add all knobs to the first generation (prepare also dictionnaries for tune and chroma)
+children[study_name]["config_collider"]["config_knobs_and_tuning"] = {
+    "knob_settings": {},
+    "qx": {},
+    "qy": {},
+    "dqx": {},
+    "dqy": {},
+}
 children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = on_x1
 children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_sep1"
@@ -169,12 +175,6 @@ children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_setting
 ] = i_oct_b2
 
 # Add tunes and chromas to the first generation
-children[study_name]["config_collider"]["config_knobs_and_tuning"] = {
-    "qx": {},
-    "qy": {},
-    "dqx": {},
-    "dqy": {},
-}
 for beam in ["lhcb1", "lhcb2"]:
     children[study_name]["config_collider"]["config_knobs_and_tuning"]["qx"][beam] = qx
     children[study_name]["config_collider"]["config_knobs_and_tuning"]["qy"][beam] = qy

@@ -11,6 +11,10 @@ cd xmask
 git submodule init
 git submodule update
 pip install -e .
+cd ..
+git clone https://github.com/xsuite/xdeps.git
+cd xdeps
+pip install -e .
 cd ../../
 xsuite-prebuild
 

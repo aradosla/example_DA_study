@@ -48985,6 +48985,20 @@
               "lhcb1": 15.0,
               "lhcb2": 15.0
             },
+            "knob_settings": {
+              "i_oct_b1": 60.0,
+              "i_oct_b2": 60.0,
+              "on_crab1": -190,
+              "on_crab5": -190,
+              "on_sep1": 0,
+              "on_sep2": 0.138,
+              "on_sep5": 0,
+              "on_x1": 250,
+              "on_x2": -170,
+              "on_x5": 250,
+              "on_x8h": 0.0,
+              "on_x8v": 170
+            },
             "qx": {
               "lhcb1": 62.316,
               "lhcb2": 62.316
@@ -49042,10 +49056,10 @@
         "files_to_clone": [
           "clean_it.sh"
         ],
-        "htc_job_flavor": "tomorrw",
+        "htc_job_flavor": "tomorrow",
         "job_executable": "2_tune_and_track.py",
         "job_folder": "master_jobs/2_tune_and_track",
-        "run_on": "local_pc"
+        "run_on": "htc"
       }
     },
     "setup_env_script": "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/../miniconda/bin/activate"

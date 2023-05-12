@@ -31,10 +31,6 @@ class cluster:
         with open(filename, "w") as fid:
             # head
             if self.run_on == "local_pc":
-                # python_env = (list_of_nodes[0]
-                #              .root
-                #              .parameters["setup_env_script"])
-                # fid.write(f'source {python_env}\n')
                 fid.write("# Running on local pc\n")
             elif self.run_on == "lsf":
                 fid.write("# Running on LSF \n")

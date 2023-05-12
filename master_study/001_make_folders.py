@@ -134,8 +134,14 @@ children[study_name]["config_collider"]["config_mad"]["beam_config"]["lhcb2"][
     "beam_energy_tot"
 ] = beam_energy_tot
 
-# Add all knobs to the first generation
-children[study_name]["config_collider"]["config_knobs_and_tuning"] = {"knob_settings": {}}
+# Add all knobs to the first generation (prepare also dictionnaries for tune and chroma)
+children[study_name]["config_collider"]["config_knobs_and_tuning"] = {
+    "knob_settings": {},
+    "qx": {},
+    "qy": {},
+    "dqx": {},
+    "dqy": {},
+}
 children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = on_x1
 children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_sep1"
@@ -168,12 +174,6 @@ children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_setting
 ] = i_oct_b2
 
 # Add tunes and chromas to the first generation
-children[study_name]["config_collider"]["config_knobs_and_tuning"] = {
-    "qx": {},
-    "qy": {},
-    "dqx": {},
-    "dqy": {},
-}
 for beam in ["lhcb1", "lhcb2"]:
     children[study_name]["config_collider"]["config_knobs_and_tuning"]["qx"][beam] = qx
     children[study_name]["config_collider"]["config_knobs_and_tuning"]["qy"][beam] = qy
