@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 import yaml
 import shutil
+import json
 from user_defined_functions import generate_run_sh_htc
 
 # ==================================================================================================
@@ -40,9 +41,9 @@ optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
 # ! number of colliding bunches at IP8 accordingly)
-pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
-i_bunch_b1 = 1963
-i_bunch_b2 = 1963
+pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/56bunches_3_1.json"
+i_bunch_b1 = 1963  # Will be updated by the script when doing the scan
+i_bunch_b2 = 1963  # Is updated later by a int value
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -68,11 +69,11 @@ i_oct_b2 = 60.0
 # Tunes and chromas (for both beams)
 qx = 62.316
 qy = 60.321
-dqx = 5.0
-dqy = 5.0
+dqx = 15.0
+dqy = 15.0
 
 # Luminosity and particles
-skip_leveling = False
+skip_leveling = True
 num_particles_per_bunch = 1.4e11
 nemitt_x = 2.5e-6
 nemitt_y = 2.5e-6
@@ -90,9 +91,14 @@ delta_cmi: 0.0
 # Below, the user defines the grid for the machine parameters that must be scanned to find the
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
-# Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
+# Get json file
+with open(pattern_fname) as file:
+    filling_scheme_dic = json.loads(file.read())
+
+# Scan all bunches that are not zero
+array_bunches_b1 = [idx for idx, i in enumerate(filling_scheme_dic["beam1"]) if i != 0]
+# Find a random bunch to set for beam 2 (not relevant anyway)
+i_bunch_b2 = [idx for idx, i in enumerate(filling_scheme_dic["beam2"]) if i != 0][0]
 
 # ==================================================================================================
 # --- Tracking parameters
@@ -110,7 +116,7 @@ delta_max = 27.0e-5  # initial off-momentum
 # distribution, and the parameters of the base machine which will later be used for simulations.
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
+study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_custom_filling"
 
 # Build empty tree: first generation (later added to the root), and second generation
 children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
@@ -231,13 +237,9 @@ children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filli
 # Collider lines composition can not be reconfigured at this step, at least for now.
 # ==================================================================================================
 track_array = np.arange(n_split)
-for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-    # Ignore conditions below the upper diagonal as this can't exist in the real machine
-    if qy < (qx - 2 + 0.0039):  # 0.0039 instead of 0.04 to avoid rounding errors
-        continue
-
+for idx_job, (track, i_bunch_b1) in enumerate(itertools.product(track_array, array_bunches_b1)):
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
-        "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
+        "parameters_scanned": {"group_3": {"i_bunch_b1": i_bunch_b1, "i_bunch_b2": i_bunch_b2}},
         "particle_file": f"../particles/{track:02}.parquet",
         "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,

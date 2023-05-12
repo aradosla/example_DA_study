@@ -14,7 +14,7 @@
       job_executable: 2_tune_and_track.py # has to be a python file
       files_to_clone: # relative to the template folder
         - clean_it.sh
-      run_on: 'local_pc' #'htc' #
+      run_on: 'htc' #'local_pc' #'htc' #'local_pc' 
       htc_job_flavor: 'tomorrow' # optional parameter to define job flavor, default is espresso
   # Children will be added below in the script 001_make_folders.py
   children:

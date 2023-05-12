@@ -36,8 +36,13 @@ else:
 # Read initial knobs and tuning settings from base collider configuration file
 conf_knobs_and_tuning = configuration_collider["config_knobs_and_tuning"]
 
-# Read initial levelling settings from base collider configuration file
-config_lumi_leveling = configuration_collider["config_lumi_leveling"]
+# Read initial levelling settings from base collider configuration file, if levelling is done
+if "config_lumi_leveling" in configuration_collider and not configuration_collider["skip_leveling"]:
+    # Read knobs and tuning settings from config file
+    config_lumi_leveling = configuration_collider["config_lumi_leveling"]
+else:
+    config_lumi_leveling = None
+
 
 # Read inital beam-beam settings from base collider configuration file
 config_bb = configuration_collider["config_beambeam"]
@@ -94,10 +99,13 @@ collider = xt.Multiline.from_json(configuration_sim["collider_file"])
 collider.build_trackers()
 
 if start_from_levelling:
-    ### Compute levelling
-    xlhc.luminosity_leveling(
-        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-    )
+    if config_lumi_leveling is not None:
+        ### Compute levelling
+        xlhc.luminosity_leveling(
+            collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
+        )
+    else:
+        print("WARNING: no levelling is being done, check that this is indeed what you want.")
 
 if start_from_levelling or start_from_tuning:
     # Reset knobs that have been modified (for now, only octupoles are concerned)

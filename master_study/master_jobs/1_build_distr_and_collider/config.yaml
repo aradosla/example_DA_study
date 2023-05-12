@@ -152,6 +152,7 @@ config_collider:
       i_bunch_b1: 1963
       i_bunch_b2: 1963
 
+  skip_leveling: false
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5

@@ -170,30 +170,37 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ==================================================================================================
 # ---Levelling
 # ==================================================================================================
-# Read knobs and tuning settings from config file
-config_lumi_leveling = config_collider["config_lumi_leveling"]
+if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
+    # Read knobs and tuning settings from config file
+    config_lumi_leveling = config_collider["config_lumi_leveling"]
 
-xlhc.luminosity_leveling(
-    collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-)
-
-# Re-match tunes, and chromaticities
-for line_name in ["lhcb1", "lhcb2"]:
-    knob_names = conf_knobs_and_tuning["knob_names"][line_name]
-    targets = {
-        "qx": conf_knobs_and_tuning["qx"][line_name],
-        "qy": conf_knobs_and_tuning["qy"][line_name],
-        "dqx": conf_knobs_and_tuning["dqx"][line_name],
-        "dqy": conf_knobs_and_tuning["dqy"][line_name],
-    }
-    xm.machine_tuning(
-        line=collider[line_name],
-        enable_tune_correction=True,
-        enable_chromaticity_correction=True,
-        knob_names=knob_names,
-        targets=targets,
+    xlhc.luminosity_leveling(
+        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
     )
 
+    # Re-match tunes, and chromaticities
+    for line_name in ["lhcb1", "lhcb2"]:
+        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
+        targets = {
+            "qx": conf_knobs_and_tuning["qx"][line_name],
+            "qy": conf_knobs_and_tuning["qy"][line_name],
+            "dqx": conf_knobs_and_tuning["dqx"][line_name],
+            "dqy": conf_knobs_and_tuning["dqy"][line_name],
+        }
+        xm.machine_tuning(
+            line=collider[line_name],
+            enable_tune_correction=True,
+            enable_chromaticity_correction=True,
+            knob_names=knob_names,
+            targets=targets,
+        )
+    else:
+        print("No leveling is done as skip_leveling is set to True.")
+else:
+    print(
+        "No leveling is done as no configuration has been provided, or skip_leveling is set to"
+        " True."
+    )
 # ==================================================================================================
 # ---Configure beam-beam
 # ==================================================================================================

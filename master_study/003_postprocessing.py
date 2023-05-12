@@ -9,12 +9,11 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-my_study = "opt_flathv_75_1500_withBB_chroma15_1p4"
-try:
-    root = tree_maker.tree_from_json(f"tree_maker_{my_study}.json")
-except Exception as e:
-    print(e)
-    print("Probably you forgot to edit the address of you json file...")
+study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
+fix = "/scans/" + study_name
+root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
+# Add suffix to the root node path to handle scans that are not in the root directory
+root.add_suffix(suffix=fix)
 
 
 # Function for parameter assignation
@@ -127,8 +126,6 @@ df_all_sim = pd.concat(l_df_to_merge)
 # Extract the particles that were lost for DA computation
 df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 
-print(df_lost_particles)
-
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
 my_final = pd.DataFrame(
     [
@@ -149,7 +146,7 @@ my_final = pd.DataFrame(
 print(my_final)
 
 # Save data and print time
-my_final.to_parquet(f"{my_study}/da.parquet")
+my_final.to_parquet(f"scans/{study_name}/da.parquet")
 print(my_final)
 end = time.time()
 print(end - start)

@@ -43,7 +43,6 @@ optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 i_bunch_b1 = 1963
 i_bunch_b2 = 1963
-num_colliding_bunches_ip8 = 1886
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -73,11 +72,13 @@ dqx = 5.0
 dqy = 5.0
 
 # Luminosity and particles
+skip_leveling = False
 num_particles_per_bunch = 1.4e11
 nemitt_x = 2.5e-6
 nemitt_y = 2.5e-6
 separation_in_sigma_ip2 = 5
 luminosity_ip8 = 2.0e33
+num_colliding_bunches_ip8 = 1886
 
 # Value to be added to linear coupling knobs
 delta_cmr: 0.001
@@ -187,6 +188,7 @@ for beam in ["lhcb1", "lhcb2"]:
     children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["dqy"][beam] = dqy
 
 # Add luminosity configuration to the first generation
+children["base_collider"]["config_collider"]["skip_leveling"] = skip_leveling
 children["base_collider"]["config_collider"]["config_lumi_leveling"] = {"ip2": {}, "ip8": {}}
 children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip2"][
     "separation_in_sigmas"
@@ -239,9 +241,6 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,
         "delta_max": delta_max,
-        # "log_file": (
-        #     f"{os.getcwd()}/scans/{study_name}/base_collider/xtrack_{idx_job:04}/tree_maker.log"
-        # ),
         "log_file": f"tree_maker.log",
     }
 
