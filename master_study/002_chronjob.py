@@ -1,10 +1,3 @@
-# %%
-"""
-Example of a chronjob
-"""
-
-# %%
-
 import pdb
 import pandas as pd
 import tree_maker
@@ -52,30 +45,32 @@ class cluster:
                     ]["htc_job_flavor"]
                     fid.write(f'+JobFlavour  = "{htc_job_flavor}"\n')
             for node in list_of_nodes:
+                # Get path node
+                path_node = node.get_abs_path()
                 if node.has_been("completed"):
-                    print(f"{node.get_abs_path()} is completed.")
-                elif node.get_abs_path() in running_jobs:
-                    print(f"{node.get_abs_path()} is running.")
+                    print(f"{path_node} is completed.")
+                elif path_node in running_jobs:
+                    print(f"{path_node} is running.")
                 elif node in queuing_jobs:
-                    print(f"{node.get_abs_path()} is queuing.")
+                    print(f"{path_node} is queuing.")
                 else:
                     if self.run_on == "local_pc":
-                        fid.write("bash " + node.get_abs_path() + "/run.sh &\n")
+                        fid.write("bash " + path_node + "/run.sh &\n")
                     elif self.run_on == "lsf":
                         fid.write(
                             "bsub -n 2 -q hpc_acc "
                             # "-e error.txt -o output.txt "
-                            f"{node.get_abs_path()}/run.sh\n"
+                            f"{path_node}/run.sh\n"
                         )
                     elif self.run_on == "slurm":
                         fid.write(
                             "sbatch --ntasks=2 --partition=slurm_hpc_acc --output=output.txt "
-                            f"{node.get_abs_path()}/run.sh\n"
+                            f"{path_node}/run.sh\n"
                         )
                     elif self.run_on == "htc":
                         # initialdir is needed so that each job has it own output, error and log.txt
-                        fid.write(f"initialdir = {node.get_abs_path()}\n")
-                        fid.write(f"executable = {node.get_abs_path()}/run.sh\nqueue\n")
+                        fid.write(f"initialdir = {path_node}\n")
+                        fid.write(f"executable = {path_node}/run.sh\nqueue\n")
             # tail
             if self.run_on == "local_pc":
                 fid.write(f"#{self.run_on}\n")
@@ -129,20 +124,24 @@ class cluster:
 # Load the tree from a yaml
 if __name__ == "__main__":
     # root = tree_maker.tree_from_json("tree_maker_example_HL_tunescan.json")
-    root = tree_maker.tree_from_json("tree_maker_opt_flathv_75_1500_withBB_chroma15_1p4.json")
+    study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
+    fix = "/scans/" + study_name
+    root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
+    # Add suffix to the root node path to handle scans that are not in the root directory
+    root.add_suffix(suffix=fix)
+
     if root.has_been("completed"):
         print("All descendants of root are completed!")
     else:
         my_run_on = cluster(root.parameters["generations"]["1"]["run_on"])
-        my_file = "first_generation.sub"
+        my_file = "submission_files/first_generation.sub"
         my_run_on.create_sub_file(root.generation(1), my_file)
         my_run_on.submit(my_file)
         if all([node.has_been("completed") for node in root.generation(1)]):
             my_run_on = cluster(root.parameters["generations"]["2"]["run_on"])
-            my_file = "second_generation.sub"
+            my_file = "submission_files/second_generation.sub"
             my_run_on.create_sub_file(root.generation(2), my_file)
             my_run_on.submit(my_file)
-        #          node.smart_run()
         if all([descendant.has_been("completed") for descendant in root.descendants]):
             root.tag_as("completed")
             print("All descendants of root are completed!")

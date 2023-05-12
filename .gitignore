@@ -2,9 +2,10 @@ stud*
 out*
 templates/particle_distributions
 master_study/opt_*
+master_study/scans/opt_*
 master_study/__pycache__/
 master_study/*.parquet
-master_study/*.sub
+master_study/submission_files/*.sub
 master_study/analysis/
 master_study/tree_maker.*
 master_study/tree_maker_*

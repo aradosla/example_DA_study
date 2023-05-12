@@ -25,7 +25,7 @@ n_r = 2 * 16 * (r_max - r_min)
 n_angles = 5
 
 # Number of split for parallelization
-n_split = 15
+n_split = 12
 
 # ==================================================================================================
 # --- Base collider parameters
@@ -69,8 +69,8 @@ i_oct_b2 = 60.0
 # Tunes and chromas (for both beams)
 qx = 62.316
 qy = 60.321
-dqx = 15.0
-dqy = 15.0
+dqx = 5.0
+dqy = 5.0
 
 # Luminosity and particles
 num_particles_per_bunch = 1.4e11
@@ -80,7 +80,6 @@ separation_in_sigma_ip2 = 5
 luminosity_ip8 = 2.0e33
 
 # Value to be added to linear coupling knobs
-# ! to be checked
 delta_cmr: 0.001
 delta_cmi: 0.0
 
@@ -91,15 +90,15 @@ delta_cmi: 0.0
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[-6:]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[-5:]
 
 # ==================================================================================================
 # --- Tracking parameters
 #
 # Below, the user defines the parameters for the tracking.
 # ==================================================================================================
-n_turns = 1000000
+n_turns = 1000
 delta_max = 27.0e-5  # initial off-momentum
 
 # ==================================================================================================
@@ -110,103 +109,109 @@ delta_max = 27.0e-5  # initial off-momentum
 # distribution, and the parameters of the base machine which will later be used for simulations.
 # ==================================================================================================
 # Define study name
-study_name = f"opt_flathv_75_1500_withBB_chroma15_1p444"
+study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {study_name: {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
-children[study_name]["config_particles"]["r_min"] = r_min
-children[study_name]["config_particles"]["r_max"] = r_max
-children[study_name]["config_particles"]["n_r"] = n_r
-children[study_name]["config_particles"]["n_angles"] = n_angles
-children[study_name]["config_particles"]["n_split"] = n_split
+children["base_collider"]["config_particles"]["r_min"] = r_min
+children["base_collider"]["config_particles"]["r_max"] = r_max
+children["base_collider"]["config_particles"]["n_r"] = n_r
+children["base_collider"]["config_particles"]["n_angles"] = n_angles
+children["base_collider"]["config_particles"]["n_split"] = n_split
 
 # Add base machine parameters to the first generation
-children[study_name]["config_collider"]["config_mad"] = {
+children["base_collider"]["config_collider"]["config_mad"] = {
     "beam_config": {"lhcb1": {}, "lhcb2": {}},
     "optics_file": None,
 }
-children[study_name]["config_collider"]["config_mad"]["optics_file"] = optics_file
-children[study_name]["config_collider"]["config_mad"]["beam_config"]["lhcb1"][
+children["base_collider"]["config_collider"]["config_mad"]["optics_file"] = optics_file
+children["base_collider"]["config_collider"]["config_mad"]["beam_config"]["lhcb1"][
     "beam_energy_tot"
 ] = beam_energy_tot
-children[study_name]["config_collider"]["config_mad"]["beam_config"]["lhcb2"][
+children["base_collider"]["config_collider"]["config_mad"]["beam_config"]["lhcb2"][
     "beam_energy_tot"
 ] = beam_energy_tot
 
 # Add all knobs to the first generation (prepare also dictionnaries for tune and chroma)
-children[study_name]["config_collider"]["config_knobs_and_tuning"] = {
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"] = {
     "knob_settings": {},
     "qx": {},
     "qy": {},
     "dqx": {},
     "dqy": {},
 }
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = on_x1
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+    "on_x1"
+] = on_x1
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_sep1"
 ] = on_sep1
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"]["on_x2"] = on_x2
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+    "on_x2"
+] = on_x2
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_sep2"
 ] = on_sep2
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"]["on_x5"] = on_x5
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+    "on_x5"
+] = on_x5
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_sep5"
 ] = on_sep5
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_x8h"
 ] = on_x8h
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_x8v"
 ] = on_x8v
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_crab1"
 ] = on_crab1
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "on_crab5"
 ] = on_crab5
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "i_oct_b1"
 ] = i_oct_b1
-children[study_name]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
     "i_oct_b2"
 ] = i_oct_b2
 
 # Add tunes and chromas to the first generation
 for beam in ["lhcb1", "lhcb2"]:
-    children[study_name]["config_collider"]["config_knobs_and_tuning"]["qx"][beam] = qx
-    children[study_name]["config_collider"]["config_knobs_and_tuning"]["qy"][beam] = qy
-    children[study_name]["config_collider"]["config_knobs_and_tuning"]["dqx"][beam] = dqx
-    children[study_name]["config_collider"]["config_knobs_and_tuning"]["dqy"][beam] = dqy
+    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["qx"][beam] = qx
+    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["qy"][beam] = qy
+    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["dqx"][beam] = dqx
+    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["dqy"][beam] = dqy
 
 # Add luminosity configuration to the first generation
-children[study_name]["config_collider"]["config_lumi_leveling"] = {"ip2": {}, "ip8": {}}
-children[study_name]["config_collider"]["config_lumi_leveling"]["ip2"][
+children["base_collider"]["config_collider"]["config_lumi_leveling"] = {"ip2": {}, "ip8": {}}
+children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip2"][
     "separation_in_sigmas"
 ] = separation_in_sigma_ip2
-children[study_name]["config_collider"]["config_lumi_leveling"]["ip8"][
+children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip8"][
     "luminosity"
 ] = luminosity_ip8
-children[study_name]["config_collider"]["config_lumi_leveling"]["ip8"][
+children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip8"][
     "num_colliding_bunches"
 ] = num_colliding_bunches_ip8
 
 # Add beam beam configuration to the first generation
-children[study_name]["config_collider"]["config_beambeam"] = {"mask_with_filling_pattern": {}}
-children[study_name]["config_collider"]["config_beambeam"][
+children["base_collider"]["config_collider"]["config_beambeam"] = {"mask_with_filling_pattern": {}}
+children["base_collider"]["config_collider"]["config_beambeam"][
     "num_particles_per_bunch"
 ] = num_particles_per_bunch
-children[study_name]["config_collider"]["config_beambeam"]["nemitt_x"] = nemitt_x
-children[study_name]["config_collider"]["config_beambeam"]["nemitt_y"] = nemitt_y
-children[study_name]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
+children["base_collider"]["config_collider"]["config_beambeam"]["nemitt_x"] = nemitt_x
+children["base_collider"]["config_collider"]["config_beambeam"]["nemitt_y"] = nemitt_y
+children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
     "pattern_fname"
 ] = pattern_fname
-children[study_name]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
+children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
     "i_bunch_b1"
 ] = i_bunch_b1
-children[study_name]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
+children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
     "i_bunch_b2"
 ] = i_bunch_b2
 
@@ -226,15 +231,19 @@ children[study_name]["config_collider"]["config_beambeam"]["mask_with_filling_pa
 track_array = np.arange(n_split)
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # Ignore conditions below the upper diagonal as this can't exist in the real machine
-    if qy < (qx - 2 + 0.0049):  # 0.0049 instead of 0.5 because of unexpected rounding error
+    if qy < (qx - 2 + 0.0039):  # 0.0039 instead of 0.04 to avoid rounding errors
         continue
-    children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
+
+    children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
         "particle_file": f"../particles/{track:02}.parquet",
         "collider_file": f"../collider/collider.json",
         "n_turns": n_turns,
         "delta_max": delta_max,
-        "log_file": f"{os.getcwd()}/{study_name}/xtrack_{idx_job:04}/tree_maker.log",
+        # "log_file": (
+        #     f"{os.getcwd()}/scans/{study_name}/base_collider/xtrack_{idx_job:04}/tree_maker.log"
+        # ),
+        "log_file": f"tree_maker.log",
     }
 
 # ==================================================================================================
@@ -255,6 +264,13 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # ==================================================================================================
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
+# Creade folder that will contain the tree
+if not os.path.exists("scans/" + study_name):
+    os.makedirs("scans/" + study_name)
+
+# Move to the folder that will contain the tree
+os.chdir("scans/" + study_name)
+
 # Create tree object
 start_time = time.time()
 root = initialize(config)
