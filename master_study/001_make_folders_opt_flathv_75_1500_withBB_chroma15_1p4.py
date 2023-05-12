@@ -226,7 +226,7 @@ children[study_name]["config_collider"]["config_beambeam"]["mask_with_filling_pa
 track_array = np.arange(n_split)
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # Ignore conditions below the upper diagonal as this can't exist in the real machine
-    if qy < (qx - 2 + 0.005):
+    if qy < (qx - 2 + 0.0049):  # 0.0049 instead of 0.5 because of unexpected rounding error
         continue
     children[study_name]["children"][f"xtrack_{idx_job:04}"] = {
         "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
