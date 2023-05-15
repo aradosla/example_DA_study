@@ -11,6 +11,7 @@ master_study/tree_maker.*
 master_study/tree_maker_*
 Miniconda3-latest-Linux-x86_64.sh
 miniconda/
+!miniconda/.gitkeep
 tree_maker/
 lhcmask/
 lhcerrors/

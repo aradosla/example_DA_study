@@ -206,7 +206,7 @@ else:
 # ==================================================================================================
 
 # The beam-beam configuration will be done in 2_tune_and_track.py, as the collider may have to be
-# retuned for parameter scanning.
+# retuned for parameter scanning, and this must be done before configuring beam-beam.
 
 # ==================================================================================================
 # ---Save to json and log result
