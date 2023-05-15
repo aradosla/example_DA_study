@@ -1,20 +1,32 @@
-stud*
-out*
-templates/particle_distributions
-master_study/opt_*
-master_study/scans/opt_*
-master_study/__pycache__/
-master_study/*.parquet
-master_study/submission_files/*.sub
-master_study/analysis/
-master_study/tree_maker.*
-master_study/tree_maker_*
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Miniconda
 Miniconda3-latest-Linux-x86_64.sh
-miniconda/
-!*/miniconda/.gitkeep
-tree_maker/
-lhcmask/
-lhcerrors/
-lhctoolkit/
-modules/
-.vscode
+miniconda/*
+!miniconda/.gitkeep
+
+# Modules
+modules/*
+!modules/.gitkeep
+
+# Filling scheme
+master_study/master_jobs/filling_scheme/*
+!master_study/master_jobs/filling_scheme/.gitkeep
+
+# Scans
+master_study/scans/*
+!master_study/scans/.gitkeep
+
+# Analysis
+master_study/analysis/*
+!master_study/analysis/.gitkeep
+
+# Submission files
+master_study/submission_files/*
+!master_study/submission_files/.gitkeep
+
+
+
