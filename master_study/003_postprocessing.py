@@ -9,7 +9,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
+study_name = "opt_flathv_75_1500_withBB_chroma15_1p4_custom_filling"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -127,19 +127,20 @@ df_all_sim = pd.concat(l_df_to_merge)
 df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
+groupby = ["i_bunch_b1", "i_bunch_b2"] #["qx", "qy"]
 my_final = pd.DataFrame(
     [
-        df_lost_particles.groupby(["qx", "qy"])["normalized amplitude in xy-plane"].min(),
-        df_lost_particles.groupby(["qx", "qy"])["on_x1"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["on_x5"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["qx"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["qy"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["dqx"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["dqy"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["i_oct_b1"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["i_oct_b2"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["i_bunch_b1"].mean(),
-        df_lost_particles.groupby(["qx", "qy"])["i_bunch_b2"].mean(),
+        df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
+        df_lost_particles.groupby(groupby)["on_x1"].mean(),
+        df_lost_particles.groupby(groupby)["on_x5"].mean(),
+        df_lost_particles.groupby(groupby)["qx"].mean(),
+        df_lost_particles.groupby(groupby)["qy"].mean(),
+        df_lost_particles.groupby(groupby)["dqx"].mean(),
+        df_lost_particles.groupby(groupby)["dqy"].mean(),
+        df_lost_particles.groupby(groupby)["i_oct_b1"].mean(),
+        df_lost_particles.groupby(groupby)["i_oct_b2"].mean(),
+        df_lost_particles.groupby(groupby)["i_bunch_b1"].mean(),
+        df_lost_particles.groupby(groupby)["i_bunch_b2"].mean(),
     ]
 ).transpose()
 
