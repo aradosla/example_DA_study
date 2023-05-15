@@ -179,13 +179,14 @@ When doing a parameter scan, the following steps are performed:
 3. Running the ```003_analyse_simulations.py``` script. This script will analyse the results of the simulations, and output a summary dataframe at the root of the study.
 
 ### More information
-More information, although outdated, can be gathered from the explanations provided in previous version of this repository, e.g. [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
+
+More information, although outdated, can be gathered from the explanations provided in previous versions of this repository, e.g. [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
 
 The code is now well formatted and well commented, such that any question should be relatively easily answered by looking at the code itself. If you have any question, do not hesitate to open an issue.
 
 ## Parameters that can be scanned
 
-At the moment, the following parameters can be scanned without requiring scripts modifications:
+At the moment, the following parameters can be scanned without requiring extensive scripts modifications:
 
 - crossing-angle (```on_x1, on_x5```)
 - tune (```qx, qy```)
