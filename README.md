@@ -1,88 +1,204 @@
-# Some simple steps
+# Dynamics aperture study boilerplate
 
-### Installation instructions
+This repository contains a boilerplate that allows users to compute the dynamics aperture of a collider
+under different parametric scenarios.
 
-Do 
+Jobs can be efficiently stored and parallelized using the
+[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harnesses the power of [X-Suite](https://github.com/xsuite/xsuite).
+
+ℹ️ If you do not need to do parametric scans, this repository is probably not what you're looking for.
+
+## Installation instructions
+
+The simplest way to start is to clone the repository and install the dependencies using conda:
+
+```bash
+git clone git@github.com:ColasDroin/example_DA_study.git -b xmask_test
 ```
-git clone git@github.com:xsuite/example_DA_study.git -b release/v0.1.1
-```
 
-then 
+Then:
 
-```
+```bash
 cd example_DA_study
 source make_miniconda.sh
 ```
 
-This will install the needed python distributions.
+This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
 
-### Connecting to the cnaf.infn.it
-Go to the the hpc-201-11-01-a machine.
-I do it by 
+⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
+
+## Running a simple parameter scan simulation
+
+This section introduces the basic steps to run a simple parameter scan simulation. The simulation consists in tracking a set of particles for a given number of turns, and computing the dynamics aperture for each particle. To get a more refined understanding of what the scripts used below are actually doing, please check the section [What happens under the hood](#what-happens-under-the-hood).
+
+### Setting up the study
+
+You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan (here, only the first 10 tunes are selected, in order not to create too many jobs):
+
+```python
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
+```
+
+Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
+
+```python
+n_turns = 200
+```
+
+Give the study you're doing the name of your choice by editing the following line:
+
+```python
+study_name = "example_HL_tunescan"
+```
+
+### Building the tree
+
+You're now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
+
+- the first generation generates the particles distribution and build a collider with "base" parameters (parameters that are kept constant during the study)
+- the second generation tunes the base collider(in here, this means changing the tunes) and tracks the particles for a given number of turns.
+
+For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, edit ```master_study/config.yaml``` to have, for both generations:
+
+```yaml
+run_on: 'local_pc'
+```
+
+If not already done, activate the conda environment:
+
 ```bash
-ssh bologna
+source miniconda/bin/activate
 ```
 
-but you need to configure your `~/.ssh/config` by adding
-```bash
-Host bastion
- HostName bastion.cnaf.infn.it
- User sterbini
- ForwardX11 yes
-
-Host bologna
- ProxyCommand ssh -q bastion nc hpc-201-11-01-a 22
- ForwardX11 yes
-```
-
-As you can see, `bologna` (hpc-201-11-01-a) host is passing via the `bastion` (bastion.cnaf.infn.it) connection.
-
-### Activate the environment
-I suggest to open a `tmux` terminal and 
+Now, build the tree and write it on disk with:
 
 ```bash
-source /home/HPC/sterbini/py38/bin/activate
-```
-then move where you want to start lauch this DA study and make a clone of this repository
-
-```
-git clone https://github.com/sterbini/DA_study_example.git
-cd DA_study_example
+python master_study/001_make_folders.py
 ```
 
-### Tree creation
-With the command
+This should create a folder named after ```study_name``` in ```master_study/scans```. This folder contains the tree structure of your study: the parent generation is in the subfolder ```base_collider```, while the subsequent children are in the ```xtrack_iiii```. The tree_maker ```.json``` and ```.log``` files are used by tree_maker to keep track of the jobs that have been run and the ones that are still to be run.
+
+Each node of each generation contains a ```config.yaml``` file that contains the parameters used to run the corresponding job (e.g. the particle distributions parameters or the collider crossing-angle for the first generation, and, e.g. the tunes and number of turns simulated for the second generation).
+
+You should be able to run each job individually by executing the following command in the corresponding folder:
+
 ```bash
-python 001_make_folders.py
-```
-one creates the `study_000` tree in the `DA_study_example`.
-It consists of a 21x21 folders (a tune scan using the pymask in `000_machine_model`).
-Each folders has 15 subfolders (each is launching an `xtrack` jobs of 42 or 43 particles, in total the particles are 640).
-
-All the details are in the code `001_make_folders.py`.
-
-### Launching the simulation
-
-One can launch the first generation of of jobs (441 pymasks) by 
-```
-python 002_chronjob.py
-```
-And you can repeat the same command to advance in the tree genealogy and launch the tracking (the code knows when is ready to launch the second generation).
-In fact this could be implemented in a chron job.
-
-One can monitor the status of the jobs by
-```
-bjobs -sum -u user_name 
+source run.sh
 ```
 
+Note that, to run without errors, children nodes will most likley need the files output by the parent nodes. Therefore, you should run the parent nodes first, and then the children nodes. However, this is all done automatically by the ```master_study/002_chronjob.py``` script (cf. upcoming section), such that running manually the ```run.sh``` should be done only for debugging purposes.
 
+### Running the jobs
 
+First, update the study name in ```master_study/002_chronjob.py```. You can now execute the script:
 
+```bash
+python master_study/002_chronjob.py
+```
 
+Here, this will run the first generation (```base_collider```), which consists of only one job (building the particles distribution and the base collider).
 
+In a general way, once the script is finished running, executing it again will check that the jobs have been run successfully, and re-run the ones that failed. If no jobs have failed, it will run the jobs from the next generation. Therefore, executing it again should launch all the tracking jobs (several for each tune, as the particle distribution is split in several files).
 
+### Analyzing the results
 
+Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have scanned (here, the tunes) by editing the following line:
 
+```python
+groupby = ["qx", "qy"]
+```
 
+Finally, run the script:
 
+```bash
+python master_study/003_postprocessing.py
+```
 
+This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis.
+
+## What happens under the hood
+
+The aim of this set of scripts is to run sets of simulations in a fast and automated way, while keeping the possibility to run each simulation individually.
+
+### Tree structure
+
+Since simulations all make use of the same base collider, the base collider only needs to be built once. However, each simulation corresponds to a different set of parameters, meaning that the base collider needs to be tailored ("tuned") to each simulation. Therefore, the base collider will correspond to generation 1, and the subsequent tracking simulations with different parameters will correspond to generation 2.
+
+This is described in the file ```master_study/config.yaml```:
+
+```yaml
+'root':
+  setup_env_script: 'none'
+  generations:
+    1: # Build the particle distribution and base collider
+      job_folder: '../../master_jobs/1_build_distr_and_collider'
+      job_executable: 1_build_distr_and_collider.py # has to be a python file
+      files_to_clone: # relative to the template folder
+        - gen_config_orbit_correction.py
+        - optics_specific_tools_hlhc15.py
+      run_on: 'local_pc'
+    2: # Launch the pymask and prepare the colliders
+      job_folder: '../../master_jobs/2_tune_and_track'
+      job_executable: 2_tune_and_track.py # has to be a python file
+      run_on: 'htc' #'local_pc' #'htc' #'local_pc' 
+      htc_job_flavor: 'tomorrow' # optional parameter to define job flavor
+  # Children will be added below in the script 001_make_folders.py
+  children:
+```
+
+This file defines the structure of the tree of jobs, which python files must be called at each generation, with which parameters, with which python distribution, and on which machine/cluster. More precisely:
+
+- ```setup_env_script``` is the path to the conda environment that will be used to run Python in the simulations. By default, is set to ```none```, but is updated by the ```001_make_folders.py``` script to point to the conda environment in the ```master_study``` folder.
+- ```job_folder```: for each generation, this describes the folder containing the files used to run the simulation. There should be at least a python script, and a ```config.yaml``` file. The python script then reads the parameters of the currunt simulation in the ```config.yaml file```, and runs the simulation accordingly.
+- ```job_executable```, this is the name of the python script that will be run at each generation.
+- ```files_to_clone```: this is a list of files that will be copied from the ```job_folder``` to the simulation folder. This is useful to copy files that are common to all simulations.
+- ```run_on```: this is the machine/cluster on which the simulations will be run. At the moment, the following options are available:
+  - ```local_pc```: the simulations will be run on the local machine. This is useful when running small number of jobs, or debugging purposes.
+  - ```htc```: the simulations will be run on the HTCondor cluster at CERN. This is useful to run large sets of simulations.
+  - ```slurm```: the simulations will be run on the Slurm cluster at CNAF.INFN. This is useful to run large sets of simulations.
+  See section [Using computing clusters](#using-computing-clusters) below for more details.
+- ```htc_job_flavor```: this is an optional parameter that can be used to define the job flavor on HTCondor. Long jobs (>8h, <24h) should most likely use ```tomorrow```. See all flavours [here](https://batchdocs.web.cern.ch/local/submit.html).
+- ```children```: this is a list of children for each generation. More precisely, this contains the set of paramerers used by each job of each generation. This is generated by the ```001_make_folders.py``` script, and should not be modified manually.
+
+To get a better idea of how this file is used, you can check the json mutated version at the root of each scan (i.e. ```master_study/scans/study_name/tree_maker_study_name.json```).
+
+Here, only two generations are used, but it is possible to add more generations if needed. For instance, if one wants to run intricated grid searches, e.g. check the dynamics aperture for each tune and each crossing angle, one could build the tree such that the tunes are scanned at generation 2, and the crossing angles at generation 3. However, this is not implemented yet, you will have to modify the scripts yourself.
+
+### Overall pipeline
+
+When doing a parameter scan, the following steps are performed:
+
+1. Running the ```001_make_folders.py``` script. This creates the folder structure for the simulations, and generate the ```config.yaml``` files for each simulation. It also generates the ```tree_maker_study_name.json``` file at each generation of the scan. In this file, the following parameters are set:
+    - the base parameters for the collider, that is, the parameters of the collider that might be changed from one study to the other (e.g. optics being used), but that will be the same for all simulations of the study (parameters being scanned excluded).
+    ⚠️ **It is possible that you need to update other collider parameters (e.g. ```on_a5```). In this case, you can either update directly the master configuration file in ```master_study/master_jobs/1_build_distr_and_collider/config.yaml```, or adapt the ```001_make_folders.py``` script to update the collider parameters you need.**
+    - the parameters for the initial particles distribution. One parameter that is important here is ```n_split```, as it sets how much a given working point will be split into different simulations, each containing a subset of the inital particles distribution. That is, ```n_split``` is actually responsible to a large extent for the parallelization of the simulations.
+  
+    All these parameters are added to the root of the main configuration file (```master_study/config.yaml```). The tree_maker package then takes care of providing the right set of parameters to the right python file for each generation. In practice, the master jobs (located in ```master_study/master_jobs```) are copied to the simulation folders, and the corresponding ```config.yaml``` (e.g. ```master_study/master_jobs/1_build_distr_and_collider/config.yaml```) file is adapted (mutated) for each generation and each simulation, according to the main tree_maker configuration file, which as been generated at the same time as the simulation folders (e.g. in ```master_study/scans/study_name/tree_maker_study_name.json```).
+2. Running the ```002_run_simulations.py``` script. This script will run the simulations in parallel, and output a file (e.g. a collider json file, or a dataframe containing the result of the tracking) for each simulation. In practice, it calls each ```run.sh``` script in each simulation folder, which in turn calls the python script defined in the ```job_executable``` parameter of the ```master_study/config.yaml``` file. The python script makes use of the proper set of parameters, set in the mutated ```config.yaml``` files (one per job, e.g. ```master_study/scans/study_name/base_collider/xtrack_0001/config.yaml```).
+3. Running the ```003_analyse_simulations.py``` script. This script will analyse the results of the simulations, and output a summary dataframe at the root of the study.
+
+### More information
+More information, although outdated, can be gathered from the explanations provided in previous version of this repository, e.g. [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
+
+The code is now well formatted and well commented, such that any question should be relatively easily answered by looking at the code itself. If you have any question, do not hesitate to open an issue.
+
+## Parameters that can be scanned
+
+At the moment, the following parameters can be scanned without requiring scripts modifications:
+
+- crossing-angle (```on_x1, on_x5```)
+- tune (```qx, qy```)
+- chromaticity (```dqx, dqy```)
+- octupole current (```i_oct_b1, i_oct_b2```)
+- bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+
+It should be relatively easy to accomodate the scripts for other parameters. In addition, to prevent any complication, only the simulation of beam 1 is possible, but this should also be relatively easy to adapt.
+
+## Using computing clusters
+
+The scripts in the repository allows for an easy deployment of the simulations on HTCondor (CERN cluster) and Slurm (CNAF.INFN cluste). Please consult the corresponding tutorials ([here](https://abpcomputing.web.cern.ch/guides/htcondor/), and [here](https://abpcomputing.web.cern.ch/computing_resources/hpc_cnaf/)) to set up the clusters on your machine.
+
+Once, this is done, jobs can be executed on HTCondor by setting ```run_on: 'htc'``` instead of ```run_on: 'local_pc'``` in ```master_study/config.yaml```. Similarly, jobs can be executed on the CNAF cluster by setting ```run_on: 'slurm'```.
+
+⚠️ **Be careful of not running the ```master_study/002_chronjob.py``` script several times, as this will submit the same jobs several times.** In the future, this will hopefully be fixed by adding a check in the script to see if the jobs have already been submitted.
