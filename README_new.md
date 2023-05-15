@@ -6,7 +6,7 @@ under different parametric scenarios.
 Jobs can be efficiently stored and parallelized using the
 [Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harnesses the power of [X-Suite](https://github.com/xsuite/xsuite).
 
-:information: If you do not need to do parametric scans, this repository is probably not what you're looking for.
+ℹ️ If you do not need to do parametric scans, this repository is probably not what you're looking for.
 ## Installation instructions
 
 The simplest way to start is to clone the repository and install the dependencies using conda:
@@ -24,9 +24,11 @@ source make_miniconda.sh
 
 This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
 
-:warning: **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
+⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 
 ## Running a simple parameter scan simulation
+
+This section introduces the basic steps to run a simple parameter scan simulation. The simulation consists in tracking a set of particles for a given number of turns, and computing the dynamics aperture for each particle. To get a more refined understanding of what the scripts used below are actually doing, please check the section [What happens under the hood](#what-happens-under-the-hood).
 
 ### Setting up the study
 
@@ -116,6 +118,32 @@ This should output a parquet dataframe in ```master_study/scans/study_name/```. 
 
 ## What happens under the hood
 
+The aim of this set of scripts is to run sets of simulations in a fast and automated way, while keeping the possibility to run each simulation individually.
+
+Since simulations all make use of the same base collider, the base collider only needs to be built once. However, each simulation corresponds to a different set of parameters, meaning that the base collider needs to be tailored ("tuned") to each simulation. Therefore, the base collider will correspond to generation 1, and the subsequent tracking simulations with different parameters will correspond to generation 2.
+
+This hierarchy is described in the file ```master_study/config.yaml```. The first generation is described by the following lines:
+
+```yaml
+'root':
+  setup_env_script: 'none'
+  generations:
+    1: # Build the particle distribution and base collider
+      job_folder: '../../master_jobs/1_build_distr_and_collider'
+      job_executable: 1_build_distr_and_collider.py # has to be a python file
+      files_to_clone: # relative to the template folder
+        - gen_config_orbit_correction.py
+        - optics_specific_tools_hlhc15.py
+      run_on: 'local_pc'
+    2: # Launch the pymask and prepare the colliders
+      job_folder: '../../master_jobs/2_tune_and_track'
+      job_executable: 2_tune_and_track.py # has to be a python file
+      run_on: 'htc' #'local_pc' #'htc' #'local_pc' 
+      htc_job_flavor: 'tomorrow' # optional parameter to define job flavor, default is espresso
+  # Children will be added below in the script 001_make_folders.py
+  children:
+```
+
 
 
 ## Parameters that can be scanned
@@ -136,6 +164,6 @@ The scripts in the repository allows for an easy deployment of the simulations o
 
 Once, this is done, jobs can be executed on HTCondor by setting ```run_on: 'htc'``` instead of ```run_on: 'local_pc'``` in ```master_study/config.yaml```. Similarly, jobs can be executed on the CNAF cluster by setting ```run_on: 'slurm'```.
 
-:warning: **Be careful of not running the ```master_study/002_chronjob.py``` script several times, as this will submit the same jobs several times.** In the future, this will hopefully be fixed by adding a check in the script to see if the jobs have already been submitted.
+⚠️ **Be careful of not running the ```master_study/002_chronjob.py``` script several times, as this will submit the same jobs several times.** In the future, this will hopefully be fixed by adding a check in the script to see if the jobs have already been submitted.
 
 
