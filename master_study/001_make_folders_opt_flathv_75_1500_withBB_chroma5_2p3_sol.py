@@ -110,7 +110,7 @@ delta_max = 27.0e-5  # initial off-momentum
 # distribution, and the parameters of the base machine which will later be used for simulations.
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"
+study_name = "opt_flathv_75_1500_withBB_chroma5_2p3_sol"
 
 # Build empty tree: first generation (later added to the root), and second generation
 children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
