@@ -1,12 +1,13 @@
-import pdb
-import pandas as pd
+# ==================================================================================================
+# --- Imports
+# ==================================================================================================
 import tree_maker
-from tree_maker import NodeJob
 import os
-import psutil
-from pathlib import Path
 
 
+# ==================================================================================================
+# --- Class for job submission
+# ==================================================================================================
 class cluster:
     def __init__(self, run_on="local_pc"):
         if run_on in ["local_pc", "htc", "slurm"]:
@@ -93,8 +94,6 @@ class cluster:
             os.system(f"condor_submit {filename}")
 
     def running_jobs(self):
-        # for local jobs
-        # ps -ef | grep "run.sh" | grep -v grep
         my_list = []
         if self.run_on == "local_pc":
             # Does not work at the moment in lxplus
@@ -120,7 +119,9 @@ class cluster:
         return []
 
 
-# %%
+# ==================================================================================================
+# --- Submission
+# ==================================================================================================
 # Load the tree from a yaml
 if __name__ == "__main__":
     # study_name = "opt_flathv_75_1500_withBB_chroma5_1p4"

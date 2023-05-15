@@ -1,8 +1,14 @@
-# Imports
+# ==================================================================================================
+# --- Imports
+# ==================================================================================================
 import tree_maker
 import yaml
 import pandas as pd
 import time
+
+# ==================================================================================================
+# --- Load tree of jobs
+# ==================================================================================================
 
 # Start of the script
 print("Analysis of output simulation files started")
@@ -14,6 +20,11 @@ fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
 root.add_suffix(suffix=fix)
+
+
+# ==================================================================================================
+# --- Define a function to get the collider parameters associated with a given simulation
+# ==================================================================================================
 
 
 # Function for parameter assignation
@@ -70,7 +81,9 @@ def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
     return df_sim
 
 
-# Browse simulations folder and extract relevant observables
+# ==================================================================================================
+# --- # Browse simulations folder and extract relevant observables
+# ==================================================================================================
 l_problematic_sim = []
 l_df_to_merge = []
 for node in root.generation(1):
@@ -120,6 +133,10 @@ for node in root.generation(1):
         df_sim_with_particle = pd.merge(df_sim, particle, on=["particle_id"])
         l_df_to_merge.append(df_sim_with_particle)
 
+# ==================================================================================================
+# --- # Merge all jobs outputs in one dataframe and save it
+# ==================================================================================================
+
 # Merge the dataframes from all simulations together
 df_all_sim = pd.concat(l_df_to_merge)
 
@@ -127,20 +144,21 @@ df_all_sim = pd.concat(l_df_to_merge)
 df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
-groupby = ["i_bunch_b1", "i_bunch_b2"] #["qx", "qy"]
+# Median is computed in the groupby function, but values are assumed identical
+groupby = ["i_bunch_b1", "i_bunch_b2"]  # ["qx", "qy"]
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
-        df_lost_particles.groupby(groupby)["on_x1"].mean(),
-        df_lost_particles.groupby(groupby)["on_x5"].mean(),
-        df_lost_particles.groupby(groupby)["qx"].mean(),
-        df_lost_particles.groupby(groupby)["qy"].mean(),
-        df_lost_particles.groupby(groupby)["dqx"].mean(),
-        df_lost_particles.groupby(groupby)["dqy"].mean(),
-        df_lost_particles.groupby(groupby)["i_oct_b1"].mean(),
-        df_lost_particles.groupby(groupby)["i_oct_b2"].mean(),
-        df_lost_particles.groupby(groupby)["i_bunch_b1"].mean(),
-        df_lost_particles.groupby(groupby)["i_bunch_b2"].mean(),
+        df_lost_particles.groupby(groupby)["on_x1"].median(),
+        df_lost_particles.groupby(groupby)["on_x5"].median(),
+        df_lost_particles.groupby(groupby)["qx"].median(),
+        df_lost_particles.groupby(groupby)["qy"].median(),
+        df_lost_particles.groupby(groupby)["dqx"].median(),
+        df_lost_particles.groupby(groupby)["dqy"].median(),
+        df_lost_particles.groupby(groupby)["i_oct_b1"].median(),
+        df_lost_particles.groupby(groupby)["i_oct_b2"].median(),
+        df_lost_particles.groupby(groupby)["i_bunch_b1"].median(),
+        df_lost_particles.groupby(groupby)["i_bunch_b2"].median(),
     ]
 ).transpose()
 

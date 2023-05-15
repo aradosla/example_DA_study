@@ -41,7 +41,7 @@ optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
 # ! number of colliding bunches at IP8 accordingly)
-pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/56bunches_3_1.json"
+pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/custom_schemes/56bunches_3_1.json"
 i_bunch_b1 = 1963  # Will be updated by the script when doing the scan
 i_bunch_b2 = 1963  # Is updated later by a int value
 
