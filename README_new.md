@@ -4,8 +4,9 @@ This repository contains a boilerplate that allows users to compute the dynamics
 under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
-[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking is performed using [X-Suite](https://github.com/xsuite/xsuite).
+[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harnesses the power of [X-Suite](https://github.com/xsuite/xsuite).
 
+:information: If you do not need to do parametric scans, this repository is probably not what you're looking for.
 ## Installation instructions
 
 The simplest way to start is to clone the repository and install the dependencies using conda:
@@ -36,18 +37,8 @@ array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
 ```
 
-:info: In practice, as the moment, the following parameters can be scanned without requiring scripts modifications:
-
-- crossing-angle (```on_x1, on_x5```)
-- tune (```qx, qy```)
-- chromaticity (```dqx, dqy```)
-- octupole current (```i_oct_b1, i_oct_b2```)
-- bunch being tracked (```i_bunch_b1, i_bunch_b2```)
-
-It should be relatively easy to accomodate the scripts for other parameters. In addition, to prevent any complication, only the simulation of beam 1 is possible, but this should also be relatively easy to adapt.
-
 Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
-    
+
 ```python
 n_turns = 200
 ```
@@ -123,6 +114,22 @@ python master_study/003_postprocessing.py
 
 This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis.
 
+## What happens under the hood
+
+
+
+## Parameters that can be scanned
+
+At the moment, the following parameters can be scanned without requiring scripts modifications:
+
+- crossing-angle (```on_x1, on_x5```)
+- tune (```qx, qy```)
+- chromaticity (```dqx, dqy```)
+- octupole current (```i_oct_b1, i_oct_b2```)
+- bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+
+It should be relatively easy to accomodate the scripts for other parameters. In addition, to prevent any complication, only the simulation of beam 1 is possible, but this should also be relatively easy to adapt.
+
 ## Using computing clusters
 
 The scripts in the repository allows for an easy deployment of the simulations on HTCondor (CERN cluster) and Slurm (CNAF.INFN cluste). Please consult the corresponding tutorials ([here](https://abpcomputing.web.cern.ch/guides/htcondor/), and [here](https://abpcomputing.web.cern.ch/computing_resources/hpc_cnaf/)) to set up the clusters on your machine.
@@ -130,4 +137,5 @@ The scripts in the repository allows for an easy deployment of the simulations o
 Once, this is done, jobs can be executed on HTCondor by setting ```run_on: 'htc'``` instead of ```run_on: 'local_pc'``` in ```master_study/config.yaml```. Similarly, jobs can be executed on the CNAF cluster by setting ```run_on: 'slurm'```.
 
 :warning: **Be careful of not running the ```master_study/002_chronjob.py``` script several times, as this will submit the same jobs several times.** In the future, this will hopefully be fixed by adding a check in the script to see if the jobs have already been submitted.
+
 
