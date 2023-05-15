@@ -146,7 +146,7 @@ df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["i_bunch_b1", "i_bunch_b2"]  # ["qx", "qy"]
+groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),

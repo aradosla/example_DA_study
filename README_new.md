@@ -1,7 +1,7 @@
 # Dynamics aperture study boilerplate
 
 This repository contains a boilerplate that allows users to compute the dynamics aperture of a collider
-under different parametric scenarios. 
+under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
 [Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking is performed using [X-Suite](https://github.com/xsuite/xsuite).
@@ -14,7 +14,7 @@ The simplest way to start is to clone the repository and install the dependencie
 git clone git@github.com:ColasDroin/example_DA_study.git -b xmask_test
 ```
 
-Then: 
+Then:
 
 ```bash
 cd example_DA_study
@@ -25,16 +25,26 @@ This should install miniconda along with the required python modules. If somethi
 
 :warning: **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 
-## Running a simple tune scan simulation
+## Running a simple parameter scan simulation
 
 ### Setting up the study
 
-You can select the range of tunes you want to scan by editing the following lines in ```master_study/001_make_folders.py``` (here, only the first 10 tunes are selected, in order not to create too many jobs):
+You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan (here, only the first 10 tunes are selected, in order not to create too many jobs):
 
 ```python
 array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
 ```
+
+:info: In practice, as the moment, the following parameters can be scanned without requiring scripts modifications:
+
+- crossing-angle (```on_x1, on_x5```)
+- tune (```qx, qy```)
+- chromaticity (```dqx, dqy```)
+- octupole current (```i_oct_b1, i_oct_b2```)
+- bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+
+It should be relatively easy to accomodate the scripts for other parameters. In addition, to prevent any complication, only the simulation of beam 1 is possible, but this should also be relatively easy to adapt.
 
 Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
     
@@ -97,59 +107,27 @@ Here, this will run the first generation (```base_collider```), which consists o
 
 In a general way, once the script is finished running, executing it again will check that the jobs have been run successfully, and re-run the ones that failed. If no jobs have failed, it will run the jobs from the next generation. Therefore, executing it again should launch all the tracking jobs (several for each tune, as the particle distribution is split in several files).
 
+### Analyzing the results
 
-## Using comuting clusters
+Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have scanned (here, the tunes) by editing the following line:
+
+```python
+groupby = ["qx", "qy"]
+```
+
+Finally, run the script:
+
+```bash
+python master_study/003_postprocessing.py
+```
+
+This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis.
+
+## Using computing clusters
 
 The scripts in the repository allows for an easy deployment of the simulations on HTCondor (CERN cluster) and Slurm (CNAF.INFN cluste). Please consult the corresponding tutorials ([here](https://abpcomputing.web.cern.ch/guides/htcondor/), and [here](https://abpcomputing.web.cern.ch/computing_resources/hpc_cnaf/)) to set up the clusters on your machine.
 
 Once, this is done, jobs can be executed on HTCondor by setting ```run_on: 'htc'``` instead of ```run_on: 'local_pc'``` in ```master_study/config.yaml```. Similarly, jobs can be executed on the CNAF cluster by setting ```run_on: 'slurm'```.
 
-### Activate the environment
-I suggest to open a `tmux` terminal and 
-
-```bash
-source /home/HPC/sterbini/py38/bin/activate
-```
-then move where you want to start lauch this DA study and make a clone of this repository
-
-```
-git clone https://github.com/sterbini/DA_study_example.git
-cd DA_study_example
-```
-
-### Tree creation
-With the command
-```bash
-python 001_make_folders.py
-```
-one creates the `study_000` tree in the `DA_study_example`.
-It consists of a 21x21 folders (a tune scan using the pymask in `000_machine_model`).
-Each folders has 15 subfolders (each is launching an `xtrack` jobs of 42 or 43 particles, in total the particles are 640).
-
-All the details are in the code `001_make_folders.py`.
-
-### Launching the simulation
-
-One can launch the first generation of of jobs (441 pymasks) by 
-```
-python 002_chronjob.py
-```
-And you can repeat the same command to advance in the tree genealogy and launch the tracking (the code knows when is ready to launch the second generation).
-In fact this could be implemented in a chron job.
-
-One can monitor the status of the jobs by
-```
-bjobs -sum -u user_name 
-```
-
-
-
-
-
-
-
-
-
-
-
+:warning: **Be careful of not running the ```master_study/002_chronjob.py``` script several times, as this will submit the same jobs several times.** In the future, this will hopefully be fixed by adding a check in the script to see if the jobs have already been submitted.
 
