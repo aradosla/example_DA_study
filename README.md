@@ -57,7 +57,7 @@ In addition, since this is a toy simulation, you also want to keep a low number 
 n_turns = 200
 ```
 
-Give the study you're doing the name of your choice by editing the following line:
+you can give the study you're doing the name of your choice by editing the following line:
 
 ```python
 study_name = "example_HL_tunescan"
@@ -65,7 +65,7 @@ study_name = "example_HL_tunescan"
 
 ### Building the tree
 
-You're now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
+You are now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
 
 - the first generation generates the particles distribution and build a collider with "base" parameters (parameters that are kept constant during the study)
 - the second generation tunes the base collider (in here, this means changing the tunes) and tracks the particles for a given number of turns.
@@ -128,7 +128,7 @@ Finally, run the script:
 python master_study/003_postprocessing.py
 ```
 
-This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis.
+This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.
 
 ## What happens under the hood
 
