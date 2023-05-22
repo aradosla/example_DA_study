@@ -49,7 +49,7 @@ array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 ```
 
-Note that, if the parameter ```only_keep_upper_triangle``` is set to True, most of the jobs in the grid defined above will be automatically skipped as the corresponding working point are too close to resonance, or are unreachable in the LHC. 
+Note that, if the parameter ```only_keep_upper_triangle``` is set to True, most of the jobs in the grid defined above will be automatically skipped as the corresponding working points are too close to resonance, or are unreachable in the LHC.
 
 In addition, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
 
