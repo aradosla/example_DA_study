@@ -91,15 +91,17 @@ delta_cmi: 0.0
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 
+# To decrease the size of the scan, we can ignore the working points too close to resonance
+only_keep_upper_triangle = True
 # ==================================================================================================
 # --- Tracking parameters
 #
 # Below, the user defines the parameters for the tracking.
 # ==================================================================================================
-n_turns = 1000
+n_turns = 500
 delta_max = 27.0e-5  # initial off-momentum
 
 # ==================================================================================================
@@ -232,9 +234,10 @@ children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filli
 # ==================================================================================================
 track_array = np.arange(n_split)
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-    # Ignore conditions below the upper diagonal as this can't exist in the real machine
-    if qy < (qx - 2 + 0.039):  # 0.039 instead of 0.04 to avoid rounding errors
-        continue
+    if only_keep_upper_triangle:
+        # Ignore conditions below the upper diagonal as this can't exist in the real machine
+        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
+            continue
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
         "particle_file": f"../particles/{track:02}.parquet",

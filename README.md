@@ -25,6 +25,15 @@ source make_miniconda.sh
 
 This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
 
+ℹ️ The following lines in the ```make_miniconda.sh``` script may require to add the xmask repository as a safe directory in your git configuration (assuming you're in the ```modules/xmask/``` folder):
+
+```bash
+git submodule init
+git submodule update
+```
+
+Just enter the command git is suggesting to you if ```git submodule init``` triggers an error (you can do this a posteriori if needed).
+
 ⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 
 ## Running a simple parameter scan simulation
@@ -33,11 +42,11 @@ This section introduces the basic steps to run a simple parameter scan simulatio
 
 ### Setting up the study
 
-You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan (here, only the first 10 tunes are selected, in order not to create too many jobs):
+You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 10 tunes are selected, in order not to create too many jobs):
 
 ```python
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 ```
 
 Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
@@ -100,6 +109,8 @@ python master_study/002_chronjob.py
 Here, this will run the first generation (```base_collider```), which consists of only one job (building the particles distribution and the base collider).
 
 In a general way, once the script is finished running, executing it again will check that the jobs have been run successfully, and re-run the ones that failed. If no jobs have failed, it will run the jobs from the next generation. Therefore, executing it again should launch all the tracking jobs (several for each tune, as the particle distribution is split in several files).
+
+⚠️ **If the generation of the simulation you're launching comprises many jobs, ensure that you're not running them on your local machine (i.e. you don't use ```run_on: 'local_pc'``` in ```master_study/config.yaml```). Otherwise, as the jobs are run in parallel, you will most likely saturate the cores and/or the RAM of your machine.**
 
 ### Analyzing the results
 

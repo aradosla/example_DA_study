@@ -15,8 +15,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-# study_name = "opt_flathv_75_1500_withBB_chroma15_1p4_custom_filling"
-study_name = "opt_flathv_75_1500_withBB_chroma5_2p3_sol"
+study_name = "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -143,6 +142,10 @@ df_all_sim = pd.concat(l_df_to_merge)
 
 # Extract the particles that were lost for DA computation
 df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
+
+# Check if the dataframe is empty
+if df_lost_particles.empty:
+    print("No unstable particles found, the output dataframe will be empty.")
 
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
 # Median is computed in the groupby function, but values are assumed identical
