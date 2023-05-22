@@ -40,9 +40,9 @@ optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
 # ! number of colliding bunches at IP8 accordingly)
-pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
-i_bunch_b1 = 1963
-i_bunch_b2 = 1963
+pattern_fname = None # "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+i_bunch_b1 = None # Irrelevant if pattern_fname is None, must be specified otherwise
+i_bunch_b2 = None # Irrelevant if pattern_fname is None, must be specified otherwise
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
