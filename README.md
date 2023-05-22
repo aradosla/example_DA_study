@@ -49,7 +49,9 @@ array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 ```
 
-Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
+Note that, if the paramter ```only_keep_upper_triangle```, is set to True, most of the jobs in the grid defined above will be automatically skipped as the corresponding working point are too close to resonance, or are unreachable in the LHC. 
+
+In addition, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
 
 ```python
 n_turns = 200
@@ -66,7 +68,7 @@ study_name = "example_HL_tunescan"
 You're now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
 
 - the first generation generates the particles distribution and build a collider with "base" parameters (parameters that are kept constant during the study)
-- the second generation tunes the base collider(in here, this means changing the tunes) and tracks the particles for a given number of turns.
+- the second generation tunes the base collider (in here, this means changing the tunes) and tracks the particles for a given number of turns.
 
 For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, edit ```master_study/config.yaml``` to have, for both generations:
 
