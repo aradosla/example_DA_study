@@ -4,7 +4,7 @@ This repository contains a boilerplate that allows users to compute the dynamics
 under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
-[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harnesses the power of [X-Suite](https://github.com/xsuite/xsuite).
+[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [XSuite](https://github.com/xsuite/xsuite).
 
 ℹ️ If you do not need to do parametric scans, this repository is probably not what you're looking for.
 
@@ -25,6 +25,15 @@ source make_miniconda.sh
 
 This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
 
+ℹ️ The following lines in the ```make_miniconda.sh``` script may require to add the xmask repository as a safe directory in your git configuration (assuming you're in the ```modules/xmask/``` folder):
+
+```bash
+git submodule init
+git submodule update
+```
+
+Just enter the command git is suggesting to you if ```git submodule init``` triggers an error (you can do this a posteriori if needed).
+
 ⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 
 ## Running a simple parameter scan simulation
@@ -33,20 +42,22 @@ This section introduces the basic steps to run a simple parameter scan simulatio
 
 ### Setting up the study
 
-You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan (here, only the first 10 tunes are selected, in order not to create too many jobs):
+You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 6 tunes are selected, in order not to create too many jobs):
 
 ```python
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 ```
 
-Most likely, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
+Note that, if the parameter ```only_keep_upper_triangle``` is set to True, most of the jobs in the grid defined above will be automatically skipped as the corresponding working points are too close to resonance, or are unreachable in the LHC.
+
+In addition, since this is a toy simulation, you also want to keep a low number of turns simulated (e.g. 200 instead of 1000000):
 
 ```python
 n_turns = 200
 ```
 
-Give the study you're doing the name of your choice by editing the following line:
+you can give the study you're doing the name of your choice by editing the following line:
 
 ```python
 study_name = "example_HL_tunescan"
@@ -54,12 +65,12 @@ study_name = "example_HL_tunescan"
 
 ### Building the tree
 
-You're now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
+You are now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
 
 - the first generation generates the particles distribution and build a collider with "base" parameters (parameters that are kept constant during the study)
-- the second generation tunes the base collider(in here, this means changing the tunes) and tracks the particles for a given number of turns.
+- the second generation tunes the base collider (in here, this means changing the tunes) and tracks the particles for a given number of turns.
 
-For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, edit ```master_study/config.yaml``` to have, for both generations:
+For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, ensure that in the file ```master_study/config.yaml```, there is, for both generations:
 
 ```yaml
 run_on: 'local_pc'
@@ -101,9 +112,11 @@ Here, this will run the first generation (```base_collider```), which consists o
 
 In a general way, once the script is finished running, executing it again will check that the jobs have been run successfully, and re-run the ones that failed. If no jobs have failed, it will run the jobs from the next generation. Therefore, executing it again should launch all the tracking jobs (several for each tune, as the particle distribution is split in several files).
 
+⚠️ **If the generation of the simulation you're launching comprises many jobs, ensure that you're not running them on your local machine (i.e. you don't use ```run_on: 'local_pc'``` in ```master_study/config.yaml```). Otherwise, as the jobs are run in parallel, you will most likely saturate the cores and/or the RAM of your machine.**
+
 ### Analyzing the results
 
-Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have scanned (here, the tunes) by editing the following line:
+Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have been scanned (here, the tunes) by editing the following line:
 
 ```python
 groupby = ["qx", "qy"]
@@ -115,7 +128,7 @@ Finally, run the script:
 python master_study/003_postprocessing.py
 ```
 
-This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis.
+This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.
 
 ## What happens under the hood
 
@@ -180,7 +193,7 @@ When doing a parameter scan, the following steps are performed:
 
 ### More information
 
-More information, although outdated, can be gathered from the explanations provided in previous versions of this repository, e.g. [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
+More information, although outdated, can be gathered from the explanations provided in previous versions of this repository, e.g. [in the previous README](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [the Tree Maker tutorial](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
 
 The code is now well formatted and well commented, such that any question should be relatively easily answered by looking at the code itself. If you have any question, do not hesitate to open an issue.
 

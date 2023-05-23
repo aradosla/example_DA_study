@@ -143,6 +143,10 @@ df_all_sim = pd.concat(l_df_to_merge)
 # Extract the particles that were lost for DA computation
 df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 
+# Check if the dataframe is empty
+if df_lost_particles.empty:
+    print("No unstable particles found, the output dataframe will be empty.")
+
 # Groupe by working point (# ! Update this with the knobs you want to group by ! #)
 # Median is computed in the groupby function, but values are assumed identical
 groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #

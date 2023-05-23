@@ -143,19 +143,41 @@ collider.configure_beambeam_interactions(
     nemitt_y=config_bb["nemitt_y"],
 )
 
+# Configure filling scheme mask and bunch numbers
 if "mask_with_filling_pattern" in config_bb:
-    fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
-    i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]
-    i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
-    with open(fname, "r") as fid:
-        filling = json.load(fid)
+    
+    # Initialize filling pattern with empty values
+    filling_pattern_cw = None
+    filling_pattern_acw = None
+        
+    # Initialize bunch numbers with empty values
+    i_bunch_cw = None
+    i_bunch_acw = None
+    
+    if "pattern_fname" in config_bb["mask_with_filling_pattern"]:        
+        
+        # Fill values if possible
+        if config_bb["mask_with_filling_pattern"]["pattern_fname"] is not None:
+            fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
+            with open(fname, "r") as fid:
+                filling = json.load(fid)
+            filling_pattern_cw = filling["beam1"]
+            filling_pattern_acw = filling["beam2"]
+            
+            # Only track bunch number if a filling pattern has been provided
+            if "i_bunch_b1" in config_bb["mask_with_filling_pattern"]:
+                i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]                
+            if "i_bunch_b2" in config_bb["mask_with_filling_pattern"]:
+                i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
 
-    collider.apply_filling_pattern(
-        filling_pattern_cw=filling["beam1"],
-        filling_pattern_acw=filling["beam2"],
-        i_bunch_cw=i_bunch_cw,
-        i_bunch_acw=i_bunch_acw,
-    )
+            # ! It seems that a bunch number must be provided if a filling pattern is provided
+            # Apply filling pattern
+            collider.apply_filling_pattern(
+                filling_pattern_cw=filling["beam1"],
+                filling_pattern_acw=filling["beam2"],
+                i_bunch_cw=i_bunch_cw,
+                i_bunch_acw=i_bunch_acw,
+            )
 
 # ==================================================================================================
 # --- Prepare particles distribution for tracking
@@ -189,12 +211,8 @@ particles.particle_id = particle_df.particle_id.values
 # ==================================================================================================
 # --- Build tracker and track
 # ==================================================================================================
-# Build tracker and optimize
-tracker = xt.Tracker(
-    line=collider.lhcb1,
-    extra_headers=["#define XTRACK_MULTIPOLE_NO_SYNRAD"],
-)
-tracker.optimize_for_tracking()
+# Optimize line for tracking
+collider.lhcb1.optimize_for_tracking()
 
 # Save initial coordinates
 pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
@@ -203,7 +221,7 @@ pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
 # Track
 num_turns = configuration_sim["n_turns"]
 a = time.time()
-tracker.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
+collider.lhcb1.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
 b = time.time()
 
 print(f"Elapsed time: {b-a} s")

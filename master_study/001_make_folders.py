@@ -41,9 +41,9 @@ optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
 # ! number of colliding bunches at IP8 accordingly)
-pattern_fname = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
-i_bunch_b1 = 1963
-i_bunch_b2 = 1963
+pattern_fname = None # "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+i_bunch_b1 = None # Irrelevant if pattern_fname is None, must be specified otherwise
+i_bunch_b2 = None # Irrelevant if pattern_fname is None, must be specified otherwise
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -92,15 +92,17 @@ delta_cmi: 0.0
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:10]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:10]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 
+# To decrease the size of the scan, we can ignore the working points too close to resonance
+only_keep_upper_triangle = True
 # ==================================================================================================
 # --- Tracking parameters
 #
 # Below, the user defines the parameters for the tracking.
 # ==================================================================================================
-n_turns = 1000
+n_turns = 500
 delta_max = 27.0e-5  # initial off-momentum
 
 # ==================================================================================================
@@ -233,9 +235,10 @@ children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filli
 # ==================================================================================================
 track_array = np.arange(n_split)
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-    # Ignore conditions below the upper diagonal as this can't exist in the real machine
-    if qy < (qx - 2 + 0.039):  # 0.039 instead of 0.04 to avoid rounding errors
-        continue
+    if only_keep_upper_triangle:
+        # Ignore conditions below the upper diagonal as this can't exist in the real machine
+        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
+            continue
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
         "particle_file": f"../particles/{track:02}.parquet",
