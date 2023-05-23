@@ -4,7 +4,7 @@ This repository contains a boilerplate that allows users to compute the dynamics
 under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
-[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harnesses the power of [X-Suite](https://github.com/xsuite/xsuite).
+[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [XSuite](https://github.com/xsuite/xsuite).
 
 ℹ️ If you do not need to do parametric scans, this repository is probably not what you're looking for.
 
@@ -42,7 +42,7 @@ This section introduces the basic steps to run a simple parameter scan simulatio
 
 ### Setting up the study
 
-You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 10 tunes are selected, in order not to create too many jobs):
+You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 6 tunes are selected, in order not to create too many jobs):
 
 ```python
 array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
@@ -70,7 +70,7 @@ You are now ready to create the folder structure (the _tree_) of your study. The
 - the first generation generates the particles distribution and build a collider with "base" parameters (parameters that are kept constant during the study)
 - the second generation tunes the base collider (in here, this means changing the tunes) and tracks the particles for a given number of turns.
 
-For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, edit ```master_study/config.yaml``` to have, for both generations:
+For now, you might want to keep the jobs running on your local machine to ensure everything runs fine. To do so, ensure that in the file ```master_study/config.yaml```, there is, for both generations:
 
 ```yaml
 run_on: 'local_pc'
@@ -193,7 +193,7 @@ When doing a parameter scan, the following steps are performed:
 
 ### More information
 
-More information, although outdated, can be gathered from the explanations provided in previous versions of this repository, e.g. [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [here](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
+More information, although outdated, can be gathered from the explanations provided in previous versions of this repository, e.g. [in the previous README](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/README.md) and [the Tree Maker tutorial](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/tree_tutorial.md).
 
 The code is now well formatted and well commented, such that any question should be relatively easily answered by looking at the code itself. If you have any question, do not hesitate to open an issue.
 
