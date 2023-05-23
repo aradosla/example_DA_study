@@ -116,7 +116,7 @@ In a general way, once the script is finished running, executing it again will c
 
 ### Analyzing the results
 
-Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have scanned (here, the tunes) by editing the following line:
+Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have been scanned (here, the tunes) by editing the following line:
 
 ```python
 groupby = ["qx", "qy"]
