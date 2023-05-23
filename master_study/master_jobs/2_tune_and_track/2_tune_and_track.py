@@ -145,17 +145,15 @@ collider.configure_beambeam_interactions(
 
 # Configure filling scheme mask and bunch numbers
 if "mask_with_filling_pattern" in config_bb:
-    
     # Initialize filling pattern with empty values
     filling_pattern_cw = None
     filling_pattern_acw = None
-        
+
     # Initialize bunch numbers with empty values
     i_bunch_cw = None
     i_bunch_acw = None
-    
-    if "pattern_fname" in config_bb["mask_with_filling_pattern"]:        
-        
+
+    if "pattern_fname" in config_bb["mask_with_filling_pattern"]:
         # Fill values if possible
         if config_bb["mask_with_filling_pattern"]["pattern_fname"] is not None:
             fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
@@ -163,14 +161,14 @@ if "mask_with_filling_pattern" in config_bb:
                 filling = json.load(fid)
             filling_pattern_cw = filling["beam1"]
             filling_pattern_acw = filling["beam2"]
-            
+
             # Only track bunch number if a filling pattern has been provided
             if "i_bunch_b1" in config_bb["mask_with_filling_pattern"]:
-                i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]                
+                i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]
             if "i_bunch_b2" in config_bb["mask_with_filling_pattern"]:
                 i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
 
-            # ! It seems that a bunch number must be provided if a filling pattern is provided
+            # Note that a bunch number must be provided if a filling pattern is provided
             # Apply filling pattern
             collider.apply_filling_pattern(
                 filling_pattern_cw=filling["beam1"],

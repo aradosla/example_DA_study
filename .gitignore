@@ -31,5 +31,6 @@ master_study/001_make_folders_*
 master_study/submission_files/*
 !master_study/submission_files/.gitkeep
 
-
+# Old analysis
+master_study/old/*
 

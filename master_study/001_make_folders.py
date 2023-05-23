@@ -16,16 +16,20 @@ from user_defined_functions import generate_run_sh_htc
 # Below, the user defines the parameters for the initial particles distribution.
 # Path for the distribution config: master_study/master_jobs/000_build_distr_and_collider/config_distrib.yaml
 # ==================================================================================================
+
+# Define dictionary for the initial particle distribution
+d_config_particles = {}
+
 # Radius of the initial particle distribution
-r_min = 2
-r_max = 10
-n_r = 2 * 16 * (r_max - r_min)
+d_config_particles["r_min"] = 2
+d_config_particles["r_max"] = 10
+d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
-n_angles = 5
+d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-n_split = 5
+d_config_particles["n_split"] = 5
 
 # ==================================================================================================
 # --- Base collider parameters
@@ -36,54 +40,118 @@ n_split = 5
 # machine. Path for the collider config:
 # master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
 # ==================================================================================================
-# Optic file path (round or flat)
-optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
-# Filling scheme and bunch number (#! If one change the filling scheme, one needs to change the
-# ! number of colliding bunches at IP8 accordingly)
-pattern_fname = None # "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
-i_bunch_b1 = None # Irrelevant if pattern_fname is None, must be specified otherwise
-i_bunch_b2 = None # Irrelevant if pattern_fname is None, must be specified otherwise
+### Mad configuration
+
+# Define dictionary for the Mad configuration
+d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
+
+# Optic file path (round or flat)
+d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
+d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
+d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
+
+### Tune and chroma configuration
+
+# Define dictionnary for tune and chroma
+d_config_tune_and_chroma = {
+    "qx": {},
+    "qy": {},
+    "dqx": {},
+    "dqy": {},
+}
+for beam in ["lhcb1", "lhcb2"]:
+    d_config_tune_and_chroma["qx"][beam] = 62.316
+    d_config_tune_and_chroma["qy"][beam] = 60.321
+    d_config_tune_and_chroma["dqx"][beam] = 5.0
+    d_config_tune_and_chroma["dqy"][beam] = 5.0
+
+# Value to be added to linear coupling knobs
+d_config_tune_and_chroma["delta_cmr"] = 0.001
+d_config_tune_and_chroma["delta_cmi"] = 0.0
+
+### Knobs configuration
+
+# Define dictionary for the knobs settings
+d_config_knobs = {}
 
 # Knobs at IPs
-on_x1 = 250
-on_sep1 = 0
-on_x2 = -170
-on_sep2 = 0.138
-on_x5 = 250
-on_sep5 = 0
-on_x8h = 0.0
-on_x8v = 170
+d_config_knobs["on_x1"] = 250
+d_config_knobs["on_sep1"] = 0
+d_config_knobs["on_x2"] = -170
+d_config_knobs["on_sep2"] = 0.138
+d_config_knobs["on_x5"] = 250
+d_config_knobs["on_sep5"] = 0
+d_config_knobs["on_x8h"] = 0.0
+d_config_knobs["on_x8v"] = 170
 
 # Crab cavities
-on_crab1 = -190
-on_crab5 = -190
+d_config_knobs["on_crab1"] = -190
+d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-i_oct_b1 = 60.0
-i_oct_b2 = 60.0
+d_config_knobs["i_oct_b1"] = 60.0
+d_config_knobs["i_oct_b2"] = 60.0
 
-# Tunes and chromas (for both beams)
-qx = 62.316
-qy = 60.321
-dqx = 5.0
-dqy = 5.0
+### leveling configuration
+
+# Define dictionary for the leveling settings
+d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
 skip_leveling = False
-num_particles_per_bunch = 1.4e11
-nemitt_x = 2.5e-6
-nemitt_y = 2.5e-6
-separation_in_sigma_ip2 = 5
-luminosity_ip8 = 2.0e33
-num_colliding_bunches_ip8 = 1886
 
-# Value to be added to linear coupling knobs
-delta_cmr: 0.001
-delta_cmi: 0.0
+if not skip_leveling:
+    d_config_leveling["ip2"]["separation_in_sigmas"] = 5
+    d_config_leveling["ip8"]["luminosity"] = 2.0e33
+    d_config_leveling["ip8"][
+        "num_colliding_bunches"
+    ] = None  # This is set after specifying the filling scheme
+
+else:
+    d_config_leveling = None
+
+### Beam beam configuration
+
+# Define dictionary for the beam beam settings
+d_config_beambeam = {"mask_with_filling_pattern": {}}
+
+# Beam settings
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11
+d_config_beambeam["nemitt_x"] = 2.5e-6
+d_config_beambeam["nemitt_y"] = 2.5e-6
+
+# Filling scheme (#! If one change the filling scheme, one needs to change the
+# ! number of colliding bunches at IP8 accordingly)
+filling_scheme_path = os.path.abspath(
+    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+)
+d_config_beambeam["mask_with_filling_pattern"][
+    "pattern_fname"
+] = filling_scheme_path  # If None, a full fill is assumed
+if not skip_leveling:
+    d_config_leveling["ip8"]["num_colliding_bunches"] = (
+        return_num_colliding_bunches_from_filling_scheme(filling_scheme_path)
+    )
+
+
+# Bunch number (ignored if pattern_fname is None, must be specified otherwise)
+d_config_beambeam["mask_with_filling_pattern"][
+    "i_bunch_b1"
+] = None  # If None, the bunch with the largest number of long-range interactions will be used
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None  # Same
+
+if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = (
+        return_bunch_with_largest_num_long_range_interactions(filling_scheme_path, beam=1)
+    )
+if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = (
+        return_bunch_with_largest_num_long_range_interactions(filling_scheme_path, beam=2)
+    )
 
 # ==================================================================================================
 # --- Machine parameters being scanned
@@ -112,120 +180,37 @@ delta_max = 27.0e-5  # initial off-momentum
 # study being done) to the root. This first generation is used set the initial particle
 # distribution, and the parameters of the base machine which will later be used for simulations.
 # ==================================================================================================
-# Define study name
-study_name = "example_HL_tunescan"
 
 # Build empty tree: first generation (later added to the root), and second generation
 children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
-children["base_collider"]["config_particles"]["r_min"] = r_min
-children["base_collider"]["config_particles"]["r_max"] = r_max
-children["base_collider"]["config_particles"]["n_r"] = n_r
-children["base_collider"]["config_particles"]["n_angles"] = n_angles
-children["base_collider"]["config_particles"]["n_split"] = n_split
+children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"]["config_mad"] = {
-    "beam_config": {"lhcb1": {}, "lhcb2": {}},
-    "optics_file": None,
-}
-children["base_collider"]["config_collider"]["config_mad"]["optics_file"] = optics_file
-children["base_collider"]["config_collider"]["config_mad"]["beam_config"]["lhcb1"][
-    "beam_energy_tot"
-] = beam_energy_tot
-children["base_collider"]["config_collider"]["config_mad"]["beam_config"]["lhcb2"][
-    "beam_energy_tot"
-] = beam_energy_tot
-
-# Add all knobs to the first generation (prepare also dictionnaries for tune and chroma)
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"] = {
-    "knob_settings": {},
-    "qx": {},
-    "qy": {},
-    "dqx": {},
-    "dqy": {},
-}
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_x1"
-] = on_x1
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_sep1"
-] = on_sep1
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_x2"
-] = on_x2
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_sep2"
-] = on_sep2
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_x5"
-] = on_x5
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_sep5"
-] = on_sep5
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_x8h"
-] = on_x8h
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_x8v"
-] = on_x8v
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_crab1"
-] = on_crab1
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "on_crab5"
-] = on_crab5
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "i_oct_b1"
-] = i_oct_b1
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["knob_settings"][
-    "i_oct_b2"
-] = i_oct_b2
+children["base_collider"]["config_collider"] = d_config_mad
 
 # Add tunes and chromas to the first generation
-for beam in ["lhcb1", "lhcb2"]:
-    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["qx"][beam] = qx
-    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["qy"][beam] = qy
-    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["dqx"][beam] = dqx
-    children["base_collider"]["config_collider"]["config_knobs_and_tuning"]["dqy"][beam] = dqy
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"] = d_config_tune_and_chroma
+
+# Add knobs to the first generation
+children["base_collider"]["config_collider"]["config_knobs_and_tuning"][
+    "knob_settings"
+] = d_config_knobs
 
 # Add luminosity configuration to the first generation
 children["base_collider"]["config_collider"]["skip_leveling"] = skip_leveling
-children["base_collider"]["config_collider"]["config_lumi_leveling"] = {"ip2": {}, "ip8": {}}
-children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip2"][
-    "separation_in_sigmas"
-] = separation_in_sigma_ip2
-children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip8"][
-    "luminosity"
-] = luminosity_ip8
-children["base_collider"]["config_collider"]["config_lumi_leveling"]["ip8"][
-    "num_colliding_bunches"
-] = num_colliding_bunches_ip8
+children["base_collider"]["config_collider"]["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration to the first generation
-children["base_collider"]["config_collider"]["config_beambeam"] = {"mask_with_filling_pattern": {}}
-children["base_collider"]["config_collider"]["config_beambeam"][
-    "num_particles_per_bunch"
-] = num_particles_per_bunch
-children["base_collider"]["config_collider"]["config_beambeam"]["nemitt_x"] = nemitt_x
-children["base_collider"]["config_collider"]["config_beambeam"]["nemitt_y"] = nemitt_y
-children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
-    "pattern_fname"
-] = pattern_fname
-children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
-    "i_bunch_b1"
-] = i_bunch_b1
-children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filling_pattern"][
-    "i_bunch_b2"
-] = i_bunch_b2
+children["base_collider"]["config_collider"]["config_beambeam"] = d_config_beambeam
 
 # ==================================================================================================
 # --- Generate second generation of the tree, with the machine parameters being scanned, and
 # tracking parameters being set.
 # Parameters are separated in three groups, depending how they affect the configuration of the
 # collider:
-# - group_1: parameters that require to retune and redo the levelling, and retune again
+# - group_1: parameters that require to retune and redo the leveling, and retune again
 #            (e.g. crossing angle)
 # - group_2: parameters that require to retune
 #            (e.g. chromaticity, octupoles)
@@ -233,7 +218,7 @@ children["base_collider"]["config_collider"]["config_beambeam"]["mask_with_filli
 #            (e.g. bunch_nb)
 # Collider lines composition can not be reconfigured at this step, at least for now.
 # ==================================================================================================
-track_array = np.arange(n_split)
+track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     if only_keep_upper_triangle:
         # Ignore conditions below the upper diagonal as this can't exist in the real machine
@@ -266,6 +251,9 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # ==================================================================================================
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
+# Define study name
+study_name = "example_HL_tunescan"
+
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
     os.makedirs("scans/" + study_name)
