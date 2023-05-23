@@ -30,10 +30,11 @@ n_split = 5
 # ==================================================================================================
 # --- Base collider parameters
 #
-# Below, the user defines the base collider parameters. That is, only the parameters that subject
-# to change are present here. More parameters can be added from the collider config.yaml, as needed.
-# One needs to ensure that the remaining (default) parameters are set properly in the machine.
-# Path for the collider config: master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
+# Below, the user defines the base collider parameters. That is, only the parameters that are
+# subject to change are present here. More parameters can be added from the collider config.yaml,
+# as needed. One needs to ensure that the remaining (default) parameters are set properly in the
+# machine. Path for the collider config:
+# master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
 # ==================================================================================================
 # Optic file path (round or flat)
 optics_file = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
