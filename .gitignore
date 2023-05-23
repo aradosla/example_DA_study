@@ -13,7 +13,7 @@ modules/*
 !modules/.gitkeep
 
 # Filling scheme
-master_study/master_jobs/filling_scheme/*
+master_study/master_jobs/filling_scheme/custom_schemes/*
 !master_study/master_jobs/filling_scheme/.gitkeep
 
 # Scans
