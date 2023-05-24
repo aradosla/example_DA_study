@@ -135,7 +135,9 @@ if start_from_levelling or start_from_tuning:
 collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
 collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 
-# Assert that tune and chromaticity are correct before going further
+# ==================================================================================================
+# --- Assert that tune and chromaticity are correct before going further
+# ==================================================================================================
 for line_name in ["lhcb1", "lhcb2"]:
     tw = collider[line_name].twiss()
     assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=2e-3), (
@@ -163,7 +165,9 @@ for line_name in ["lhcb1", "lhcb2"]:
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"
     )
 
-### Configure beam-beam
+# ==================================================================================================
+# --- Configure beam-beam
+# ==================================================================================================
 print("Configuring beam-beam lenses...")
 collider.configure_beambeam_interactions(
     num_particles=config_bb["num_particles_per_bunch"],
@@ -204,6 +208,11 @@ if "mask_with_filling_pattern" in config_bb:
                 i_bunch_cw=i_bunch_cw,
                 i_bunch_acw=i_bunch_acw,
             )
+
+# ==================================================================================================
+# --- Save the final collider before tracking
+# ==================================================================================================
+collider.to_json("final_collider.json")
 
 # ==================================================================================================
 # --- Prepare particles distribution for tracking
