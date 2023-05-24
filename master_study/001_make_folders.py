@@ -151,10 +151,12 @@ d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
     # Case the bunch number has not been provided
     worst_bunch_b1 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1")
-    while worst_bunch_b1 is None:
+    while d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         bool_inp = input(
-            "The bunch number has not been provided. Do you want to use the bunch with the largest"
-            " number of long-range interactions? (y/n)"
+            "The bunch number for beam 1 has not been provided. Do you want to use the bunch with"
+            " the largest number of long-range interactions? It is the bunch number "
+            + str(worst_bunch_b1)
+            + " (y/n): "
         )
         if bool_inp == "y":
             d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
@@ -258,11 +260,9 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 # Load the tree_maker simulation configuration
 config = yaml.safe_load(open("config.yaml"))
 
-# # Set the root children to the ones defined above, or to the default one
-# if config["root"]["use_yaml_children"] == False:
+# # Set the root children to the ones defined above
 config["root"]["children"] = children
-# else:
-#     print("The default simulation configuration will be used.")
+
 
 # Set miniconda environment path in the config
 config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"

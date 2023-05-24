@@ -148,7 +148,8 @@ def get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1")
     elif beam == "beam_2":
         worst_bunch = B2_bunches_index[np.argmax(l_long_range_per_bunch)]
 
-    return worst_bunch
+    # Need to explicitly convert to int for json serialization
+    return int(worst_bunch)
 
 
 if __name__ == "__main__":
