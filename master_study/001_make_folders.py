@@ -8,7 +8,7 @@ import itertools
 import numpy as np
 import yaml
 import shutil
-from user_defined_functions import generate_run_sh_htc
+from user_defined_functions import generate_run_sh_htc, get_worst_bunch
 
 # ==================================================================================================
 # --- Initial particle distribution parameters
@@ -107,9 +107,7 @@ skip_leveling = False
 if not skip_leveling:
     d_config_leveling["ip2"]["separation_in_sigmas"] = 5
     d_config_leveling["ip8"]["luminosity"] = 2.0e33
-    d_config_leveling["ip8"][
-        "num_colliding_bunches"
-    ] = None  # This is set after specifying the filling scheme
+    # "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
 
 else:
     d_config_leveling = None
@@ -124,34 +122,38 @@ d_config_beambeam["num_particles_per_bunch"] = 1.4e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
-# Filling scheme (#! If one change the filling scheme, one needs to change the
-# ! number of colliding bunches at IP8 accordingly)
+# Filling scheme 
 filling_scheme_path = os.path.abspath(
     "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 )
 d_config_beambeam["mask_with_filling_pattern"][
     "pattern_fname"
 ] = filling_scheme_path  # If None, a full fill is assumed
-if not skip_leveling:
-    d_config_leveling["ip8"]["num_colliding_bunches"] = (
-        return_num_colliding_bunches_from_filling_scheme(filling_scheme_path)
-    )
 
 
-# Bunch number (ignored if pattern_fname is None, must be specified otherwise)
+
+# Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch 
+# elements), must be specified otherwise)
 d_config_beambeam["mask_with_filling_pattern"][
     "i_bunch_b1"
-] = None  # If None, the bunch with the largest number of long-range interactions will be used
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None  # Same
+] = 1963  # If None, the bunch with the largest number of long-range interactions will be used
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 1963  # Same
 
 if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = (
-        return_bunch_with_largest_num_long_range_interactions(filling_scheme_path, beam=1)
-    )
+    # Case the bunch number has not been provided
+    worst_bunch_b1 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider = 26, beam = "beam_1")
+    while worst_bunch_b1 is None:
+        bool_inp = input("The bunch number has not been provided. Do you want to use the bunch with the largest number of long-range interactions? (y/n)")
+        if bool_inp == "y":
+            d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
+        elif bool_inp == "n":
+            d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = int(input("Please enter the bunch number for beam 1: "))
+        
 if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = (
-        return_bunch_with_largest_num_long_range_interactions(filling_scheme_path, beam=2)
-    )
+    # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
+    print('The bunch number for beam 2 has not been provided. Bunch tracking for beam 2 is not implemented yet in this script, so you can ignore this warning.')
+    worst_bunch_b2 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider = 26, beam = "beam_2")
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
 # ==================================================================================================
 # --- Machine parameters being scanned

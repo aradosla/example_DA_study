@@ -29,6 +29,7 @@ config_collider = configuration["config_collider"]
 # Start tree_maker logging if log_file is present in config
 if tree_maker is not None and "log_file" in configuration:
     tree_maker.tag_json.tag_it(configuration["log_file"], "started")
+    
 # ==================================================================================================
 # --- Build particle distribution
 # ==================================================================================================
@@ -168,12 +169,37 @@ for line_name in ["lhcb1", "lhcb2"]:
     )
 
 # ==================================================================================================
+# --- Compute the number of collisions in the different IPs (used for luminosity leveling)
+# ==================================================================================================
+
+# Get the filling scheme path
+filling_scheme_path = config_bb['mask_with_filling_pattern']['pattern_fname']
+
+# Load the filling scheme directly if json
+if filling_scheme_path.endswith('.json'):
+    with open(filling_scheme_path, 'r') as fid:
+        filling_scheme = json.load(fid)
+# Extract booleans beam arrays
+array_b1 = np.array(filling_scheme['beam1'])
+array_b2 = np.array(filling_scheme['beam2'])
+
+# Assert that the arrays have the required length, and do the convolution
+assert len(array_b1) == len(array_b2) == 3564
+n_collisions_ip1_and_5 = array_b1 @ array_b2
+n_collisions_ip2 = np.roll(array_b1,-891) @ array_b2
+n_collisions_ip8 = np.roll(array_b1,-2670) @ array_b2
+
+# ==================================================================================================
 # ---Levelling
 # ==================================================================================================
 if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
     # Read knobs and tuning settings from config file
     config_lumi_leveling = config_collider["config_lumi_leveling"]
 
+    # Update number of collisions un the config, according to the filling scheme
+    config_lumi_leveling["ip8"]["num_colliding_bunches"] = n_collisions_ip8
+
+    # Level luminosity
     xlhc.luminosity_leveling(
         collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
     )
