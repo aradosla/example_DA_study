@@ -131,7 +131,9 @@ filling_scheme_path = os.path.abspath(
 # Convert filling scheme to json if needed
 if filling_scheme_path.endswith(".csv"):
     # TODO
-    pass
+    raise NotImplementedError(
+        "The conversion of csv to json is not implemented yet. Please convert the file manually."
+    )
 
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"][
@@ -141,10 +143,10 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
 # elements), must be specified otherwise)
-d_config_beambeam["mask_with_filling_pattern"][
-    "i_bunch_b1"
-] = 1963  # If None, the bunch with the largest number of long-range interactions will be used
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 1963  # Same
+# If the bunch number is None and pattern_name is defined, the bunch with the largest number of
+# long-range interactions will be used
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 
 if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
     # Case the bunch number has not been provided
