@@ -29,7 +29,7 @@ config_collider = configuration["config_collider"]
 # Start tree_maker logging if log_file is present in config
 if tree_maker is not None and "log_file" in configuration:
     tree_maker.tag_json.tag_it(configuration["log_file"], "started")
-    
+
 # ==================================================================================================
 # --- Build particle distribution
 # ==================================================================================================
@@ -172,22 +172,29 @@ for line_name in ["lhcb1", "lhcb2"]:
 # --- Compute the number of collisions in the different IPs (used for luminosity leveling)
 # ==================================================================================================
 
-# Get the filling scheme path
-filling_scheme_path = config_bb['mask_with_filling_pattern']['pattern_fname']
+# Get the filling scheme path (in json or csv format)
+filling_scheme_path = config_bb["mask_with_filling_pattern"]["pattern_fname"]
 
-# Load the filling scheme directly if json
-if filling_scheme_path.endswith('.json'):
-    with open(filling_scheme_path, 'r') as fid:
+# Load the filling scheme
+if filling_scheme_path.endswith(".json"):
+    with open(filling_scheme_path, "r") as fid:
         filling_scheme = json.load(fid)
+else:
+    raise ValueError(
+        f"Unknown filling scheme file format: {filling_scheme_path}. It you provided a csv file, it"
+        " should have been automatically convert when running the script 001_make_folders.py."
+        " Something went wrong."
+    )
+
 # Extract booleans beam arrays
-array_b1 = np.array(filling_scheme['beam1'])
-array_b2 = np.array(filling_scheme['beam2'])
+array_b1 = np.array(filling_scheme["beam1"])
+array_b2 = np.array(filling_scheme["beam2"])
 
 # Assert that the arrays have the required length, and do the convolution
 assert len(array_b1) == len(array_b2) == 3564
 n_collisions_ip1_and_5 = array_b1 @ array_b2
-n_collisions_ip2 = np.roll(array_b1,-891) @ array_b2
-n_collisions_ip8 = np.roll(array_b1,-2670) @ array_b2
+n_collisions_ip2 = np.roll(array_b1, -891) @ array_b2
+n_collisions_ip8 = np.roll(array_b1, -2670) @ array_b2
 
 # ==================================================================================================
 # ---Levelling

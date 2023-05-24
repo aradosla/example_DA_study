@@ -1,6 +1,7 @@
 import numpy as np
 import json
 
+
 def generate_run_sh(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
     return (
@@ -20,8 +21,9 @@ def generate_run_sh_htc(node, generation_number):
     )
 
 
-def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_index, numberOfLRToConsider, beam = "beam_1"):
-    
+def _compute_LR_per_bunch(
+    _array_b1, _array_b2, _B1_bunches_index, _B2_bunches_index, numberOfLRToConsider, beam="beam_1"
+):
     # Reverse beam order if needed
     if beam == "beam_1":
         factor = 1
@@ -31,7 +33,7 @@ def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_i
         factor = -1
     else:
         raise ValueError("beam must be either 'beam_1' or 'beam_2'")
-    
+
     # Define number of LR to consider
     if isinstance(numberOfLRToConsider, int):
         numberOfLRToConsider = [numberOfLRToConsider, numberOfLRToConsider, numberOfLRToConsider]
@@ -52,7 +54,6 @@ def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_i
         # (n + 2670) mod 3564 = m
         # where n is number of bunch in B1, and m is number of bunch in B2
 
-
         colide_factor_list = [891, 0, 2670]
         number_of_bunches = 3564
 
@@ -62,7 +63,7 @@ def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_i
         num_of_long_range = 0
         for i in range(0, 3):
             collide_factor = colide_factor_list[i]
-            m = (n + factor * collide_factor) % number_of_bunches 
+            m = (n + factor * collide_factor) % number_of_bunches
 
             ## Check if beam 2 has bunches in range  m - numberOfLRToConsider to m + numberOfLRToConsider
             ## Also have to check if bunches wrap around from 3563 to 0 or vice versa
@@ -97,7 +98,8 @@ def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_i
                 last_to_consider = number_of_bunches
 
             bunches_ineraction_partial = np.append(
-                bunches_ineraction_temp, np.flatnonzero(_array_b2[first_to_consider:last_to_consider])
+                bunches_ineraction_temp,
+                np.flatnonzero(_array_b2[first_to_consider:last_to_consider]),
             )
 
             # This represents the relative position to the head-on bunch
@@ -108,35 +110,38 @@ def _compute_LR_per_bunch(_array_b1, _array_b2, _B1_bunches_index, _B2_bunches_i
 
             # Add to total number of long range collisions
             num_of_long_range += num_of_long_range_curren_ip
-        
+
         # Add to list of long range collisions per bunch
-        l_long_range_per_bunch.append(num_of_long_range )
+        l_long_range_per_bunch.append(num_of_long_range)
     return l_long_range_per_bunch
 
-def get_worst_bunch(filling_scheme_path, numberOfLRToConsider = 26, beam = "beam_1"):
+
+def get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1"):
     """
     # Adapted from https://github.com/PyCOMPLETE/FillingPatterns/blob/5f28d1a99e9a2ef7cc5c171d0cab6679946309e8/fillingpatterns/bbFunctions.py#L233
-    Given a filling scheme, containin two arrays of booleans representing the trains of bunches for 
-    the two beams, this function returns the worst bunch for each beam, according to their collision 
+    Given a filling scheme, containin two arrays of booleans representing the trains of bunches for
+    the two beams, this function returns the worst bunch for each beam, according to their collision
     schedule.
     """
-    
+
     # Load the filling scheme directly if json
-    if filling_scheme_path.endswith('.json'):
-        with open(filling_scheme_path, 'r') as fid:
+    if filling_scheme_path.endswith(".json"):
+        with open(filling_scheme_path, "r") as fid:
             filling_scheme = json.load(fid)
-            
+
     # Extract booleans beam arrays
-    array_b1 = np.array(filling_scheme['beam1'])
-    array_b2 = np.array(filling_scheme['beam2'])
+    array_b1 = np.array(filling_scheme["beam1"])
+    array_b2 = np.array(filling_scheme["beam2"])
 
     # Get bunches index
     B1_bunches_index = np.flatnonzero(array_b1)
     B2_bunches_index = np.flatnonzero(array_b2)
-    
+
     # Compute the number of long range collisions per bunch
-    l_long_range_per_bunch = _compute_LR_per_bunch(array_b1, array_b2, B1_bunches_index, B2_bunches_index, numberOfLRToConsider, beam = beam)
-    
+    l_long_range_per_bunch = _compute_LR_per_bunch(
+        array_b1, array_b2, B1_bunches_index, B2_bunches_index, numberOfLRToConsider, beam=beam
+    )
+
     # Get the worst bunch for both beams
     if beam == "beam_1":
         worst_bunch = B1_bunches_index[np.argmax(l_long_range_per_bunch)]
@@ -144,6 +149,9 @@ def get_worst_bunch(filling_scheme_path, numberOfLRToConsider = 26, beam = "beam
         worst_bunch = B2_bunches_index[np.argmax(l_long_range_per_bunch)]
 
     return worst_bunch
- 
+
+
 if __name__ == "__main__":
-    get_worst_bunch("/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json")
+    get_worst_bunch(
+        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    )
