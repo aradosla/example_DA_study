@@ -131,9 +131,37 @@ if start_from_levelling or start_from_tuning:
             targets=targets,
         )
 
-# Add linear coupling (# ! To be checked)
+# Add linear coupling (# ! To be checked. Is it the correct place to do this?)
 collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
 collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+
+# Assert that tune and chromaticity are correct before going further
+for line_name in ["lhcb1", "lhcb2"]:
+    tw = collider[line_name].twiss()
+    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=2e-3), (
+        f"tune_x is not correct for {line_name}. Expected {conf_knobs_and_tuning['qx'][line_name]},"
+        f" got {tw.qx}"
+    )
+    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=2e-3), (
+        f"tune_y is not correct for {line_name}. Expected {conf_knobs_and_tuning['qy'][line_name]},"
+        f" got {tw.qy}"
+    )
+    assert np.isclose(
+        tw.dqx,
+        conf_knobs_and_tuning["dqx"][line_name],
+        rtol=2e-3,
+    ), (
+        f"chromaticity_x is not correct for {line_name}. Expected"
+        f" {conf_knobs_and_tuning['dqx'][line_name]}, got {tw.dqx}"
+    )
+    assert np.isclose(
+        tw.dqy,
+        conf_knobs_and_tuning["dqy"][line_name],
+        rtol=2e-3,
+    ), (
+        f"chromaticity_y is not correct for {line_name}. Expected"
+        f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"
+    )
 
 ### Configure beam-beam
 print("Configuring beam-beam lenses...")
