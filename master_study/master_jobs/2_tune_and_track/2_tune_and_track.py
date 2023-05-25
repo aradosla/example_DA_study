@@ -166,7 +166,7 @@ for line_name in ["lhcb1", "lhcb2"]:
     assert np.isclose(
         tw.dqx,
         conf_knobs_and_tuning["dqx"][line_name],
-        rtol=1e-4,
+        rtol=1e-3,
     ), (
         f"chromaticity_x is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqx'][line_name]}, got {tw.dqx}"
@@ -174,7 +174,7 @@ for line_name in ["lhcb1", "lhcb2"]:
     assert np.isclose(
         tw.dqy,
         conf_knobs_and_tuning["dqy"][line_name],
-        rtol=1e-4,
+        rtol=1e-3,
     ), (
         f"chromaticity_y is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"

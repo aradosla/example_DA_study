@@ -7,6 +7,7 @@ import xmask as xm
 import xmask.lhc as xlhc
 import shutil
 import json
+import yaml
 import ruamel.yaml
 import tree_maker
 import numpy as np
@@ -22,11 +23,7 @@ from gen_config_orbit_correction import generate_orbit_correction_setup
 # ==================================================================================================
 # Load configuration
 with open("config.yaml", "r") as fid:
-    configuration = fid.read()
-
-# Convert to yaml object with comment preservation
-yaml = ruamel.yaml.YAML()
-configuration = yaml.load(configuration)
+    configuration = yaml.safe_load(fid)
 
 # Get configuration for the particles distribution and the collider separately
 config_particles = configuration["config_particles"]
@@ -202,14 +199,23 @@ n_collisions_ip1_and_5 = array_b1 @ array_b2
 n_collisions_ip2 = np.roll(array_b1, -891) @ array_b2
 n_collisions_ip8 = np.roll(array_b1, -2670) @ array_b2
 
-# Update the configuration file with the number of collisions
-configuration["config_collider"]["config_lumi_leveling"]["ip8"][
-    "num_colliding_bunches"
-] = n_collisions_ip8
+# Reload the configuration file as a string
+with open("config.yaml", "r") as fid:
+    configuration = fid.read()
+
+# Convert to yaml object with comment preservation
+ryaml = ruamel.yaml.YAML()
+configuration = ryaml.load(configuration)
+
+# Update the configuration file with the number of collisions (need to cast to int otherwise it
+# can be encoded by ruamel.yaml)
+configuration["config_collider"]["config_lumi_leveling"]["ip8"]["num_colliding_bunches"] = int(
+    n_collisions_ip8
+)
 
 # Write the updated configuration file
 with open("config.yaml", "w") as file:
-    yaml.dump(configuration, file)
+    ryaml.dump(configuration, file)
 
 # ==================================================================================================
 # ---Levelling
@@ -217,6 +223,9 @@ with open("config.yaml", "w") as file:
 if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling_base_collider"]:
     # Read knobs and tuning settings from config file (already updated with the number of collisions)
     config_lumi_leveling = config_collider["config_lumi_leveling"]
+
+    # Update the number of bunches in the configuration file
+    config_lumi_leveling["ip8"]["num_colliding_bunches"] = n_collisions_ip8
 
     # Level luminosity
     xlhc.luminosity_leveling(
@@ -239,8 +248,7 @@ if "config_lumi_leveling" in config_collider and not config_collider["skip_level
             knob_names=knob_names,
             targets=targets,
         )
-    else:
-        print("No leveling is done as skip_leveling_base_collider is set to True.")
+
 else:
     print(
         "No leveling is done as no configuration has been provided, or skip_leveling_base_collider"
