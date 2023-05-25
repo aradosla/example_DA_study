@@ -102,15 +102,28 @@ d_config_knobs["i_oct_b2"] = 60.0
 d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
-skip_leveling = False
 
-if not skip_leveling:
-    d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-    d_config_leveling["ip8"]["luminosity"] = 2.0e33
-    # "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
+# skip_leveling_base_collider should be set to True if:
+# - the leveling will be done in the 2_tune_and_track script, i.e. a parameter belonging to group 1 is being scanned
+# - the leveling is not wanted, i.e. the study is done at start of leveling
+skip_leveling_base_collider = False
+# Ask the user if he indeed wants to skip the leveling
+if skip_leveling_base_collider:
+    print(
+        "You chose to skip the leveling in the base collider. This could be either because the"
+        " parameter you want to scan requires recomputing leveling, or because the study you're"
+        " doing is at start of leveling. Do you confirm? (y/n)"
+    )
+    answer = input()
+    if answer != "y":
+        raise ValueError(
+            "You did not confirm that you want to skip the leveling in the base collider. Aborting."
+        )
 
-else:
-    d_config_leveling = None
+# Leveling parameters (ignored if skip_leveling_base_collider is True, and no leveling is done in the 2_tune_and_track script)
+d_config_leveling["ip2"]["separation_in_sigmas"] = 5
+d_config_leveling["ip8"]["luminosity"] = 2.0e33
+# "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
 
 ### Beam beam configuration
 
@@ -222,7 +235,9 @@ children["base_collider"]["config_collider"]["config_knobs_and_tuning"][
 ] = d_config_knobs
 
 # Add luminosity configuration to the first generation
-children["base_collider"]["config_collider"]["skip_leveling"] = skip_leveling
+children["base_collider"]["config_collider"][
+    "skip_leveling_base_collider"
+] = skip_leveling_base_collider
 children["base_collider"]["config_collider"]["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration to the first generation

@@ -37,7 +37,7 @@ else:
 conf_knobs_and_tuning = configuration_collider["config_knobs_and_tuning"]
 
 # Read initial levelling settings from base collider configuration file, if levelling is done
-if "config_lumi_leveling" in configuration_collider and not configuration_collider["skip_leveling"]:
+if "config_lumi_leveling" in configuration_collider:
     # Read knobs and tuning settings from config file
     config_lumi_leveling = configuration_collider["config_lumi_leveling"]
 else:
@@ -126,8 +126,10 @@ for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
 
 # Add linear coupling as the target in the tuning of the base collider was 0
 # (not possible to set it the target to 0.001 for now)
-collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+# ! This is commented as this affects the tune/chroma too much
+# ! We need to wait for the possibility to set the linear coupling as a target along with tune/chroma
+# collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+# collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 
 # Since we might have updated some knobs, we need to rematch tune and chromaticity
 # This would been done in any case as we need to rematch after changing the linear coupling
@@ -153,18 +155,18 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ==================================================================================================
 for line_name in ["lhcb1", "lhcb2"]:
     tw = collider[line_name].twiss()
-    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=1e-3), (
+    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=1e-4), (
         f"tune_x is not correct for {line_name}. Expected {conf_knobs_and_tuning['qx'][line_name]},"
         f" got {tw.qx}"
     )
-    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=1e-3), (
+    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=1e-4), (
         f"tune_y is not correct for {line_name}. Expected {conf_knobs_and_tuning['qy'][line_name]},"
         f" got {tw.qy}"
     )
     assert np.isclose(
         tw.dqx,
         conf_knobs_and_tuning["dqx"][line_name],
-        rtol=1e-3,
+        rtol=1e-4,
     ), (
         f"chromaticity_x is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqx'][line_name]}, got {tw.dqx}"
@@ -172,19 +174,21 @@ for line_name in ["lhcb1", "lhcb2"]:
     assert np.isclose(
         tw.dqy,
         conf_knobs_and_tuning["dqy"][line_name],
-        rtol=1e-3,
+        rtol=1e-4,
     ), (
         f"chromaticity_y is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"
     )
-    assert np.isclose(
-        tw.c_minus,
-        conf_knobs_and_tuning["delta_cmr"],
-        rtol=1e-1,
-    ), (
-        f"linear coupling is not correct for {line_name}. Expected"
-        f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"
-    )
+    # ! Commented as the linear coupling is not optimized anymore
+    # ! This should be updated when possible
+    # assert np.isclose(
+    #     tw.c_minus,
+    #     conf_knobs_and_tuning["delta_cmr"],
+    #     atol=5e-3,
+    # ), (
+    #     f"linear coupling is not correct for {line_name}. Expected"
+    #     f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"
+    # )
 
 # ==================================================================================================
 # --- Configure beam-beam

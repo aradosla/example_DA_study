@@ -152,7 +152,7 @@ config_collider:
       i_bunch_b1: 1963 # If not specified, the bunch with the worst schedule is chosen
       i_bunch_b2: 1963 # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
-  skip_leveling: false
+  skip_leveling_base_collider: false
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
