@@ -51,8 +51,13 @@ config_bb = configuration_collider["config_beambeam"]
 start_from_levelling = False
 for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"].items():
     if value is not None:
+        # Separation
         if parameter_name in conf_knobs_and_tuning["knob_settings"]:
             conf_knobs_and_tuning["knob_settings"][parameter_name] = value
+            start_from_levelling = True
+        # Bunch intensity
+        elif parameter_name in config_bb:
+            config_bb[parameter_name] = value
             start_from_levelling = True
         else:
             raise ValueError(
@@ -63,9 +68,11 @@ for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"].
 start_from_tuning = False
 for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"].items():
     if value is not None:
+        # Octupoles
         if parameter_name in conf_knobs_and_tuning["knob_settings"]:
             conf_knobs_and_tuning["knob_settings"][parameter_name] = value
             start_from_tuning = True
+        # Tune and chroma
         elif parameter_name in conf_knobs_and_tuning:
             if "lhcb1" in conf_knobs_and_tuning[parameter_name]:
                 conf_knobs_and_tuning[parameter_name]["lhcb1"] = value
@@ -83,6 +90,7 @@ for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"].
 # Check if some parameters involve resetting the beam-beam mask (group 3)
 for parameter_name, value in configuration_sim["parameters_scanned"]["group_3"].items():
     if value is not None:
+        # Bunch index
         if parameter_name in config_bb["mask_with_filling_pattern"]:
             config_bb["mask_with_filling_pattern"][parameter_name] = value
         else:
@@ -111,14 +119,18 @@ if start_from_levelling:
 # Reset knobs that might have been modified (e.g. octupoles, crossing-angle, etc)
 # Knobs that have not been modified are not in configuration_sim["parameters_scanned"] and are
 # therefore left untouched
-# ! Ensure that resetting the knobs do no require a recomputing of the leveling
+# ! If adding other knobs to group_2, ensure that re-setting the knobs do no require a recomputing of the leveling
 for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
     if kk in configuration_sim["parameters_scanned"]["group_2"]:
         collider.vars[kk] = vv
 
+# Add linear coupling as the target in the tuning of the base collider was 0
+# (not possible to set it the target to 0.001 for now)
+collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+
 # Since we might have updated some knobs, we need to rematch tune and chromaticity
-# This would been done in any case as we need to set the linear coupling to zero, before
-# adding the 0.001 correction error
+# This would been done in any case as we need to rematch after changing the linear coupling
 for line_name in ["lhcb1", "lhcb2"]:
     knob_names = conf_knobs_and_tuning["knob_names"][line_name]
     targets = {
@@ -131,32 +143,28 @@ for line_name in ["lhcb1", "lhcb2"]:
         line=collider[line_name],
         enable_tune_correction=True,
         enable_chromaticity_correction=True,
-        enable_linear_coupling_correction=True,
+        enable_linear_coupling_correction=False,
         knob_names=knob_names,
         targets=targets,
     )
 
-# Add linear coupling as the target above was 0 (not possible to set it to 0.001 for now)
-collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
-
 # ==================================================================================================
-# --- Assert that tune and chromaticity are correct before going further
+# --- Assert that tune, chromaticity and linear coupling are correct before going further
 # ==================================================================================================
 for line_name in ["lhcb1", "lhcb2"]:
     tw = collider[line_name].twiss()
-    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=2e-3), (
+    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=1e-3), (
         f"tune_x is not correct for {line_name}. Expected {conf_knobs_and_tuning['qx'][line_name]},"
         f" got {tw.qx}"
     )
-    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=2e-3), (
+    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=1e-3), (
         f"tune_y is not correct for {line_name}. Expected {conf_knobs_and_tuning['qy'][line_name]},"
         f" got {tw.qy}"
     )
     assert np.isclose(
         tw.dqx,
         conf_knobs_and_tuning["dqx"][line_name],
-        rtol=2e-3,
+        rtol=1e-3,
     ), (
         f"chromaticity_x is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqx'][line_name]}, got {tw.dqx}"
@@ -164,10 +172,18 @@ for line_name in ["lhcb1", "lhcb2"]:
     assert np.isclose(
         tw.dqy,
         conf_knobs_and_tuning["dqy"][line_name],
-        rtol=2e-3,
+        rtol=1e-3,
     ), (
         f"chromaticity_y is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"
+    )
+    assert np.isclose(
+        tw.c_minus,
+        conf_knobs_and_tuning["delta_cmr"],
+        rtol=1e-1,
+    ), (
+        f"linear coupling is not correct for {line_name}. Expected"
+        f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"
     )
 
 # ==================================================================================================
@@ -256,7 +272,6 @@ collider.lhcb1.optimize_for_tracking()
 
 # Save initial coordinates
 pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
-
 
 # Track
 num_turns = configuration_sim["n_turns"]

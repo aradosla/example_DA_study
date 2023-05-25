@@ -39,17 +39,22 @@ def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
         conf_knobs_and_tuning = dic_parent["config_knobs_and_tuning"]
         config_bb = dic_parent["config_beambeam"]
 
-        # Group 1 contains crossing angles (on_x1 and on_x5), update with other knobs if needed
+        # Group 1 contains separation (on_sep2, on_sep8h, on_sep8v) and bunch intensity,
+        # update with other knobs if needed
         if group == "group_1":
             if parameter in conf_knobs_and_tuning["knob_settings"]:
                 df_sim[parameter] = conf_knobs_and_tuning["knob_settings"][parameter]
+            elif parameter in config_bb:
+                df_sim[parameter] = config_bb[parameter]
             else:
                 raise ValueError(
                     f"The parameter {parameter} is assumed to be a knob belonging to"
-                    " conf_knobs_and_tuning['knob_settings']. Please update script accordingly."
+                    " conf_knobs_and_tuning['knob_settings'] or config_bb. Please update script"
+                    " accordingly."
                 )
 
-        # Group 2 contains chromaticity and tune, update with other knobs if needed
+        # Group 2 contains crossing-angle, chromaticity, tune and octupoles,
+        # update with other knobs if needed
         elif group == "group_2":
             if parameter in conf_knobs_and_tuning["knob_settings"]:
                 df_sim[parameter] = conf_knobs_and_tuning["knob_settings"][parameter]
@@ -107,7 +112,8 @@ for node in root.generation(1):
         df_sim["path base collider"] = f"{node.get_abs_path()}"
         df_sim["name base collider"] = f"{node.name}"
         df_sim["path simulation"] = f"{node_child.get_abs_path()}"
-        df_sim[["qx", "qy"]] = f"{node_child.name}"
+        df_sim["name final collider"] = f"{node_child.name}"
+        # df_sim[["qx", "qy"]] = f"{node_child.name}"
 
         # Get node parameters as dictionnaries for parameter assignation
         dic_child = node_child.parameters["parameters_scanned"]
@@ -117,6 +123,9 @@ for node in root.generation(1):
         df_sim = assign_parameter("on_sep2", "group_1", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter("on_sep8h", "group_1", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter("on_sep8v", "group_1", df_sim, dic_child, dic_parent)
+        df_sim = assign_parameter(
+            "num_particles_per_bunch", "group_1", df_sim, dic_child, dic_parent
+        )
 
         # Get scanned parameters: Group 2
         df_sim = assign_parameter("on_x1", "group_2", df_sim, dic_child, dic_parent)
@@ -159,6 +168,7 @@ my_final = pd.DataFrame(
         df_lost_particles.groupby(groupby)["on_sep2"].median(),
         df_lost_particles.groupby(groupby)["on_sep8h"].median(),
         df_lost_particles.groupby(groupby)["on_sep8v"].median(),
+        df_lost_particles.groupby(groupby)["num_particles_per_bunch"].median(),
         df_lost_particles.groupby(groupby)["on_x1"].median(),
         df_lost_particles.groupby(groupby)["on_x5"].median(),
         df_lost_particles.groupby(groupby)["qx"].median(),

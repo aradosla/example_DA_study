@@ -19,6 +19,7 @@ parameters_scanned :
     on_sep2: null
     on_sep8h: null
     on_sep8v: null
+    num_particles_per_bunch: null
   group_2:
     on_x1 : null
     on_x5 : null
