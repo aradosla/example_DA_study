@@ -64,8 +64,8 @@ d_config_tune_and_chroma = {
     "dqy": {},
 }
 for beam in ["lhcb1", "lhcb2"]:
-    d_config_tune_and_chroma["qx"][beam] = 62.316
-    d_config_tune_and_chroma["qy"][beam] = 60.321
+    d_config_tune_and_chroma["qx"][beam] = 62.31
+    d_config_tune_and_chroma["qy"][beam] = 60.32
     d_config_tune_and_chroma["dqx"][beam] = 5.0
     d_config_tune_and_chroma["dqy"][beam] = 5.0
 
@@ -184,7 +184,9 @@ if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
 array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 
-# To decrease the size of the scan, we can ignore the working points too close to resonance
+# In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
+# working points too close to resonance. Otherwise just delete this variable in the loop at the end
+# of the script
 only_keep_upper_triangle = True
 # ==================================================================================================
 # --- Tracking parameters
