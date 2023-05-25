@@ -16,9 +16,12 @@ n_turns    :    1000     # number of turns to track
 # on the resulting collider (e.g. retune, recompute luminosity, etc).
 parameters_scanned :
   group_1:
+    on_sep2: null
+    on_sep8h: null
+    on_sep8v: null
+  group_2:
     on_x1 : null
     on_x5 : null
-  group_2:
     qx : null
     qy : null
     dqx : null

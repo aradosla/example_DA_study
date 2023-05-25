@@ -107,31 +107,36 @@ if start_from_levelling:
     else:
         print("WARNING: no levelling is being done, check that this is indeed what you want.")
 
-if start_from_levelling or start_from_tuning:
-    # Reset knobs that have been modified (for now, only octupoles are concerned)
-    # ! Other knobs may require to recompute luminosity leveling
-    for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
-        if kk in configuration_sim["parameters_scanned"]["group_1"]:
-            collider.vars[kk] = vv
 
-    # Re-match tunes, and chromaticities
-    for line_name in ["lhcb1", "lhcb2"]:
-        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
-        targets = {
-            "qx": conf_knobs_and_tuning["qx"][line_name],
-            "qy": conf_knobs_and_tuning["qy"][line_name],
-            "dqx": conf_knobs_and_tuning["dqx"][line_name],
-            "dqy": conf_knobs_and_tuning["dqy"][line_name],
-        }
-        xm.machine_tuning(
-            line=collider[line_name],
-            enable_tune_correction=True,
-            enable_chromaticity_correction=True,
-            knob_names=knob_names,
-            targets=targets,
-        )
+# Reset knobs that might have been modified (e.g. octupoles, crossing-angle, etc)
+# Knobs that have not been modified are not in configuration_sim["parameters_scanned"] and are
+# therefore left untouched
+# ! Ensure that resetting the knobs do no require a recomputing of the leveling
+for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
+    if kk in configuration_sim["parameters_scanned"]["group_2"]:
+        collider.vars[kk] = vv
 
-# Add linear coupling (# ! To be checked. Is it the correct place to do this?)
+# Since we might have updated some knobs, we need to rematch tune and chromaticity
+# This would been done in any case as we need to set the linear coupling to zero, before
+# adding the 0.001 correction error
+for line_name in ["lhcb1", "lhcb2"]:
+    knob_names = conf_knobs_and_tuning["knob_names"][line_name]
+    targets = {
+        "qx": conf_knobs_and_tuning["qx"][line_name],
+        "qy": conf_knobs_and_tuning["qy"][line_name],
+        "dqx": conf_knobs_and_tuning["dqx"][line_name],
+        "dqy": conf_knobs_and_tuning["dqy"][line_name],
+    }
+    xm.machine_tuning(
+        line=collider[line_name],
+        enable_tune_correction=True,
+        enable_chromaticity_correction=True,
+        enable_linear_coupling_correction=True,
+        knob_names=knob_names,
+        targets=targets,
+    )
+
+# Add linear coupling as the target above was 0 (not possible to set it to 0.001 for now)
 collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
 collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 

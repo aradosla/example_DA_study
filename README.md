@@ -201,11 +201,14 @@ The code is now well formatted and well commented, such that any question should
 
 At the moment, the following parameters can be scanned without requiring extensive scripts modifications:
 
+- separation at IP8 and IP2 (```on_sep8h, on_sep8v, on_sep2```)
 - crossing-angle (```on_x1, on_x5```)
 - tune (```qx, qy```)
 - chromaticity (```dqx, dqy```)
 - octupole current (```i_oct_b1, i_oct_b2```)
 - bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+
+At generation 1, the base collider is built with a default set of parameters (most of which are explicitely set in ```001_make_folder.py```), the tune and chroma are matched, the luminosity leveling is computed (if leveling is required), and an inactive set of beam-beam lenses is configured. Depending on the type of parameter being scanned, some steps in the tailoring of the base collider will be skiped at generation 2 to gain time. E.g. if you change only ```qx, qy```, the luminosity will not be recomputed. If you only change the bunch being tracked, the tunes and chroma will not be rematched.
 
 It should be relatively easy to accomodate the scripts for other parameters. In addition, to prevent any complication, only the simulation of beam 1 is possible, but this should also be relatively easy to adapt.
 

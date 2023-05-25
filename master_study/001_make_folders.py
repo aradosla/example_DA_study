@@ -232,7 +232,7 @@ children["base_collider"]["config_collider"]["config_beambeam"] = d_config_beamb
 # Parameters are separated in three groups, depending how they affect the configuration of the
 # collider:
 # - group_1: parameters that require to retune and redo the leveling, and retune again
-#            (e.g. crossing angle)
+#            (e.g. separation at the IP)
 # - group_2: parameters that require to retune
 #            (e.g. chromaticity, octupoles)
 # - group_3: parameters that require to reconfigure bb lenses

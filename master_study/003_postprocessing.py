@@ -114,10 +114,13 @@ for node in root.generation(1):
         dic_parent = node.parameters["config_collider"]
 
         # Get scanned parameters: Group 1
-        df_sim = assign_parameter("on_x1", "group_1", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("on_x5", "group_1", df_sim, config_child, dic_parent)
+        df_sim = assign_parameter("on_sep2", "group_1", df_sim, dic_child, dic_parent)
+        df_sim = assign_parameter("on_sep8h", "group_1", df_sim, dic_child, dic_parent)
+        df_sim = assign_parameter("on_sep8v", "group_1", df_sim, dic_child, dic_parent)
 
         # Get scanned parameters: Group 2
+        df_sim = assign_parameter("on_x1", "group_2", df_sim, dic_child, dic_parent)
+        df_sim = assign_parameter("on_x5", "group_2", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter("qx", "group_2", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter("qy", "group_2", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter("dqx", "group_2", df_sim, dic_child, dic_parent)
@@ -147,12 +150,15 @@ df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 if df_lost_particles.empty:
     print("No unstable particles found, the output dataframe will be empty.")
 
-# Groupe by working point (# ! Update this with the knobs you want to group by ! #)
+# Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
 groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
+        df_lost_particles.groupby(groupby)["on_sep2"].median(),
+        df_lost_particles.groupby(groupby)["on_sep8h"].median(),
+        df_lost_particles.groupby(groupby)["on_sep8v"].median(),
         df_lost_particles.groupby(groupby)["on_x1"].median(),
         df_lost_particles.groupby(groupby)["on_x5"].median(),
         df_lost_particles.groupby(groupby)["qx"].median(),
