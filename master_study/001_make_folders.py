@@ -209,7 +209,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 500
+d_config_simulation["n_turns"] = 200
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -263,8 +263,8 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
-        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = qx
-        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = qy
+        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
+        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -272,7 +272,6 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
-        "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
         "config_simulation": d_config_simulation,
         "config_collider": d_config_collider,
     }

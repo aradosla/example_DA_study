@@ -7,19 +7,21 @@ import time
 import logging
 import numpy as np
 import pandas as pd
+import os
 import xtrack as xt
-import xpart as xp
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
+from gen_config_orbit_correction import generate_orbit_correction_setup
 
 # ==================================================================================================
 # --- Read configuration files and tag start of the job
 # ==================================================================================================
 # Read configuration for simulations
 with open("config.yaml", "r") as fid:
-    config_sim = yaml.safe_load(fid)["config_simulation"]
-    config_collider = yaml.safe_load(fid)["config_collider"]
+    config = yaml.safe_load(fid)
+config_sim = config["config_simulation"]
+config_collider = config["config_collider"]
 
 # Start tree_maker logging if log_file is present in config
 if tree_maker is not None and "log_file" in config_sim:
@@ -33,6 +35,16 @@ else:
 # ==================================================================================================
 # Load collider and build trackers
 collider = xt.Multiline.from_json(config_sim["collider_file"])
+
+
+# ==================================================================================================
+# --- Generate config correction files
+# ==================================================================================================
+correction_setup = generate_orbit_correction_setup()
+os.makedirs("correction", exist_ok=True)
+for nn in ["lhcb1", "lhcb2"]:
+    with open(f"correction/corr_co_{nn}.json", "w") as fid:
+        json.dump(correction_setup[nn], fid, indent=4)
 
 # ==================================================================================================
 # --- Install beam-beam

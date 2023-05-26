@@ -15,7 +15,6 @@ import pandas as pd
 
 # Import user-defined optics-specific tools
 import optics_specific_tools_hlhc15 as ost
-from gen_config_orbit_correction import generate_orbit_correction_setup
 
 # ==================================================================================================
 # --- Load configuration file
@@ -64,15 +63,6 @@ for idx_chunk, my_list in enumerate(particle_list):
         my_list,
         columns=["particle_id", "normalized amplitude in xy-plane", "angle in xy-plane [deg]"],
     ).to_parquet(f"{distributions_folder}/{idx_chunk:02}.parquet")
-
-# ==================================================================================================
-# --- Generate config correction files
-# ==================================================================================================
-correction_setup = generate_orbit_correction_setup()
-os.makedirs("correction", exist_ok=True)
-for nn in ["lhcb1", "lhcb2"]:
-    with open(f"correction/corr_co_{nn}.json", "w") as fid:
-        json.dump(correction_setup[nn], fid, indent=4)
 
 # ==================================================================================================
 # --- Build collider from mad model
