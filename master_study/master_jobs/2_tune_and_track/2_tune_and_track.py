@@ -328,5 +328,5 @@ print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns
 # ==================================================================================================
 pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
 
-if tree_maker is not None and "log_file" in config_sim:
-    tree_maker.tag_json.tag_it(config_sim["log_file"], "completed")
+if tree_maker is not None and "log_file" in config:
+    tree_maker.tag_json.tag_it(config["log_file"], "completed")

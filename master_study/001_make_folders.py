@@ -79,6 +79,7 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 5.0
 
 # Value to be added to linear coupling knobs
+# ! Not working for now
 d_config_tune_and_chroma["delta_cmr"] = 0.001
 d_config_tune_and_chroma["delta_cmi"] = 0.0
 
@@ -221,8 +222,8 @@ d_config_simulation["delta_max"] = 27.0e-5
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
@@ -274,6 +275,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "config_simulation": d_config_simulation,
         "config_collider": d_config_collider,
+        "log_file": "tree_maker.log",
     }
 
 # ==================================================================================================
