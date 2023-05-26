@@ -11,10 +11,11 @@ import shutil
 from user_defined_functions import generate_run_sh_htc, get_worst_bunch
 
 # ==================================================================================================
-# --- Initial particle distribution parameters
+# --- Initial particle distribution parameters (generation 1)
 #
 # Below, the user defines the parameters for the initial particles distribution.
-# Path for the distribution config: master_study/master_jobs/000_build_distr_and_collider/config_distrib.yaml
+# Path for the particle distribution configuration:
+# mmaster_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_particles]
 # ==================================================================================================
 
 # Define dictionary for the initial particle distribution
@@ -32,13 +33,11 @@ d_config_particles["n_angles"] = 5
 d_config_particles["n_split"] = 5
 
 # ==================================================================================================
-# --- Base collider parameters
+# --- Optics collider parameters (generation 1)
 #
-# Below, the user defines the base collider parameters. That is, only the parameters that are
-# subject to change are present here. More parameters can be added from the collider config.yaml,
-# as needed. One needs to ensure that the remaining (default) parameters are set properly in the
-# machine. Path for the collider config:
-# master_study/master_jobs/000_build_distr_and_machine/config_collider.yaml
+# Below, the user defines the optics collider parameters. These parameters cannot be scanned.
+# Path for the collider configuration:
+# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_collider]
 # ==================================================================================================
 
 ### Mad configuration
@@ -53,6 +52,16 @@ d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin
 beam_energy_tot = 7000
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
+
+
+# ==================================================================================================
+# --- Base collider parameters (generation 2)
+#
+# Below, the user defines the standard collider parameters. Some of the values defined here are
+# later updated according to the grid-search being done.
+# Path for the collider config:
+# master_study/master_jobs/2_tune_and_track/config.yaml [field config_collider]
+# ==================================================================================================
 
 ### Tune and chroma configuration
 
@@ -103,24 +112,10 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
 
-# skip_leveling_base_collider should be set to True if:
-# - the leveling will be done in the 2_tune_and_track script, i.e. a parameter belonging to group 1 is being scanned
-# - the leveling is not wanted, i.e. the study is done at start of leveling
-skip_leveling_base_collider = False
-# Ask the user if he indeed wants to skip the leveling
-if skip_leveling_base_collider:
-    print(
-        "You chose to skip the leveling in the base collider. This could be either because the"
-        " parameter you want to scan requires recomputing leveling, or because the study you're"
-        " doing is at start of leveling. Do you confirm? (y/n)"
-    )
-    answer = input()
-    if answer != "y":
-        raise ValueError(
-            "You did not confirm that you want to skip the leveling in the base collider. Aborting."
-        )
+# skip_leveling should be set to True if the study is done at start of leveling
+skip_leveling = False
 
-# Leveling parameters (ignored if skip_leveling_base_collider is True, and no leveling is done in the 2_tune_and_track script)
+# Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
 d_config_leveling["ip8"]["luminosity"] = 2.0e33
 # "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
@@ -187,8 +182,40 @@ if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
     worst_bunch_b2 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_2")
     d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
+
 # ==================================================================================================
-# --- Machine parameters being scanned
+# --- Generate dictionnary to encapsulate all base collider parameters (generation 2)
+# ==================================================================================================
+d_config_collider = {}
+
+# Add tunes and chromas
+d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
+
+# Add knobs
+d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
+
+# Add luminosity configuration
+d_config_collider["skip_leveling"] = skip_leveling
+d_config_collider["config_lumi_leveling"] = d_config_leveling
+
+# Add beam beam configuration
+d_config_collider["config_beambeam"] = d_config_beambeam
+
+# ==================================================================================================
+# --- Tracking parameters (generation 2)
+#
+# Below, the user defines the parameters for the tracking.
+# ==================================================================================================
+d_config_simulation = {}
+
+# Number of turns to track
+d_config_simulation["n_turns"] = 500
+
+# Initial off-momentum
+d_config_simulation["delta_max"] = 27.0e-5
+
+# ==================================================================================================
+# --- Machine parameters being scanned (generation 2)
 #
 # Below, the user defines the grid for the machine parameters that must be scanned to find the
 # optimal DA (e.g. tune, chroma, etc).
@@ -201,20 +228,13 @@ array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:6]
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
 only_keep_upper_triangle = True
-# ==================================================================================================
-# --- Tracking parameters
-#
-# Below, the user defines the parameters for the tracking.
-# ==================================================================================================
-n_turns = 500
-delta_max = 27.0e-5  # initial off-momentum
 
 # ==================================================================================================
-# --- Build base tree for the simulations
+# --- Make tree for the simulations (generation 1)
 #
 # The tree is built as a hierarchy of dictionnaries. We add a first generation (named as the
 # study being done) to the root. This first generation is used set the initial particle
-# distribution, and the parameters of the base machine which will later be used for simulations.
+# distribution, and build a collider with only the optics set.
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
@@ -226,49 +246,35 @@ children["base_collider"]["config_particles"] = d_config_particles
 # Add base machine parameters to the first generation
 children["base_collider"]["config_collider"] = d_config_mad
 
-# Add tunes and chromas to the first generation
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"] = d_config_tune_and_chroma
-
-# Add knobs to the first generation
-children["base_collider"]["config_collider"]["config_knobs_and_tuning"][
-    "knob_settings"
-] = d_config_knobs
-
-# Add luminosity configuration to the first generation
-children["base_collider"]["config_collider"][
-    "skip_leveling_base_collider"
-] = skip_leveling_base_collider
-children["base_collider"]["config_collider"]["config_lumi_leveling"] = d_config_leveling
-
-# Add beam beam configuration to the first generation
-children["base_collider"]["config_collider"]["config_beambeam"] = d_config_beambeam
 
 # ==================================================================================================
-# --- Generate second generation of the tree, with the machine parameters being scanned, and
-# tracking parameters being set.
-# Parameters are separated in three groups, depending how they affect the configuration of the
-# collider:
-# - group_1: parameters that require to retune and redo the leveling, and retune again
-#            (e.g. separation at the IP)
-# - group_2: parameters that require to retune
-#            (e.g. chromaticity, octupoles)
-# - group_3: parameters that require to reconfigure bb lenses
-#            (e.g. bunch_nb)
-# Collider lines composition can not be reconfigured at this step, at least for now.
+# --- Complete tree for the simulations (generation 2)
+#
+# We now set a second generation for the tree. This second generation contains the tracking
+# parameters, as well as a default set of parameters for the colliders (defined above), that we
+# mutate according to the parameters we want to scan.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
+    # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
     if only_keep_upper_triangle:
-        # Ignore conditions below the upper diagonal as this can't exist in the real machine
         if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
             continue
+
+    # Mutate the appropriate collider parameters
+    for beam in ["lhcb1", "lhcb2"]:
+        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = qx
+        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = qy
+
+    # Complete the dictionnary for the tracking
+    d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
+    d_config_simulation["collider_file"] = f"../collider/collider.json"
+
+    # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "parameters_scanned": {"group_2": {"qx": float(qx), "qy": float(qy)}},
-        "particle_file": f"../particles/{track:02}.parquet",
-        "collider_file": f"../collider/collider.json",
-        "n_turns": n_turns,
-        "delta_max": delta_max,
-        "log_file": f"tree_maker.log",
+        "config_simulation": d_config_simulation,
+        "config_collider": d_config_collider,
     }
 
 # ==================================================================================================
@@ -279,7 +285,6 @@ config = yaml.safe_load(open("config.yaml"))
 
 # # Set the root children to the ones defined above
 config["root"]["children"] = children
-
 
 # Set miniconda environment path in the config
 config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"

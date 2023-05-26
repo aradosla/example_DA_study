@@ -16,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_tune_intensity_scan"  # "example_HL_tunescan"
+study_name = "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -114,32 +114,23 @@ for node in root.generation(1):
         df_sim["path base collider"] = f"{node.get_abs_path()}"
         df_sim["name base collider"] = f"{node.name}"
         df_sim["path simulation"] = f"{node_child.get_abs_path()}"
-        df_sim["name final collider"] = f"{node_child.name}"
-        # df_sim[["qx", "qy"]] = f"{node_child.name}"
+        df_sim["name simulation"] = f"{node_child.name}"
 
         # Get node parameters as dictionnaries for parameter assignation
-        dic_child = node_child.parameters["parameters_scanned"]
-        dic_parent = node.parameters["config_collider"]
+        dic_child_collider = node_child.parameters["config_collider"]
+        dic_child_simulation = node_child.parameters["config_simulation"]
+        dic_parent_collider = node.parameters["config_collider"]
+        dic_parent_particles = node.parameters["config_particles"]
 
-        # Get scanned parameters: Group 1
-        df_sim = assign_parameter("on_sep2", "group_1", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter(
-            "num_particles_per_bunch", "group_1", df_sim, dic_child, dic_parent
-        )
-
-        # Get scanned parameters: Group 2
-        df_sim = assign_parameter("on_x1", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("on_x5", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("qx", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("qy", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("dqx", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("dqy", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("i_oct_b1", "group_2", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("i_oct_b2", "group_2", df_sim, dic_child, dic_parent)
-
-        # Get scanned parameters: Group 3
-        df_sim = assign_parameter("i_bunch_b1", "group_3", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("i_bunch_b2", "group_3", df_sim, dic_child, dic_parent)
+        # Get scanned parameters (complete with the scanned parameters)
+        df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
+        df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
+        df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
+            "i_bunch_b1"
+        ]
+        df_sim["i_bunch_b2"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
+            "i_bunch_b2"
+        ]
 
         # Merge with particle data
         df_sim_with_particle = pd.merge(df_sim, particle, on=["particle_id"])
@@ -161,20 +152,12 @@ if df_lost_particles.empty:
 
 # Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "num_particles_per_bunch"]  # ["i_bunch_b1", "i_bunch_b2"]  #
+groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
-        df_lost_particles.groupby(groupby)["on_sep2"].median(),
-        df_lost_particles.groupby(groupby)["num_particles_per_bunch"].median(),
-        df_lost_particles.groupby(groupby)["on_x1"].median(),
-        df_lost_particles.groupby(groupby)["on_x5"].median(),
         df_lost_particles.groupby(groupby)["qx"].median(),
         df_lost_particles.groupby(groupby)["qy"].median(),
-        df_lost_particles.groupby(groupby)["dqx"].median(),
-        df_lost_particles.groupby(groupby)["dqy"].median(),
-        df_lost_particles.groupby(groupby)["i_oct_b1"].median(),
-        df_lost_particles.groupby(groupby)["i_oct_b2"].median(),
         df_lost_particles.groupby(groupby)["i_bunch_b1"].median(),
         df_lost_particles.groupby(groupby)["i_bunch_b2"].median(),
     ]

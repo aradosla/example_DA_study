@@ -18,111 +18,146 @@ import xmask.lhc as xlhc
 # ==================================================================================================
 # Read configuration for simulations
 with open("config.yaml", "r") as fid:
-    configuration_sim = yaml.safe_load(fid)
-
-# Read base collider configuration (one generation above)
-with open("../config.yaml", "r") as fid:
-    configuration_collider = yaml.safe_load(fid)["config_collider"]
+    config_sim = yaml.safe_load(fid)["config_simulation"]
+    config_collider = yaml.safe_load(fid)["config_collider"]
 
 # Start tree_maker logging if log_file is present in config
-if tree_maker is not None and "log_file" in configuration_sim:
-    tree_maker.tag_json.tag_it(configuration_sim["log_file"], "started")
+if tree_maker is not None and "log_file" in config_sim:
+    tree_maker.tag_json.tag_it(config_sim["log_file"], "started")
 else:
     logging.warning("tree_maker loging not available")
 
-# ==================================================================================================
-# --- Check which parameters must be changed (beam-beam is always reconfigured)
-# ==================================================================================================
-# Read initial knobs and tuning settings from base collider configuration file
-conf_knobs_and_tuning = configuration_collider["config_knobs_and_tuning"]
-
-# Read initial levelling settings from base collider configuration file, if levelling is done
-if "config_lumi_leveling" in configuration_collider:
-    # Read knobs and tuning settings from config file
-    config_lumi_leveling = configuration_collider["config_lumi_leveling"]
-else:
-    config_lumi_leveling = None
-
-
-# Read inital beam-beam settings from base collider configuration file
-config_bb = configuration_collider["config_beambeam"]
-
-# Check if some parameters involve recomputing levelling (group 1)
-start_from_levelling = False
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_1"].items():
-    if value is not None:
-        # Separation
-        if parameter_name in conf_knobs_and_tuning["knob_settings"]:
-            conf_knobs_and_tuning["knob_settings"][parameter_name] = value
-            start_from_levelling = True
-        # Bunch intensity
-        elif parameter_name in config_bb:
-            config_bb[parameter_name] = value
-            start_from_levelling = True
-        else:
-            raise ValueError(
-                f"The parameter {parameter_name} is assumed to be a knob belonging to"
-                " conf_knobs_and_tuning['knob_settings']. Please update script accordingly."
-            )
-# Check if some parameters involve redoing the tuning (group 2)
-start_from_tuning = False
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_2"].items():
-    if value is not None:
-        # Octupoles
-        if parameter_name in conf_knobs_and_tuning["knob_settings"]:
-            conf_knobs_and_tuning["knob_settings"][parameter_name] = value
-            start_from_tuning = True
-        # Tune and chroma
-        elif parameter_name in conf_knobs_and_tuning:
-            if "lhcb1" in conf_knobs_and_tuning[parameter_name]:
-                conf_knobs_and_tuning[parameter_name]["lhcb1"] = value
-                conf_knobs_and_tuning[parameter_name]["lhcb2"] = value
-            else:
-                conf_knobs_and_tuning[parameter_name] = value
-            start_from_tuning = True
-        else:
-            raise ValueError(
-                f"The parameter {parameter_name} is assumed to be a knob belonging to"
-                " conf_knobs_and_tuning['knob_settings'] or conf_knobs_and_tuning. Please update"
-                " script accordingly."
-            )
-
-# Check if some parameters involve resetting the beam-beam mask (group 3)
-for parameter_name, value in configuration_sim["parameters_scanned"]["group_3"].items():
-    if value is not None:
-        # Bunch index
-        if parameter_name in config_bb["mask_with_filling_pattern"]:
-            config_bb["mask_with_filling_pattern"][parameter_name] = value
-        else:
-            raise ValueError(
-                f"The parameter {parameter_name} is assumed to be a knob belonging to"
-                " config_bb['mask_with_filling_pattern']. Please update script accordingly."
-            )
 
 # ==================================================================================================
-# --- Rebuild and tune collider
+# --- Rebuild collider
 # ==================================================================================================
 # Load collider and build trackers
-collider = xt.Multiline.from_json(configuration_sim["collider_file"])
+collider = xt.Multiline.from_json(config_sim["collider_file"])
+
+# ==================================================================================================
+# --- Install beam-beam
+# ==================================================================================================
+config_bb = config_collider["config_beambeam"]
+
+# Install beam-beam lenses (inactive and not configured)
+collider.install_beambeam_interactions(
+    clockwise_line="lhcb1",
+    anticlockwise_line="lhcb2",
+    ip_names=["ip1", "ip2", "ip5", "ip8"],
+    delay_at_ips_slots=[0, 891, 0, 2670],
+    num_long_range_encounters_per_side=config_bb["num_long_range_encounters_per_side"],
+    num_slices_head_on=config_bb["num_slices_head_on"],
+    harmonic_number=35640,
+    bunch_spacing_buckets=config_bb["bunch_spacing_buckets"],
+    sigmaz=config_bb["sigma_z"],
+)
+
+# ==================================================================================================
+# ---Knobs and tuning
+# ==================================================================================================
+# Build trackers
 collider.build_trackers()
 
-if start_from_levelling:
-    if config_lumi_leveling is not None:
-        ### Compute levelling
-        xlhc.luminosity_leveling(
-            collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-        )
-    else:
-        print("WARNING: no levelling is being done, check that this is indeed what you want.")
+# Read knobs and tuning settings from config file
+conf_knobs_and_tuning = config_collider["config_knobs_and_tuning"]
 
-
-# Reset knobs that might have been modified (e.g. octupoles, crossing-angle, etc)
-# Knobs that have not been modified are not in configuration_sim["parameters_scanned"] and are
-# therefore left untouched
-# ! If adding other knobs to group_2, ensure that re-setting the knobs do no require a recomputing of the leveling
+# Set all knobs (crossing angles, dispersion correction, rf, crab cavities,
+# experimental magnets, etc.)
 for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
-    if kk in configuration_sim["parameters_scanned"]["group_2"]:
-        collider.vars[kk] = vv
+    collider.vars[kk] = vv
+
+# Tunings
+for line_name in ["lhcb1", "lhcb2"]:
+    knob_names = conf_knobs_and_tuning["knob_names"][line_name]
+
+    targets = {
+        "qx": conf_knobs_and_tuning["qx"][line_name],
+        "qy": conf_knobs_and_tuning["qy"][line_name],
+        "dqx": conf_knobs_and_tuning["dqx"][line_name],
+        "dqy": conf_knobs_and_tuning["dqy"][line_name],
+    }
+
+    xm.machine_tuning(
+        line=collider[line_name],
+        enable_closed_orbit_correction=True,
+        enable_linear_coupling_correction=True,
+        enable_tune_correction=True,
+        enable_chromaticity_correction=True,
+        knob_names=knob_names,
+        targets=targets,
+        line_co_ref=collider[line_name + "_co_ref"],
+        co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
+    )
+
+# ==================================================================================================
+# --- Compute the number of collisions in the different IPs (used for luminosity leveling)
+# ==================================================================================================
+
+# Get the filling scheme path (in json or csv format)
+filling_scheme_path = config_bb["mask_with_filling_pattern"]["pattern_fname"]
+
+# Load the filling scheme
+if filling_scheme_path.endswith(".json"):
+    with open(filling_scheme_path, "r") as fid:
+        filling_scheme = json.load(fid)
+else:
+    raise ValueError(
+        f"Unknown filling scheme file format: {filling_scheme_path}. It you provided a csv file, it"
+        " should have been automatically convert when running the script 001_make_folders.py."
+        " Something went wrong."
+    )
+
+# Extract booleans beam arrays
+array_b1 = np.array(filling_scheme["beam1"])
+array_b2 = np.array(filling_scheme["beam2"])
+
+# Assert that the arrays have the required length, and do the convolution
+assert len(array_b1) == len(array_b2) == 3564
+n_collisions_ip1_and_5 = array_b1 @ array_b2
+n_collisions_ip2 = np.roll(array_b1, -891) @ array_b2
+n_collisions_ip8 = np.roll(array_b1, -2670) @ array_b2
+
+# ==================================================================================================
+# ---Levelling
+# ==================================================================================================
+if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
+    # Read knobs and tuning settings from config file (already updated with the number of collisions)
+    config_lumi_leveling = config_collider["config_lumi_leveling"]
+
+    # Update the number of bunches in the configuration file
+    config_lumi_leveling["ip8"]["num_colliding_bunches"] = int(n_collisions_ip8)
+
+    # Level luminosity
+    xlhc.luminosity_leveling(
+        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
+    )
+
+    # Re-match tunes, and chromaticities
+    for line_name in ["lhcb1", "lhcb2"]:
+        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
+        targets = {
+            "qx": conf_knobs_and_tuning["qx"][line_name],
+            "qy": conf_knobs_and_tuning["qy"][line_name],
+            "dqx": conf_knobs_and_tuning["dqx"][line_name],
+            "dqy": conf_knobs_and_tuning["dqy"][line_name],
+        }
+        xm.machine_tuning(
+            line=collider[line_name],
+            enable_tune_correction=True,
+            enable_chromaticity_correction=True,
+            knob_names=knob_names,
+            targets=targets,
+        )
+
+else:
+    print(
+        "No leveling is done as no configuration has been provided, or skip_leveling"
+        " is set to True."
+    )
+
+# ==================================================================================================
+# --- Add linear coupling and rematch tune and chromaticity
+# ==================================================================================================
 
 # Add linear coupling as the target in the tuning of the base collider was 0
 # (not possible to set it the target to 0.001 for now)
@@ -131,8 +166,7 @@ for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
 # collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
 # collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 
-# Since we might have updated some knobs, we need to rematch tune and chromaticity
-# This would been done in any case as we need to rematch after changing the linear coupling
+# Rematch tune and chromaticity
 for line_name in ["lhcb1", "lhcb2"]:
     knob_names = conf_knobs_and_tuning["knob_names"][line_name]
     targets = {
@@ -242,7 +276,7 @@ collider.to_json("final_collider.json")
 # ==================================================================================================
 # --- Prepare particles distribution for tracking
 # ==================================================================================================
-particle_df = pd.read_parquet(configuration_sim["particle_file"])
+particle_df = pd.read_parquet(config_sim["particle_file"])
 
 r_vect = particle_df["normalized amplitude in xy-plane"].values
 theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad]
@@ -250,20 +284,11 @@ theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad
 A1_in_sigma = r_vect * np.cos(theta_vect)
 A2_in_sigma = r_vect * np.sin(theta_vect)
 
-# Assess that emittances in collider and in simulation configuration files are identical
-if not np.allclose(
-    configuration_sim["epsn_1"], config_bb["nemitt_x"], rtol=1e-3
-) or not np.allclose(configuration_sim["epsn_2"], config_bb["nemitt_y"], rtol=1e-3):
-    raise ValueError(
-        "The emittances in the simulation configuration file and in the beam-beam configuration"
-        " file are not identical. Please update script accordingly."
-    )
-
 particles = collider.lhcb1.build_particles(
     x_norm=A1_in_sigma,
     y_norm=A2_in_sigma,
-    delta=configuration_sim["delta_max"],
-    scale_with_transverse_norm_emitt=(configuration_sim["epsn_1"], configuration_sim["epsn_2"]),
+    delta=config_sim["delta_max"],
+    scale_with_transverse_norm_emitt=(config_bb["nemitt_x"], config_bb["nemitt_y"]),
 )
 particles.particle_id = particle_df.particle_id.values
 
@@ -278,7 +303,7 @@ collider.lhcb1.optimize_for_tracking()
 pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
 
 # Track
-num_turns = configuration_sim["n_turns"]
+num_turns = config_sim["n_turns"]
 a = time.time()
 collider.lhcb1.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
 b = time.time()
@@ -291,5 +316,5 @@ print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns
 # ==================================================================================================
 pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
 
-if tree_maker is not None and "log_file" in configuration_sim:
-    tree_maker.tag_json.tag_it(configuration_sim["log_file"], "completed")
+if tree_maker is not None and "log_file" in config_sim:
+    tree_maker.tag_json.tag_it(config_sim["log_file"], "completed")
