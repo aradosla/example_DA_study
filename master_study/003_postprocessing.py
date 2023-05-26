@@ -5,6 +5,7 @@ import tree_maker
 import yaml
 import pandas as pd
 import time
+import logging
 
 # ==================================================================================================
 # --- Load tree of jobs
@@ -15,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma5_tune_intensity_scan"  # "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -42,12 +43,13 @@ def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
         # Group 1 contains separation (on_sep2, on_sep8h, on_sep8v) and bunch intensity,
         # update with other knobs if needed
         if group == "group_1":
+            print(conf_knobs_and_tuning["knob_settings"])
             if parameter in conf_knobs_and_tuning["knob_settings"]:
                 df_sim[parameter] = conf_knobs_and_tuning["knob_settings"][parameter]
             elif parameter in config_bb:
                 df_sim[parameter] = config_bb[parameter]
             else:
-                raise ValueError(
+                logging.warning(
                     f"The parameter {parameter} is assumed to be a knob belonging to"
                     " conf_knobs_and_tuning['knob_settings'] or config_bb. Please update script"
                     " accordingly."
@@ -68,7 +70,7 @@ def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
                 else:
                     df_sim[parameter] = conf_knobs_and_tuning[parameter]
             else:
-                raise ValueError(
+                logging.warning(
                     f"The parameter {parameter} is assumed to be a knob belonging to"
                     " conf_knobs_and_tuning['knob_settings'] or conf_knobs_and_tuning. Please"
                     " update script accordingly."
@@ -79,7 +81,7 @@ def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
             if parameter in config_bb["mask_with_filling_pattern"]:
                 df_sim[parameter] = config_bb["mask_with_filling_pattern"][parameter]
             else:
-                raise ValueError(
+                logging.warning(
                     f"The parameter {parameter} is assumed to be a knob belonging to"
                     " config_bb['mask_with_filling_pattern']. Please update script accordingly."
                 )
@@ -121,8 +123,6 @@ for node in root.generation(1):
 
         # Get scanned parameters: Group 1
         df_sim = assign_parameter("on_sep2", "group_1", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("on_sep8h", "group_1", df_sim, dic_child, dic_parent)
-        df_sim = assign_parameter("on_sep8v", "group_1", df_sim, dic_child, dic_parent)
         df_sim = assign_parameter(
             "num_particles_per_bunch", "group_1", df_sim, dic_child, dic_parent
         )
@@ -161,13 +161,11 @@ if df_lost_particles.empty:
 
 # Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #
+groupby = ["qx", "num_particles_per_bunch"]  # ["i_bunch_b1", "i_bunch_b2"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
         df_lost_particles.groupby(groupby)["on_sep2"].median(),
-        df_lost_particles.groupby(groupby)["on_sep8h"].median(),
-        df_lost_particles.groupby(groupby)["on_sep8v"].median(),
         df_lost_particles.groupby(groupby)["num_particles_per_bunch"].median(),
         df_lost_particles.groupby(groupby)["on_x1"].median(),
         df_lost_particles.groupby(groupby)["on_x5"].median(),

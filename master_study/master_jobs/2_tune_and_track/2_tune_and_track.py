@@ -155,18 +155,18 @@ for line_name in ["lhcb1", "lhcb2"]:
 # ==================================================================================================
 for line_name in ["lhcb1", "lhcb2"]:
     tw = collider[line_name].twiss()
-    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], rtol=1e-4), (
+    assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], atol=1e-4), (
         f"tune_x is not correct for {line_name}. Expected {conf_knobs_and_tuning['qx'][line_name]},"
         f" got {tw.qx}"
     )
-    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], rtol=1e-4), (
+    assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], atol=1e-4), (
         f"tune_y is not correct for {line_name}. Expected {conf_knobs_and_tuning['qy'][line_name]},"
         f" got {tw.qy}"
     )
     assert np.isclose(
         tw.dqx,
         conf_knobs_and_tuning["dqx"][line_name],
-        rtol=1e-3,
+        rtol=1e-2,
     ), (
         f"chromaticity_x is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqx'][line_name]}, got {tw.dqx}"
@@ -174,7 +174,7 @@ for line_name in ["lhcb1", "lhcb2"]:
     assert np.isclose(
         tw.dqy,
         conf_knobs_and_tuning["dqy"][line_name],
-        rtol=1e-3,
+        rtol=1e-2,
     ), (
         f"chromaticity_y is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"

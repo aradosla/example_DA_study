@@ -17,8 +17,6 @@ n_turns    :    1000     # number of turns to track
 parameters_scanned :
   group_1:
     on_sep2: null
-    on_sep8h: null
-    on_sep8v: null
     num_particles_per_bunch: null
   group_2:
     on_x1 : null

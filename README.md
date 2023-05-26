@@ -201,7 +201,7 @@ The code is now well formatted and well commented, such that any question should
 
 At the moment, the following parameters can be scanned without requiring extensive scripts modifications:
 
-- separation at IP8 and IP2 (```on_sep8h, on_sep8v, on_sep2```)
+- separation at IP2 (```on_sep2```)
 - intensity (```num_particles_per_bunch```)
 - crossing-angle (```on_x1, on_x5```)
 - tune (```qx, qy```)
