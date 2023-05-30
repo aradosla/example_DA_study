@@ -9,7 +9,12 @@ import numpy as np
 import yaml
 import shutil
 import copy
-from user_defined_functions import generate_run_sh_htc, get_worst_bunch
+import json
+from user_defined_functions import (
+    generate_run_sh_htc,
+    get_worst_bunch,
+    reformat_filling_scheme_from_lpc,
+)
 
 # ==================================================================================================
 # --- Initial particle distribution parameters (generation 1)
@@ -132,18 +137,34 @@ d_config_beambeam["num_particles_per_bunch"] = 1.4e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
-# Filling scheme (in json or csv format)
-# Several filling schemes are available here: https://lpc.web.cern.ch/cgi-bin/fillTable.py?year=2023
+# Filling scheme (in json format)
+# The scheme should consist of a json file containing two lists of booleans (one for each beam),
+# representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
     "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 )
 
-# Convert filling scheme to json if needed
-if filling_scheme_path.endswith(".csv"):
-    # TODO
-    raise NotImplementedError(
-        "The conversion of csv to json is not implemented yet. Please convert the file manually."
-    )
+# Alternatively, one can get a fill directly from LPC from, e.g.:
+# https://lpc.web.cern.ch/cgi-bin/fillTable.py?year=2023
+# In this page, get the fill number of your fill of interest, and use it to replace the XXXX in the
+# URL below before downloading:
+# https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
+# Unfortunately, the format is not the same as the one used by defaults in xmask, but it should
+# still be converted in the lines below (see with matteo.rufolo@cern.ch for questions, or if it
+# doesn't work).
+
+# Load filling scheme
+if filling_scheme_path.endswith(".json"):
+    with open(filling_scheme_path, "r") as fid:
+        d_filling_scheme = json.load(fid)
+
+# If the filling scheme is already in the correct format, do nothing
+if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
+    pass
+# Otherwise, we need to reformat the file
+else:
+    reformat_filling_scheme_from_lpc(filling_scheme_path)
+
 
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"][

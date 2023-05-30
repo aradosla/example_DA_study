@@ -119,7 +119,7 @@ def _compute_LR_per_bunch(
 def get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1"):
     """
     # Adapted from https://github.com/PyCOMPLETE/FillingPatterns/blob/5f28d1a99e9a2ef7cc5c171d0cab6679946309e8/fillingpatterns/bbFunctions.py#L233
-    Given a filling scheme, containin two arrays of booleans representing the trains of bunches for
+    Given a filling scheme, containing two arrays of booleans representing the trains of bunches for
     the two beams, this function returns the worst bunch for each beam, according to their collision
     schedule.
     """
@@ -152,7 +152,170 @@ def get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1")
     return int(worst_bunch)
 
 
+def reformat_filling_scheme_from_lpc(filling_scheme_path, fill_number=None):
+    """
+    Adapted from a function provided by Matteo Ruffolo, matteo.rufolo@cern.ch
+    This function converts a .json file downloaded from the url link of LPC to the appropriate
+    format for xmask. If a fill number is not provided, it is assumed that the first fill in the
+    json file is the one of interest.
+    When computing the filling scheme in case of a hybrid scheme, the following hypotheses are done:
+    - There must be only one PS batch composed by 8b4e at the beginning of every SPS batch
+    - After that 8b4e PS batch, all the remaining PS batches inside that SPS batch must be BCMS composed by 36 bunches
+    - All the SPS batches composed by more than one PS batch have to respect the rules above
+    """
+
+    # Load the filling scheme directly if json
+    with open(filling_scheme_path, "r") as fid:
+        data = json.load(fid)
+
+    # If the fill number has not been provided, take the first one
+    if fill_number is None:
+        fill_number = list(data["fills"].keys())[0]
+
+    # Do the conversion (Matteo's code)
+    string = ""
+    B1 = np.zeros(3564)
+    B2 = np.zeros(3564)
+    if data["fills"][f"{fill_number}"]["name"][0:1000].split("_")[7] == "hybrid":
+        n_injection = int(
+            data["fills"][f"{fill_number}"]["name"][0:1000].split("_")[6].split("inj")[0]
+        )
+        beam = np.fromstring(
+            string.join(
+                string.join(
+                    data["fills"][f"{fill_number}"]["csv"].split("\t")[
+                        3 : n_injection * 2 * 10 : 10
+                    ]
+                ).split("ring_")[0 : n_injection * 2 + 1]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        n_bunches = np.fromstring(
+            string.join(
+                data["fills"][f"{fill_number}"]["csv"].split("\t")[8 : n_injection * 2 * 10 : 10]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        initial = np.fromstring(
+            string.join(
+                data["fills"][f"{fill_number}"]["csv"].split("\t")[4 : n_injection * 2 * 10 : 10]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        n_batches = [
+            int(ii.split("\n")[0])
+            for ii in data["fills"][f"{fill_number}"]["csv"].split("\t")[
+                11 : (n_injection) * 2 * 10 : 10
+            ]
+        ]
+        n_batches = np.append(n_batches, max(n_batches))
+        initial = [int(ii) for ii in (initial - 1) / 10]
+        for i in np.arange(n_injection * 2):
+            if n_batches[i] > 1:
+                counter = 1
+                if beam[i] == 1:
+                    for k in np.arange(n_bunches[i] / 8):
+                        init_batch = int(initial[i] + (k * 8 + k * 4))
+                        print(init_batch)
+                        B1[init_batch : init_batch + 8] = np.ones(8)
+                    for j in np.arange(n_batches[i] - 1):
+                        init_batch = (
+                            initial[i] + (counter - 1) * (36 + 7) + (n_bunches[i] + 6 * 4 + 7)
+                        )
+                        print(init_batch)
+                        B1[init_batch : init_batch + 36] = np.ones(36)
+                        counter += 1
+                else:
+                    for k in np.arange(n_bunches[i] / 8):
+                        init_batch = int(initial[i] + (k * 8 + k * 4))
+                        B2[init_batch : init_batch + 8] = np.ones(8)
+                    for j in np.arange(n_batches[i] - 1) + 1:
+                        init_batch = (
+                            initial[i] + (counter - 1) * (36 + 7) + (n_bunches[i] + 6 * 4 + 7)
+                        )
+                        B2[init_batch : init_batch + 36] = np.ones(36)
+                        counter += 1
+            else:
+                counter = 0
+                if beam[i] == 1:
+                    for j in np.arange(n_batches[i]):
+                        init_batch = initial[i] + counter * (n_bunches[i] + 7)
+                        B1[init_batch : init_batch + n_bunches[i]] = np.ones(n_bunches[i])
+                        counter += 1
+                else:
+                    for j in np.arange(n_batches[i]):
+                        init_batch = initial[i] + counter * (n_bunches[i] + 7)
+                        B2[init_batch : init_batch + n_bunches[i]] = np.ones(n_bunches[i])
+                        counter += 1
+    else:
+        n_injection = int(
+            data["fills"][f"{fill_number}"]["name"][0:1000].split("_")[6].split("inj")[0]
+        )
+        beam = np.fromstring(
+            string.join(
+                string.join(
+                    data["fills"][f"{fill_number}"]["csv"].split("\t")[
+                        3 : n_injection * 2 * 10 : 10
+                    ]
+                ).split("ring_")[0 : n_injection * 2 + 1]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        n_bunches = np.fromstring(
+            string.join(
+                data["fills"][f"{fill_number}"]["csv"].split("\t")[8 : n_injection * 2 * 10 : 10]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        initial = np.fromstring(
+            string.join(
+                data["fills"][f"{fill_number}"]["csv"].split("\t")[4 : n_injection * 2 * 10 : 10]
+            ),
+            dtype=int,
+            sep=",",
+        )
+
+        n_batches = [
+            int(ii.split("\n")[0])
+            for ii in data["fills"][f"{fill_number}"]["csv"].split("\t")[
+                11 : (n_injection) * 2 * 10 : 10
+            ]
+        ]
+        n_batches = np.append(n_batches, max(n_batches))
+        initial = [int(ii) for ii in (initial - 1) / 10]
+        for i in np.arange(n_injection * 2):
+            counter = 0
+            if beam[i] == 1:
+                for j in np.arange(n_batches[i]):
+                    init_batch = initial[i] + counter * (n_bunches[i] + 7)
+                    B1[init_batch : init_batch + n_bunches[i]] = np.ones(n_bunches[i])
+                    counter += 1
+            else:
+                for j in np.arange(n_batches[i]):
+                    init_batch = initial[i] + counter * (n_bunches[i] + 7)
+                    B2[init_batch : init_batch + n_bunches[i]] = np.ones(n_bunches[i])
+                    counter += 1
+    data_json = {"beam1": [int(ii) for ii in B1], "beam2": [int(ii) for ii in B2]}
+
+    with open(filling_scheme_path.split(".json")[0] + "_converted.json", "w") as file_bool:
+        json.dump(data_json, file_bool)
+    return B1, B2
+
+
 if __name__ == "__main__":
-    get_worst_bunch(
-        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    # get_worst_bunch(
+    #     "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    # )
+    reformat_filling_scheme_from_lpc(
+        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8807_test_fill.json"
     )
