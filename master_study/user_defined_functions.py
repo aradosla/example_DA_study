@@ -222,13 +222,13 @@ def reformat_filling_scheme_from_lpc(filling_scheme_path, fill_number=None):
                 if beam[i] == 1:
                     for k in np.arange(n_bunches[i] / 8):
                         init_batch = int(initial[i] + (k * 8 + k * 4))
-                        print(init_batch)
+                        # print(init_batch)
                         B1[init_batch : init_batch + 8] = np.ones(8)
                     for j in np.arange(n_batches[i] - 1):
                         init_batch = (
                             initial[i] + (counter - 1) * (36 + 7) + (n_bunches[i] + 6 * 4 + 7)
                         )
-                        print(init_batch)
+                        # print(init_batch)
                         B1[init_batch : init_batch + 36] = np.ones(36)
                         counter += 1
                 else:

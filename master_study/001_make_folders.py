@@ -163,7 +163,9 @@ if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
     pass
 # Otherwise, we need to reformat the file
 else:
-    reformat_filling_scheme_from_lpc(filling_scheme_path)
+    # One can potentially use b1_array, b2_array to scan the bunches later
+    b1_array, b2_array = reformat_filling_scheme_from_lpc(filling_scheme_path)
+    filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
 
 
 # Add to config file
@@ -172,38 +174,46 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
-# Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
-# elements), must be specified otherwise)
-# If the bunch number is None and pattern_name is defined, the bunch with the largest number of
-# long-range interactions will be used
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
+# are defined later)
+check_bunch_number = True
+if check_bunch_number:
+    # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
+    # elements), must be specified otherwise)
+    # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
+    # long-range interactions will be used
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 
-if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
-    # Case the bunch number has not been provided
-    worst_bunch_b1 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_1")
-    while d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
-        bool_inp = input(
-            "The bunch number for beam 1 has not been provided. Do you want to use the bunch with"
-            " the largest number of long-range interactions? It is the bunch number "
-            + str(worst_bunch_b1)
-            + " (y/n): "
+    if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
+        # Case the bunch number has not been provided
+        worst_bunch_b1 = get_worst_bunch(
+            filling_scheme_path, numberOfLRToConsider=26, beam="beam_1"
         )
-        if bool_inp == "y":
-            d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
-        elif bool_inp == "n":
-            d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = int(
-                input("Please enter the bunch number for beam 1: ")
+        while d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
+            bool_inp = input(
+                "The bunch number for beam 1 has not been provided. Do you want to use the bunch"
+                " with the largest number of long-range interactions? It is the bunch number "
+                + str(worst_bunch_b1)
+                + " (y/n): "
             )
+            if bool_inp == "y":
+                d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
+            elif bool_inp == "n":
+                d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = int(
+                    input("Please enter the bunch number for beam 1: ")
+                )
 
-if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
-    # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
-    print(
-        "The bunch number for beam 2 has not been provided. Bunch tracking for beam 2 is not"
-        " implemented yet in this script, so you can ignore this warning."
-    )
-    worst_bunch_b2 = get_worst_bunch(filling_scheme_path, numberOfLRToConsider=26, beam="beam_2")
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
+    if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
+        # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
+        print(
+            "The bunch number for beam 2 has not been provided. Bunch tracking for beam 2 is not"
+            " implemented yet in this script, so you can ignore this warning."
+        )
+        worst_bunch_b2 = get_worst_bunch(
+            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
+        )
+        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
 
 # ==================================================================================================
