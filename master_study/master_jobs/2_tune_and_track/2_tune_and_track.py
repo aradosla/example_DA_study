@@ -24,8 +24,8 @@ config_sim = config["config_simulation"]
 config_collider = config["config_collider"]
 
 # Start tree_maker logging if log_file is present in config
-if tree_maker is not None and "log_file" in config_sim:
-    tree_maker.tag_json.tag_it(config_sim["log_file"], "started")
+if tree_maker is not None and "log_file" in config:
+    tree_maker.tag_json.tag_it(config["log_file"], "started")
 else:
     logging.warning("tree_maker loging not available")
 
