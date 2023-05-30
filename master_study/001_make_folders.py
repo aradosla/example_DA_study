@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 import yaml
 import shutil
+import copy
 from user_defined_functions import generate_run_sh_htc, get_worst_bunch
 
 # ==================================================================================================
@@ -254,6 +255,8 @@ children["base_collider"]["config_collider"] = d_config_mad
 # We now set a second generation for the tree. This second generation contains the tracking
 # parameters, as well as a default set of parameters for the colliders (defined above), that we
 # mutate according to the parameters we want to scan.
+# ! Caution when mutating the dictionnary in this function, you have to pass a deepcopy to children,
+# ! otherwise the dictionnary will be mutated for all the children.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
@@ -273,8 +276,8 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
-        "config_simulation": d_config_simulation,
-        "config_collider": d_config_collider,
+        "config_simulation": copy.deepcopy(d_config_simulation),
+        "config_collider": copy.deepcopy(d_config_collider),
         "log_file": "tree_maker.log",
     }
 

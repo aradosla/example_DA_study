@@ -24,71 +24,6 @@ root.add_suffix(suffix=fix)
 
 
 # ==================================================================================================
-# --- Define a function to get the collider parameters associated with a given simulation
-# ==================================================================================================
-
-
-# Function for parameter assignation
-def assign_parameter(parameter, group, df_sim, dic_child, dic_parent=None):
-    if group in dic_child:
-        if parameter in dic_child[group]:
-            df_sim[parameter] = dic_child[group][parameter]
-            return df_sim
-
-    # If the parameters have not been scanned, they must be found in the base collider configuation
-    if dic_parent is not None:
-        conf_knobs_and_tuning = dic_parent["config_knobs_and_tuning"]
-        config_bb = dic_parent["config_beambeam"]
-
-        # Group 1 contains separation (on_sep2, on_sep8h, on_sep8v) and bunch intensity,
-        # update with other knobs if needed
-        if group == "group_1":
-            print(conf_knobs_and_tuning["knob_settings"])
-            if parameter in conf_knobs_and_tuning["knob_settings"]:
-                df_sim[parameter] = conf_knobs_and_tuning["knob_settings"][parameter]
-            elif parameter in config_bb:
-                df_sim[parameter] = config_bb[parameter]
-            else:
-                logging.warning(
-                    f"The parameter {parameter} is assumed to be a knob belonging to"
-                    " conf_knobs_and_tuning['knob_settings'] or config_bb. Please update script"
-                    " accordingly."
-                )
-
-        # Group 2 contains crossing-angle, chromaticity, tune and octupoles,
-        # update with other knobs if needed
-        elif group == "group_2":
-            if parameter in conf_knobs_and_tuning["knob_settings"]:
-                df_sim[parameter] = conf_knobs_and_tuning["knob_settings"][parameter]
-            elif parameter in conf_knobs_and_tuning:
-                if (
-                    "lhcb1" in conf_knobs_and_tuning[parameter]
-                    or "lhcb2" in conf_knobs_and_tuning[parameter]
-                ):
-                    # chromaticity and tune are handled only for 1 beam... Update this if required
-                    df_sim[parameter] = conf_knobs_and_tuning[parameter]["lhcb1"]
-                else:
-                    df_sim[parameter] = conf_knobs_and_tuning[parameter]
-            else:
-                logging.warning(
-                    f"The parameter {parameter} is assumed to be a knob belonging to"
-                    " conf_knobs_and_tuning['knob_settings'] or conf_knobs_and_tuning. Please"
-                    " update script accordingly."
-                )
-
-        # Group 3 contains bunch number, update with other parameters if needed
-        elif group == "group_3":
-            if parameter in config_bb["mask_with_filling_pattern"]:
-                df_sim[parameter] = config_bb["mask_with_filling_pattern"][parameter]
-            else:
-                logging.warning(
-                    f"The parameter {parameter} is assumed to be a knob belonging to"
-                    " config_bb['mask_with_filling_pattern']. Please update script accordingly."
-                )
-    return df_sim
-
-
-# ==================================================================================================
 # --- # Browse simulations folder and extract relevant observables
 # ==================================================================================================
 l_problematic_sim = []
@@ -101,7 +36,7 @@ for node in root.generation(1):
             config_child = yaml.safe_load(fid)
         try:
             particle = pd.read_parquet(
-                f"{node_child.get_abs_path()}/{config_child['particle_file']}"
+                f"{node_child.get_abs_path()}/{config_child['config_simulation']['particle_file']}"
             )
             df_sim = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
 
@@ -123,6 +58,10 @@ for node in root.generation(1):
         dic_parent_particles = node.parameters["config_particles"]
 
         # Get scanned parameters (complete with the scanned parameters)
+        print(
+            dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"],
+            dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"],
+        )
         df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
         df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
         df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
