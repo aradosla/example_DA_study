@@ -1,43 +1,30 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================import numpy as np
-import json
 import pandas as pd
 import xtrack as xt
-import pickle
-import os
+import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
+
 # ==================================================================================================
 # --- Functions to load dashboard variables
 # ==================================================================================================
-
-
-def return_line_from_file(file_path):
-    """Return the line from a json file."""
-    # Load the line
-    with open(file_path, "r") as fid:
-        dct = json.load(fid)
-        line = xt.Line.from_dict(dct)
-
-    return line
-
-
 def return_dataframe_elements_from_line(line):
     # Build a dataframe with the elements of the lines
     df_elements = pd.DataFrame([x.to_dict() for x in line.elements])
     return df_elements
 
 
-def return_survey_and_twiss_dataframes_from_tracker(tracker, correct_x_axis=True):
+def return_survey_and_twiss_dataframes_from_line(line, correct_x_axis=True):
     """Return the survey and twiss dataframes from a tracker."""
     # Get survey dataframes
-    df_sv = tracker.survey().to_pandas()
+    df_sv = line.survey().to_pandas()
 
     # Get Twiss dataframes
-    tw = tracker.twiss()
+    tw = line.twiss()
     df_tw = tw.to_pandas()
 
     # Reverse x-axis if requested
@@ -86,37 +73,35 @@ def return_dataframe_corrected_for_thin_lens_approx(df_elements, df_tw):
     return df_elements_corrected
 
 
-def return_all_loaded_variables(
-    save_path=None, force_load=False, correct_x_axis=True, line_path=None, line=None
-):
+def return_all_loaded_variables(collider_path=None, collider=None):
     """Return all loaded variables if they are not already loaded."""
 
-    if line is None and line_path is not None:
+    if collider is None and collider_path is not None:
         # Rebuild line (can't be pickled, most likely because of struct and multiprocessing)
-        line = return_line_from_file(line_path)
+        collider = xt.Multiline.from_json(collider_path)
 
-    elif line is None and line_path is None:
-        raise ValueError("Either line or line_path must be provided")
+    elif collider is None and collider_path is None:
+        raise ValueError("Either collider or collider_path must be provided")
 
     # Build tracker
-    tracker = line.build_tracker()
+    collider.build_trackers()
 
-    # Check if df are already saved
-    if save_path is not None and os.path.exists(save_path):
-        with open(save_path, "rb") as handle:
-            df_elements, df_sv, df_tw, df_elements_corrected = pickle.load(handle)
-    else:
-        df_elements = return_dataframe_elements_from_line(line)
-        df_sv, df_tw = return_survey_and_twiss_dataframes_from_tracker(tracker, correct_x_axis)
-        df_elements_corrected = return_dataframe_corrected_for_thin_lens_approx(df_elements, df_tw)
+    # Get elements of the line (only done for b1, should be identical for b2)
+    df_elements = return_dataframe_elements_from_line(collider.lhcb1)
 
-    if save_path is not None:
-        # Save variables
-        with open(save_path, "wb") as handle:
-            pickle.dump([df_elements, df_sv, df_tw, df_elements_corrected], handle)
+    # Compute twiss and survey for both lines
+    df_sv_b1, df_tw_b1 = return_survey_and_twiss_dataframes_from_line(
+        collider.lhcb1, correct_x_axis=True
+    )
+    df_sv_b2, df_tw_b2 = return_survey_and_twiss_dataframes_from_line(
+        collider.lhcb1, correct_x_axis=False
+    )
+
+    # Correct df elements for thin lens approximation
+    df_elements_corrected = return_dataframe_corrected_for_thin_lens_approx(df_elements, df_tw_b1)
 
     # Return all variables
-    return line, tracker, df_elements, df_sv, df_tw, df_elements_corrected
+    return collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected
 
 
 def get_indices_of_interest(df_tw, element_1, element_2):
@@ -535,8 +520,8 @@ def return_plot_lattice_with_tracking(
     df_sv,
     df_elements,
     df_tw,
-    df_sv_4=None,
-    df_tw_4=None,
+    df_sv_2=None,
+    df_tw_2=None,
     add_dipoles=True,
     add_quadrupoles=True,
     add_sextupoles=True,
@@ -601,8 +586,8 @@ def return_plot_lattice_with_tracking(
 
     # Add optics traces for beam_2 if requested
     if add_optics_beam_2:
-        if df_sv_4 is None or df_tw_4 is None:
-            print("Warning: df_sv_4 or df_tw_4 is None, beam_2 optics will not be plotted")
+        if df_sv_2 is None or df_tw_2 is None:
+            print("Warning: df_sv_2 or df_tw_2 is None, beam_2 optics will not be plotted")
         else:
             fig = add_optics_to_fig(
                 fig,
@@ -612,8 +597,8 @@ def return_plot_lattice_with_tracking(
                 plot_vertical_dispersion,
                 plot_horizontal_position,
                 plot_vertical_position,
-                df_sv_4,
-                df_tw_4,
+                df_sv_2,
+                df_tw_2,
                 beam_2=True,
             )
 

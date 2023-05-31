@@ -16,34 +16,10 @@ import dashboard_functions
 
 def load_default_config():
     # Define global variables # ! Not compatible with multiple users when used online
-    global line_b1, tracker_b1, df_elements_b1, df_sv_b1, df_tw_b1, df_elements_corrected_b1
-    global line_b4, tracker_b4, df_elements_b4, df_sv_b4, df_tw_b4, df_elements_corrected_b4
-    # Get trackers and dataframes for beam 1 and 4
-    (
-        line_b1,
-        tracker_b1,
-        df_elements_b1,
-        df_sv_b1,
-        df_tw_b1,
-        df_elements_corrected_b1,
-    ) = dashboard_functions.return_all_loaded_variables(
-        line_path="json_lines/line_b1.json",
-        save_path="temp/line_b1_dfs.pickle",
-        force_load=False,
-        correct_x_axis=True,
-    )
-    (
-        line_b4,
-        tracker_b4,
-        df_elements_b4,
-        df_sv_b4,
-        df_tw_b4,
-        df_elements_corrected_b4,
-    ) = dashboard_functions.return_all_loaded_variables(
-        line_path="json_lines/line_b4.json",
-        save_path="temp/line_b4_dfs.pickle",
-        force_load=False,
-        correct_x_axis=False,
+    global collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected
+    # Get trackers and dataframes for beam 1 and 2
+    collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
+        dashboard_functions.return_all_loaded_variables(collider_path="json_lines/line_b1.json")
     )
 
 
@@ -54,7 +30,7 @@ app = Dash(
     external_scripts=[
         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
     ],
-    title="LHC explorer",
+    title="Twiss dashboard for current simulation",
     # suppress_callback_exceptions=True,
 )
 server = app.server
@@ -163,7 +139,7 @@ def return_optics_layout():
                         children=[
                             dmc.Select(
                                 id="knob-select",
-                                data=list(tracker_b1.vars._owner.keys()),
+                                data=list(collider.vars._owner.keys()),
                                 searchable=True,
                                 nothingFound="No options found",
                                 style={"width": 200},
@@ -173,7 +149,7 @@ def return_optics_layout():
                             dmc.NumberInput(
                                 id="knob-input",
                                 label="Knob value",
-                                value=tracker_b1.vars["on_x1"]._value,
+                                value=collider.vars["on_x1"]._value,
                                 step=1,
                                 style={"width": 200},
                             ),
@@ -209,53 +185,6 @@ def return_optics_layout():
     return optics_layout
 
 
-def return_load_data_layout():
-    load_data_layout = dmc.Center(
-        dmc.Stack(
-            children=[
-                dmc.Alert(
-                    (
-                        "Please upload two json files containing each a Line Dictionnary dataset,"
-                        " one for each beam, using the field below. If no file is uploaded, the"
-                        " default dataset will be used."
-                    ),
-                    title="Load a dataset",
-                    mt=10,
-                ),
-                dmc.Center(
-                    dmc.Group(
-                        children=[
-                            dcc.Upload(
-                                id="upload-json-beam-1",
-                                children=dmc.Button(
-                                    id="button-upload-beam-1", children="Upload beam 1 file"
-                                ),
-                                # Allow multiple files to be uploaded
-                                multiple=False,
-                            ),
-                            dcc.Upload(
-                                id="upload-json-beam-2",
-                                children=dmc.Button(
-                                    id="button-upload-beam-2", children="Upload beam 2 file"
-                                ),
-                                # Allow multiple files to be uploaded
-                                multiple=False,
-                            ),
-                            dmc.Button("Reload default configuration", id="reload-default-button"),
-                        ],
-                    ),
-                ),
-                html.Div(id="output-default-data"),
-                html.Div(id="output-data-upload-1"),
-                html.Div(id="output-data-upload-2"),
-                html.Div(id="notify-container-1"),
-                html.Div(id="notify-container-2"),
-            ],
-        ),
-    )
-    return load_data_layout
-
-
 layout = html.Div(
     style={"width": "80%", "margin": "auto"},
     children=[
@@ -286,11 +215,6 @@ layout = html.Div(
                                     position="center",
                                     children=[
                                         dmc.Tab(
-                                            "Load data",
-                                            value="load-data",
-                                            style={"font-size": "18px"},
-                                        ),
-                                        dmc.Tab(
                                             "Display LHC survey",
                                             value="display-survey",
                                             style={"font-size": "18px"},
@@ -301,9 +225,6 @@ layout = html.Div(
                                             style={"font-size": "18px"},
                                         ),
                                     ],
-                                ),
-                                dmc.TabsPanel(
-                                    children=return_load_data_layout(), value="load-data"
                                 ),
                                 dmc.TabsPanel(
                                     children=return_LHC_survey_layout(),
@@ -328,93 +249,6 @@ app.layout = layout
 #################### App Callbacks ####################
 
 
-def parse_content(content, filename, beam=1):
-    content_type, content_string = content.split(",")
-    decoded = base64.b64decode(content_string)
-    try:
-        if "json" in filename:
-            json_dict = json.loads(io.StringIO(decoded.decode("utf-8")).getvalue())
-            line = xt.Line.from_dict(json_dict)
-            if beam == 1:
-                (
-                    line_b1,
-                    tracker_b1,
-                    df_elements_b1,
-                    df_sv_b1,
-                    df_tw_b1,
-                    df_elements_corrected_b1,
-                ) = dashboard_functions.return_all_loaded_variables(
-                    save_path=None, force_load=False, correct_x_axis=True, line_path=None, line=line
-                )
-            else:
-                (
-                    line_b4,
-                    tracker_b4,
-                    df_elements_b4,
-                    df_sv_b4,
-                    df_tw_b4,
-                    df_elements_corrected_b4,
-                ) = dashboard_functions.return_all_loaded_variables(
-                    save_path=None, force_load=False, correct_x_axis=True, line_path=None, line=line
-                )
-
-    except Exception as e:
-        print(e)
-        return html.Div(["There was an error processing this file."])
-
-
-# @app.callback(
-#     Output("notify-container-1", "children"),
-#     Input("button-upload-beam-1", "contents"),
-# )
-# def update_output_notifier(content):
-#     if content is not None:
-#         return dmc.Notification(
-#             id="data-loading-1",
-#             title="Data loading",
-#             message="The dataset is getting loaded.",
-#             color="green",
-#             action="show",
-#         )
-#     else:
-#         return dash.no_update
-
-
-@app.callback(
-    Output("output-default-data", "children"),
-    Input("reload-default-button", "n_clicks"),
-)
-def reload_default_config(n_clicks):
-    if n_clicks is not None:
-        load_default_config()
-
-    return dash.no_update
-
-
-@app.callback(
-    Output("output-data-upload-1", "children"),
-    Input("upload-json-beam-1", "contents"),
-    State("upload-json-beam-1", "filename"),
-)
-def update_output_beam_1(content, name):
-    if content is not None:
-        return parse_content(content, name, beam=1)
-    else:
-        return dash.no_update
-
-
-@app.callback(
-    Output("output-data-upload-2", "children"),
-    Input("upload-json-beam-2", "contents"),
-    State("upload-json-beam-2", "filename"),
-)
-def update_output_beam_2(content, name):
-    if content is not None:
-        return parse_content(content, name, beam=2)
-    else:
-        return dash.no_update
-
-
 @app.callback(
     Output("LHC-layout", "figure"),
     Input("chips-ip", "value"),
@@ -432,10 +266,10 @@ def update_graph_LHC_layout(l_values):
 
     fig = dashboard_functions.return_plot_lattice_with_tracking(
         df_sv_b1,
-        df_elements_corrected_b1,
+        df_elements_corrected,
         df_tw_b1,
-        df_sv_4=df_sv_b4,
-        df_tw_4=df_tw_b4,
+        df_sv_2=df_sv_b2,
+        df_tw_2=df_tw_b2,
         l_indices_to_keep=l_indices_to_keep,
     )
 
@@ -447,7 +281,7 @@ def update_graph_LHC_layout(l_values):
     Input("knob-select", "value"),
 )
 def update_knob_input(value):
-    return tracker_b1.vars[value]._value
+    return collider.vars[value]._value
 
 
 @app.callback(
@@ -471,8 +305,8 @@ def update_graph_LHC_2D(
     #    return dash.no_update
 
     # Update knob if needed
-    tracker_b1.vars[knob] = knob_value
-    tw_b1 = tracker_b1.twiss()
+    collider.vars[knob] = knob_value
+    tw_b1 = collider.lhcb1.twiss()
 
     if ctx.triggered_id == "update-knob-button" or ctx.triggered_id is None:
         fig = dashboard_functions.plot_around_IP(tw_b1)
@@ -581,39 +415,47 @@ def update_text_graph_LHC_2D(clickData):
             if name.startswith("mb"):
                 type_text = "Dipole"
                 try:
-                    set_var = tracker_b1.element_refs[name].knl[0]._expr._get_dependencies()
+                    set_var = collider.lhcb1.element_refs[name].knl[0]._expr._get_dependencies()
                 except:
-                    set_var = tracker_b1.element_refs[name + "..1"].knl[0]._expr._get_dependencies()
+                    set_var = (
+                        collider.lhcb1.element_refs[name + "..1"].knl[0]._expr._get_dependencies()
+                    )
             elif name.startswith("mq"):
                 type_text = "Quadrupole"
                 try:
-                    set_var = tracker_b1.element_refs[name].knl[1]._expr._get_dependencies()
+                    set_var = collider.lhcb1.element_refs[name].knl[1]._expr._get_dependencies()
                 except:
-                    set_var = tracker_b1.element_refs[name + "..1"].knl[1]._expr._get_dependencies()
+                    set_var = (
+                        collider.lhcb1.element_refs[name + "..1"].knl[1]._expr._get_dependencies()
+                    )
             elif name.startswith("ms"):
                 type_text = "Sextupole"
                 try:
-                    set_var = tracker_b1.element_refs[name].knl[2]._expr._get_dependencies()
+                    set_var = collider.lhcb1.element_refs[name].knl[2]._expr._get_dependencies()
                 except:
-                    set_var = tracker_b1.element_refs[name + "..1"].knl[2]._expr._get_dependencies()
+                    set_var = (
+                        collider.lhcb1.element_refs[name + "..1"].knl[2]._expr._get_dependencies()
+                    )
             elif name.startswith("mo"):
                 type_text = "Octupole"
                 try:
-                    set_var = tracker_b1.element_refs[name].knl[3]._expr._get_dependencies()
+                    set_var = collider.lhcb1.element_refs[name].knl[3]._expr._get_dependencies()
                 except:
-                    set_var = tracker_b1.element_refs[name + "..1"].knl[3]._expr._get_dependencies()
+                    set_var = (
+                        collider.lhcb1.element_refs[name + "..1"].knl[3]._expr._get_dependencies()
+                    )
 
             text = []
             for var in set_var:
                 name_var = str(var).split("'")[1]
-                val = tracker_b1.vars[name_var]._get_value()
-                expr = tracker_b1.vars[name_var]._expr
+                val = collider.lhcb1.vars[name_var]._get_value()
+                expr = collider.lhcb1.vars[name_var]._expr
                 if expr is not None:
-                    dependencies = tracker_b1.vars[name_var]._expr._get_dependencies()
+                    dependencies = collider.lhcb1.vars[name_var]._expr._get_dependencies()
                 else:
                     dependencies = "No dependencies"
                     expr = "No expression"
-                targets = tracker_b1.vars[name_var]._find_dependant_targets()
+                targets = collider.lhcb1.vars[name_var]._find_dependant_targets()
 
                 text.append(dmc.Text("Name: ", weight=500))
                 text.append(dmc.Text(name_var, size="sm"))

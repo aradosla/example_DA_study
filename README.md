@@ -152,8 +152,8 @@ This is described in the file ```master_study/config.yaml```:
         - optics_specific_tools_hlhc15.py
       run_on: 'local_pc'
     2: # Launch the pymask and prepare the colliders
-      job_folder: '../../master_jobs/2_tune_and_track'
-      job_executable: 2_tune_and_track.py # has to be a python file
+      job_folder: '../../master_jobs/2_configure_and_track'
+      job_executable: 2_configure_and_track.py # has to be a python file
       run_on: 'htc' #'local_pc' #'htc' #'local_pc' 
       htc_job_flavor: 'tomorrow' # optional parameter to define job flavor
   # Children will be added below in the script 001_make_folders.py

@@ -66,7 +66,7 @@ d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 # Below, the user defines the standard collider parameters. Some of the values defined here are
 # later updated according to the grid-search being done.
 # Path for the collider config:
-# master_study/master_jobs/2_tune_and_track/config.yaml [field config_collider]
+# master_study/master_jobs/2_configure_and_track/config.yaml [field config_collider]
 # ==================================================================================================
 
 ### Tune and chroma configuration
