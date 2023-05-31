@@ -94,7 +94,7 @@ def return_all_loaded_variables(collider_path=None, collider=None):
         collider.lhcb1, correct_x_axis=True
     )
     df_sv_b2, df_tw_b2 = return_survey_and_twiss_dataframes_from_line(
-        collider.lhcb1, correct_x_axis=False
+        collider.lhcb1, correct_x_axis=True
     )
 
     # Correct df elements for thin lens approximation
@@ -619,7 +619,11 @@ def return_plot_lattice_with_tracking(
         height=1000,
         # margin=dict(l=10, r=10, b=100, t=100, pad=10),
         dragmode="pan",
-        template="plotly_white",
+    )
+
+    # Make background transparent
+    fig.update_layout(
+        template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
     )
 
     return fig
@@ -734,8 +738,12 @@ def plot_around_IP(tw_part):
         height=1000,
         legend_tracegroupgap=190,
         dragmode="pan",
-        template="plotly_white",
         uirevision="Don't change",
+    )
+
+    # Make background transparent
+    fig.update_layout(
+        template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
     )
 
     # Update yaxis properties
@@ -744,14 +752,5 @@ def plot_around_IP(tw_part):
     fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-1.5, 2.5], row=3, col=1)
     fig.update_xaxes(title_text=r"$s$", row=3, col=1)
     fig.update_yaxes(fixedrange=True)
-
-    # Add range slider
-    # fig.update_layout(
-    #     xaxis=dict(
-    #         rangeslider=dict(visible=True),
-    #         type="linear",
-    #         range=(10, 20),
-    #     )
-    # )
 
     return fig

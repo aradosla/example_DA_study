@@ -5,3 +5,5 @@ pandas
 psutil
 xsuite
 cpymad
+dash
+dash-mantine-components

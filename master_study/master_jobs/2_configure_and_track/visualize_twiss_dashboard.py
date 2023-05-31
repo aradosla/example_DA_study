@@ -19,7 +19,9 @@ def load_default_config():
     global collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected
     # Get trackers and dataframes for beam 1 and 2
     collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
-        dashboard_functions.return_all_loaded_variables(collider_path="json_lines/line_b1.json")
+        dashboard_functions.return_all_loaded_variables(
+            collider_path="/afs/cern.ch/work/c/cdroin/private/comparison_pymask_xmask/xmask/xsuite_lines/collider_03_tuned_and_leveled_bb_off.json"
+        )
     )
 
 
@@ -243,6 +245,14 @@ layout = html.Div(
         ),
     ],
 )
+
+# Dark theme
+layout = dmc.MantineProvider(
+    withGlobalStyles=True,
+    theme={"colorScheme": "dark"},
+    children=layout,
+)
+
 app.layout = layout
 
 
