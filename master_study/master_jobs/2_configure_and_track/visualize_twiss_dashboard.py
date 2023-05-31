@@ -2,7 +2,8 @@
 
 # Import standard libraries
 import dash_mantine_components as dmc
-from dash import Dash, html, dcc, Input, Output, State, ctx
+from dash import Dash, html, dcc, Input, Output, State, ctx, dash_table
+from dash.dash_table.Format import Format, Scheme, Trim
 import dash
 import numpy as np
 import base64
@@ -14,25 +15,27 @@ import json
 import dashboard_functions
 
 
-def load_default_config():
-    # Define global variables # ! Not compatible with multiple users when used online
-    global collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected
-    # Get trackers and dataframes for beam 1 and 2
-    collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
-        dashboard_functions.return_all_loaded_variables(
-            collider_path="/afs/cern.ch/work/c/cdroin/private/comparison_pymask_xmask/xmask/xsuite_lines/collider_03_tuned_and_leveled_bb_off.json"
-        )
+#################### Build CSS ####################
+dashboard_functions.build_CSS()
+
+#################### Load global variables ####################
+
+path_configuration = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/scans/opt_flathv_75_1500_withBB_chroma5_1p4_eol_bunch_scan/base_collider/xtrack_0002/config.yaml"
+
+# Get collider variables
+collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
+    dashboard_functions.return_all_loaded_variables(
+        collider_path="/afs/cern.ch/work/c/cdroin/private/comparison_pymask_xmask/xmask/xsuite_lines/collider_03_tuned_and_leveled_bb_off.json"
     )
+)
 
-
-load_default_config()
 #################### App ####################
 app = Dash(
     __name__,
+    title="Dashboard for current simulation",
     external_scripts=[
         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
     ],
-    title="Twiss dashboard for current simulation",
     # suppress_callback_exceptions=True,
 )
 server = app.server
@@ -40,8 +43,77 @@ server = app.server
 #################### App Layout ####################
 
 
-def return_LHC_survey_layout():
-    LHC_survey_layout = dmc.Center(
+def return_configuration_layout(path_configuration):
+    # Load configuration file
+    with open(path_configuration, "r") as file:
+        configuration_str = file.read()
+
+    configuration_layout = dmc.Prism(
+        language="yaml", children=configuration_str, style={"height": "90vh", "overflowY": "auto"}
+    )
+
+    return configuration_layout
+
+
+def return_twiss_table_layout():
+    array_type = ["numeric"] * (len(df_tw_b1.columns) - 1)
+    array_format = [Format(precision=2, scheme=Scheme.decimal_si_prefix)] * (
+        len(df_tw_b1.columns) - 1
+    )
+    table = (
+        dash_table.DataTable(
+            id="datatable-twiss",
+            columns=[
+                {
+                    "name": i,
+                    "id": i,
+                    "deletable": False,
+                }
+                for i in df_tw_b1.columns[:1]
+            ]
+            + [
+                {
+                    "name": i + "      ",
+                    "id": i,
+                    "deletable": False,
+                    "type": array_type[idx],
+                    "format": array_format[idx],
+                }
+                for idx, i in enumerate(df_tw_b1.columns[1:])
+            ],
+            data=df_tw_b1.drop(["W_matrix"], axis=1).to_dict("records"),
+            editable=False,
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
+            row_selectable=False,
+            row_deletable=False,
+            # page_action="none",
+            # fixed_rows={"headers": True, "data": 0},
+            # fixed_columns={"headers": True, "data": 1},
+            # virtualization=True,
+            page_size=30,
+            # style_cell={"minWidth": 95, "width": 95, "maxWidth": 95},
+            style_table={
+                # "height": "100%",
+                "maxHeight": "80vh",
+                "margin-x": "auto",
+                "margin-top": "20px",
+                "overflowY": "auto",
+                "overflowX": "auto",
+                "minWidth": "100%",
+            },
+            style_header={"backgroundColor": "rgb(30, 30, 30)", "color": "white", "padding": "1em"},
+            style_data={"backgroundColor": "rgb(50, 50, 50)", "color": "white"},
+            style_filter={"backgroundColor": "rgb(70, 70, 70)"},  # , "color": "white"},
+            style_cell={"font-family": "sans-serif"},
+        ),
+    )
+    return table
+
+
+def return_survey_layout():
+    survey_layout = dmc.Center(
         dmc.Stack(
             children=[
                 dmc.Center(
@@ -129,7 +201,7 @@ def return_LHC_survey_layout():
             ],
         )
     )
-    return LHC_survey_layout
+    return survey_layout
 
 
 def return_optics_layout():
@@ -196,10 +268,11 @@ layout = html.Div(
             height=50,
             children=dmc.Center(
                 children=dmc.Text(
-                    "LHC explorer",
+                    "Simulation dashboard",
                     size=30,
-                    variant="gradient",
-                    gradient={"from": "blue", "to": "green", "deg": 45},
+                    color="Teal",
+                    # variant="gradient",
+                    # gradient={"from": "blue", "to": "green", "deg": 45},
                 )
             ),
             style={"margin": "auto"},
@@ -217,27 +290,53 @@ layout = html.Div(
                                     position="center",
                                     children=[
                                         dmc.Tab(
-                                            "Display LHC survey",
-                                            value="display-survey",
+                                            "Configuration",
+                                            value="display-configuration",
                                             style={"font-size": "18px"},
                                         ),
                                         dmc.Tab(
-                                            "Display LHC optics",
+                                            "Twiss table",
+                                            value="display-twiss",
+                                            style={"font-size": "18px"},
+                                        ),
+                                        dmc.Tab(
+                                            "Filling scheme",
+                                            value="display-scheme",
+                                            style={"font-size": "18px"},
+                                        ),
+                                        dmc.Tab(
+                                            "Optics",
                                             value="display-optics",
+                                            style={"font-size": "18px"},
+                                        ),
+                                        dmc.Tab(
+                                            "Survey",
+                                            value="display-survey",
                                             style={"font-size": "18px"},
                                         ),
                                     ],
                                 ),
                                 dmc.TabsPanel(
-                                    children=return_LHC_survey_layout(),
-                                    value="display-survey",
+                                    children=return_configuration_layout(path_configuration),
+                                    value="display-configuration",
                                 ),
+                                dmc.TabsPanel(
+                                    children=return_twiss_table_layout(),
+                                    value="display-twiss",
+                                    style={"height": "90vh"},
+                                ),
+                                dmc.TabsPanel(children=[], value="display-scheme"),
                                 dmc.TabsPanel(
                                     children=return_optics_layout(), value="display-optics"
                                 ),
+                                dmc.TabsPanel(
+                                    children=return_survey_layout(),
+                                    value="display-survey",
+                                ),
                             ],
-                            value="display-survey",
+                            value="display-configuration",
                             variant="pills",
+                            color="teal",
                         ),
                     ],
                 ),
