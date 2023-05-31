@@ -16,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol"  # "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bunch_scan"  # "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -91,7 +91,7 @@ if df_lost_particles.empty:
 
 # Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "qy"]  # ["i_bunch_b1", "i_bunch_b2"]  #
+groupby = ["i_bunch_b1", "i_bunch_b2"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
