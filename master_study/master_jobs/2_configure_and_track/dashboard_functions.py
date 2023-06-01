@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 import os
 from plotly.subplots import make_subplots
+from dash import dash_table
+from dash.dash_table.Format import Format, Scheme, Trim
 
 
 # ==================================================================================================
@@ -755,6 +757,62 @@ def plot_around_IP(tw_part):
     fig.update_yaxes(fixedrange=True)
 
     return fig
+
+
+# ==================================================================================================
+# --- Functions to build data tables
+# ==================================================================================================
+def return_data_table(df, id_table, twiss=True):
+    if twiss:
+        df = df.drop(["W_matrix"], axis=1)
+        idx_column_name = 0
+    else:
+        idx_column_name = 6
+    table = (
+        dash_table.DataTable(
+            id=id_table,
+            columns=[
+                (
+                    {
+                        "name": i,
+                        "id": i,
+                        "deletable": False,
+                        "type": "numeric",
+                        "format": Format(precision=2, scheme=Scheme.decimal_si_prefix),
+                    }
+                    if idx != idx_column_name
+                    else {"name": i, "id": i, "deletable": False}
+                )
+                for idx, i in enumerate(df.columns)
+            ],
+            data=df.to_dict("records"),
+            editable=False,
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
+            row_selectable=False,
+            row_deletable=False,
+            # page_action="none",
+            # fixed_rows={"headers": True, "data": 0},
+            # fixed_columns={"headers": True, "data": 1},
+            # virtualization=True,
+            page_size=30,
+            style_table={
+                # "height": "100%",
+                "maxHeight": "80vh",
+                "margin-x": "auto",
+                "margin-top": "20px",
+                "overflowY": "auto",
+                "overflowX": "auto",
+                "minWidth": "100%",
+            },
+            style_header={"backgroundColor": "rgb(30, 30, 30)", "color": "white", "padding": "1em"},
+            style_data={"backgroundColor": "rgb(50, 50, 50)", "color": "white"},
+            style_filter={"backgroundColor": "rgb(70, 70, 70)"},  # , "color": "white"},
+            style_cell={"font-family": "sans-serif", "minWidth": 95},
+        ),
+    )
+    return table
 
 
 # ==================================================================================================

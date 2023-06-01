@@ -2,8 +2,7 @@
 
 # Import standard libraries
 import dash_mantine_components as dmc
-from dash import Dash, html, dcc, Input, Output, State, ctx, dash_table
-from dash.dash_table.Format import Format, Scheme, Trim
+from dash import Dash, html, dcc, Input, Output, State, ctx
 import dash
 import numpy as np
 import base64
@@ -29,6 +28,12 @@ collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
     )
 )
 
+# Get corresponding data tables
+table_sv_b1 = dashboard_functions.return_data_table(df_sv_b1, "id-df-sv-b1", twiss=False)
+table_tw_b1 = dashboard_functions.return_data_table(df_tw_b1, "id-df-tw-b1", twiss=True)
+table_sv_b2 = dashboard_functions.return_data_table(df_sv_b2, "id-df-sv-b2", twiss=False)
+table_tw_b2 = dashboard_functions.return_data_table(df_tw_b2, "id-df-tw-b2", twiss=True)
+
 #################### App ####################
 app = Dash(
     __name__,
@@ -53,63 +58,6 @@ def return_configuration_layout(path_configuration):
     )
 
     return configuration_layout
-
-
-def return_twiss_table_layout():
-    array_type = ["numeric"] * (len(df_tw_b1.columns) - 1)
-    array_format = [Format(precision=2, scheme=Scheme.decimal_si_prefix)] * (
-        len(df_tw_b1.columns) - 1
-    )
-    table = (
-        dash_table.DataTable(
-            id="datatable-twiss",
-            columns=[
-                {
-                    "name": i,
-                    "id": i,
-                    "deletable": False,
-                }
-                for i in df_tw_b1.columns[:1]
-            ]
-            + [
-                {
-                    "name": i + "      ",
-                    "id": i,
-                    "deletable": False,
-                    "type": array_type[idx],
-                    "format": array_format[idx],
-                }
-                for idx, i in enumerate(df_tw_b1.columns[1:])
-            ],
-            data=df_tw_b1.drop(["W_matrix"], axis=1).to_dict("records"),
-            editable=False,
-            filter_action="native",
-            sort_action="native",
-            sort_mode="multi",
-            row_selectable=False,
-            row_deletable=False,
-            # page_action="none",
-            # fixed_rows={"headers": True, "data": 0},
-            # fixed_columns={"headers": True, "data": 1},
-            # virtualization=True,
-            page_size=30,
-            # style_cell={"minWidth": 95, "width": 95, "maxWidth": 95},
-            style_table={
-                # "height": "100%",
-                "maxHeight": "80vh",
-                "margin-x": "auto",
-                "margin-top": "20px",
-                "overflowY": "auto",
-                "overflowX": "auto",
-                "minWidth": "100%",
-            },
-            style_header={"backgroundColor": "rgb(30, 30, 30)", "color": "white", "padding": "1em"},
-            style_data={"backgroundColor": "rgb(50, 50, 50)", "color": "white"},
-            style_filter={"backgroundColor": "rgb(70, 70, 70)"},  # , "color": "white"},
-            style_cell={"font-family": "sans-serif"},
-        ),
-    )
-    return table
 
 
 def return_survey_layout():
@@ -321,7 +269,26 @@ layout = html.Div(
                                     value="display-configuration",
                                 ),
                                 dmc.TabsPanel(
-                                    children=return_twiss_table_layout(),
+                                    children=html.Div(
+                                        children=[
+                                            dmc.Center(
+                                                dmc.SegmentedControl(
+                                                    id="segmented-data-table",
+                                                    data=[
+                                                        "Twiss table beam 1",
+                                                        "Survey table beam 1",
+                                                        "Twiss table beam 2",
+                                                        "Survey table beam 2",
+                                                    ],
+                                                    radius="md",
+                                                    mt=10,
+                                                    value="Twiss table beam 1",
+                                                ),
+                                            ),
+                                            html.Div(id="placeholder-data-table"),
+                                        ],
+                                        style={"width": "100%", "margin": "auto"},
+                                    ),
                                     value="display-twiss",
                                     style={"height": "90vh"},
                                 ),
@@ -356,6 +323,21 @@ app.layout = layout
 
 
 #################### App Callbacks ####################
+
+
+@app.callback(Output("placeholder-data-table", "children"), Input("segmented-data-table", "value"))
+def select_data_table(value):
+    match value:
+        case "Twiss table beam 1":
+            return table_sv_b1
+        case "Survey table beam 1":
+            return table_tw_b1
+        case "Twiss table beam 2":
+            return table_sv_b2
+        case "Survey table beam 2":
+            return table_tw_b2
+        case _:
+            return table_sv_b1
 
 
 @app.callback(
