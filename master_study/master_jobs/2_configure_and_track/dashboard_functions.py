@@ -795,7 +795,7 @@ def return_data_table(df, id_table, twiss=True):
             # page_action="none",
             # fixed_rows={"headers": True, "data": 0},
             # fixed_columns={"headers": True, "data": 1},
-            # virtualization=True,
+            virtualization=False,
             page_size=30,
             style_table={
                 # "height": "100%",

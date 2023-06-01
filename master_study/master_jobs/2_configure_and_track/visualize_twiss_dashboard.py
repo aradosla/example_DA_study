@@ -218,7 +218,7 @@ layout = html.Div(
                 children=dmc.Text(
                     "Simulation dashboard",
                     size=30,
-                    color="Teal",
+                    color="green",
                     # variant="gradient",
                     # gradient={"from": "blue", "to": "green", "deg": 45},
                 )
@@ -271,6 +271,17 @@ layout = html.Div(
                                 dmc.TabsPanel(
                                     children=html.Div(
                                         children=[
+                                            dmc.Alert(
+                                                (
+                                                    "The datatables are slow as they are heavy to"
+                                                    " download from the server. If we want to keep"
+                                                    " this feature, I will try to implement a lazy"
+                                                    " loading, sorting and filtering in the"
+                                                    " backend to speed things up."
+                                                ),
+                                                title="Alert!",
+                                                mt=10,
+                                            ),
                                             dmc.Center(
                                                 dmc.SegmentedControl(
                                                     id="segmented-data-table",
@@ -283,6 +294,7 @@ layout = html.Div(
                                                     radius="md",
                                                     mt=10,
                                                     value="Twiss table beam 1",
+                                                    color="cyan",
                                                 ),
                                             ),
                                             html.Div(id="placeholder-data-table"),
@@ -329,15 +341,15 @@ app.layout = layout
 def select_data_table(value):
     match value:
         case "Twiss table beam 1":
-            return table_sv_b1
-        case "Survey table beam 1":
             return table_tw_b1
-        case "Twiss table beam 2":
-            return table_sv_b2
-        case "Survey table beam 2":
-            return table_tw_b2
-        case _:
+        case "Survey table beam 1":
             return table_sv_b1
+        case "Twiss table beam 2":
+            return table_tw_b2
+        case "Survey table beam 2":
+            return table_sv_b2
+        case _:
+            return table_tw_b1
 
 
 @app.callback(
