@@ -632,135 +632,6 @@ def return_plot_lattice_with_tracking(
     return fig
 
 
-# def plot_around_IP(tw_part):
-#     # Build figure
-#     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["betx"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$\beta_x$",
-#             legendgroup="1",
-#             line=dict(color="cyan"),
-#         ),
-#         row=1,
-#         col=1,
-#     )
-
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["bety"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$\beta_y$",
-#             legendgroup="1",
-#             line=dict(color="cyan", dash="dash"),
-#         ),
-#         row=1,
-#         col=1,
-#     )
-
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["x"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$x$",
-#             xaxis="x",
-#             yaxis="y2",
-#             legendgroup="2",
-#         ),
-#         row=2,
-#         col=1,
-#     )
-
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["y"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$y$",
-#             xaxis="x",
-#             yaxis="y2",
-#             legendgroup="2",
-#         ),
-#         row=2,
-#         col=1,
-#     )
-
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["dx"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$D_x$",
-#             xaxis="x",
-#             yaxis="y3",
-#             legendgroup="3",
-#         ),
-#         row=3,
-#         col=1,
-#     )
-
-#     fig.append_trace(
-#         go.Scatter(
-#             x=tw_part["s"],
-#             y=tw_part["dy"],
-#             mode="lines",
-#             showlegend=True,
-#             name=r"$D_y$",
-#             xaxis="x",
-#             yaxis="y3",
-#             legendgroup="3",
-#         ),
-#         row=3,
-#         col=1,
-#     )
-
-#     # Update overall layout
-#     fig.update_layout(
-#         title_text=r"$q_x = " + f'{tw_part["qx"]:.5f}' + r"\hspace{0.5cm}" + r" q_y = "
-#         f'{tw_part["qy"]:.5f}' + r"\hspace{0.5cm}" + r"Q'_x = "
-#         f'{tw_part["dqx"]:.2f}' + r"\hspace{0.5cm}" + r" Q'_y = "
-#         f'{tw_part["dqy"]:.2f}'
-#         + r"\hspace{0.5cm}"
-#         + r" \gamma_{tr} = "
-#         + f'{1/np.sqrt(tw_part["momentum_compaction_factor"]):.2f}'
-#         + r"$",  # "Transverse dynamics evolution with crossing angle",
-#         title_x=0.5,
-#         showlegend=True,
-#         xaxis_showgrid=True,
-#         yaxis_showgrid=True,
-#         # xaxis_title=r'$s$',
-#         # yaxis_title=r'$[m]$',
-#         width=1000,
-#         height=1000,
-#         legend_tracegroupgap=190,
-#         dragmode="pan",
-#         uirevision="Don't change",
-#     )
-
-#     # Make background transparent
-#     fig.update_layout(
-#         template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
-#     )
-
-#     # Update yaxis properties
-#     fig.update_yaxes(title_text=r"$\beta_{x,y}$ [m]", range=[0, 10000], row=1, col=1)
-#     fig.update_yaxes(title_text=r"(Closed orbit)$_{x,y}$ [m]", range=[-0.05, 0.05], row=2, col=1)
-#     fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-1.5, 2.5], row=3, col=1)
-#     fig.update_xaxes(title_text=r"$s$", row=3, col=1)
-#     fig.update_yaxes(fixedrange=True)
-
-#     return fig
-
-
 def add_scatter_trace(
     fig,
     x,
@@ -821,7 +692,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y",
-        visible="legendonly",
+        # visible="legendonly",
         color="cyan",
         legendgroup="beta",
         dashed=True,
@@ -835,7 +706,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="beta",
     )
@@ -848,7 +719,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="beta",
         dashed=True,
@@ -876,7 +747,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y2",
-        visible="legendonly",
+        # visible="legendonly",
         color="cyan",
         legendgroup="position",
         dashed=True,
@@ -890,7 +761,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y2",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="position",
     )
@@ -903,7 +774,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y2",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="position",
         dashed=True,
@@ -931,7 +802,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y3",
-        visible="legendonly",
+        # visible="legendonly",
         color="cyan",
         legendgroup="dispersion",
         dashed=True,
@@ -945,7 +816,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y3",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="dispersion",
     )
@@ -958,7 +829,7 @@ def return_plot_optics(tw_b1, tw_b2):
         1,
         "x",
         "y3",
-        visible="legendonly",
+        # visible="legendonly",
         color="tomato",
         legendgroup="dispersion",
         dashed=True,
@@ -1031,7 +902,6 @@ def return_plot_optics(tw_b1, tw_b2):
         width=1000,
         height=1000,
         legend_tracegroupgap=200,
-        template="plotly_white",
         dragmode="pan",
         uirevision="Don't change",
     )
@@ -1047,6 +917,41 @@ def return_plot_optics(tw_b1, tw_b2):
     fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-1.5, 2.5], row=3, col=1)
     fig.update_xaxes(title_text=r"$s$", row=3, col=1)
     fig.update_yaxes(fixedrange=True)
+
+    return fig
+
+
+def return_plot_filling_scheme(array_b1, array_b2):
+    # Color filling scheme with blue and red
+    array_b1_colored = np.array(
+        [[30, 144, 255, 1] if x != 0 else [255, 255, 255, 0] for x in array_b1], dtype=np.uint8
+    )
+    array_b2_colored = np.array(
+        [[238, 75, 43, 1] if x != 0 else [255, 255, 255, 0] for x in array_b2], dtype=np.uint8
+    )
+
+    # Convert to matrix
+    mat = np.stack((array_b1_colored, array_b2_colored), dtype=np.uint8)
+
+    # Plot filling scheme with plotly
+    fig = go.Figure(go.Image(z=mat))
+
+    fig.update_yaxes(
+        scaleanchor="x",
+        scaleratio=200,
+        tickvals=[0, 1],
+        ticktext=["Beam 1 ", "Beam 2 "],
+        constrain="domain",
+        range=[0, 1],
+    )
+
+    fig.update_layout(
+        xaxis=dict(title="Bucket number"),
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        dragmode="zoom",
+    )
 
     return fig
 

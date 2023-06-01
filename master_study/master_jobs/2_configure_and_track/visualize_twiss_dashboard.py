@@ -34,6 +34,15 @@ table_tw_b1 = dashboard_functions.return_data_table(df_tw_b1, "id-df-tw-b1", twi
 table_sv_b2 = dashboard_functions.return_data_table(df_sv_b2, "id-df-sv-b2", twiss=False)
 table_tw_b2 = dashboard_functions.return_data_table(df_tw_b2, "id-df-tw-b2", twiss=True)
 
+# Get filling scheme
+path_filling_scheme = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+
+with open(path_filling_scheme) as fid:
+    filling_scheme = json.load(fid)
+
+array_b1 = np.array(filling_scheme["beam1"])
+array_b2 = np.array(filling_scheme["beam2"])
+
 #################### App ####################
 app = Dash(
     __name__,
@@ -54,7 +63,9 @@ def return_configuration_layout(path_configuration):
         configuration_str = file.read()
 
     configuration_layout = dmc.Prism(
-        language="yaml", children=configuration_str, style={"height": "90vh", "overflowY": "auto"}
+        language="yaml",
+        children=configuration_str,
+        style={"height": "90vh", "overflowY": "auto", "width": "80%"},
     )
 
     return configuration_layout
@@ -152,61 +163,42 @@ def return_survey_layout():
     return survey_layout
 
 
+def return_filling_scheme_layout():
+    scheme_layout = dmc.Center(
+        dcc.Graph(
+            id="filling-scheme-graph",
+            mathjax=True,
+            config={
+                "displayModeBar": False,
+                "scrollZoom": True,
+                "responsive": True,
+                "displaylogo": False,
+            },
+            figure=dashboard_functions.return_plot_filling_scheme(array_b1, array_b2),
+            style={"height": "30vh", "width": "100%"},
+        ),
+        style={"width": "100%"},
+    )
+    return scheme_layout
+
+
 def return_optics_layout():
     optics_layout = dmc.Center(
         dmc.Stack(
             children=[
-                # dmc.Center(
-                #     dmc.Group(
-                #         children=[
-                #             # dmc.Select(
-                #             #     id="knob-select",
-                #             #     data=list(collider.vars._owner.keys()),
-                #             #     searchable=True,
-                #             #     nothingFound="No options found",
-                #             #     style={"width": 200},
-                #             #     value="on_x1",
-                #             #     label="Knob selection",
-                #             # ),
-                #             # dmc.NumberInput(
-                #             #     id="knob-input",
-                #             #     label="Knob value",
-                #             #     value=collider.vars["on_x1"]._value,
-                #             #     step=1,
-                #             #     style={"width": 200},
-                #             # ),
-                #             # dmc.Button("Update knob", id="update-knob-button", mr=10),
-                #             dmc.Button(
-                #                 "Display whole ring", id="display-ring-button", color="cyan"
-                #             ),
-                #             dmc.Button(
-                #                 "Display around IR 1", id="display-ir1-button", color="cyan"
-                #             ),
-                #             dmc.Button(
-                #                 "Display around IR 5", id="display-ir5-button", color="cyan"
-                #             ),
-                #         ],
-                #         align="end",
-                #         style={"margin-top": "10px"},
-                #     ),
-                # ),
                 dmc.Group(
                     children=[
-                        # dcc.Loading(
-                        # children=
                         dcc.Graph(
                             id="LHC-2D-near-IP",
                             mathjax=True,
                             config={
-                                "displayModeBar": True,
+                                "displayModeBar": False,
                                 "scrollZoom": True,
                                 "responsive": True,
                                 "displaylogo": False,
                             },
                             figure=dashboard_functions.return_plot_optics(tw_b1, tw_b2),
                         ),
-                        #    type="circle",
-                        # ),
                     ],
                 ),
             ],
@@ -216,7 +208,7 @@ def return_optics_layout():
 
 
 layout = html.Div(
-    style={"width": "80%", "margin": "auto"},
+    style={"width": "90%", "margin": "auto"},
     children=[
         # Interval for the logging handler
         # dcc.Interval(id="interval1", interval=5 * 1000, n_intervals=0),
@@ -313,9 +305,11 @@ layout = html.Div(
                                         style={"width": "100%", "margin": "auto"},
                                     ),
                                     value="display-twiss",
-                                    style={"height": "90vh"},
+                                    style={"height": "90vh", "margin": "80%"},
                                 ),
-                                dmc.TabsPanel(children=[], value="display-scheme"),
+                                dmc.TabsPanel(
+                                    children=return_filling_scheme_layout(), value="display-scheme"
+                                ),
                                 dmc.TabsPanel(
                                     children=return_optics_layout(), value="display-optics"
                                 ),
