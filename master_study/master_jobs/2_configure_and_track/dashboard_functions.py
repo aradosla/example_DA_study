@@ -607,7 +607,7 @@ def return_plot_lattice_with_tracking(
 
     # Set general layout for figure
     fig.update_layout(
-        title_text="LHC layout and beam dynamics",
+        title_text="Survey of the current simulation",
         title_x=0.5,
         showlegend=True,
         xaxis_range=[df_sv["X"].min() - 300, df_sv["X"].max() + 300],
@@ -618,8 +618,8 @@ def return_plot_lattice_with_tracking(
         yaxis_scaleanchor="x",
         yaxis_scaleratio=1,
         yaxis_showticklabels=False,
-        width=1000,
-        height=1000,
+        # width=1000,
+        # height=1000,
         # margin=dict(l=10, r=10, b=100, t=100, pad=10),
         dragmode="pan",
     )
@@ -887,7 +887,7 @@ def return_plot_optics(tw_b1, tw_b2):
         + r"\hspace{0.5cm}"
         # + r" \gamma_{tr_{2}} = "
         # + f'{1/np.sqrt(tw_b2["momentum_compaction_factor"]):.2f}'
-        + r"$"
+        + r"\\ $"
     )
     title = title_1 + title_2
 
@@ -913,8 +913,8 @@ def return_plot_optics(tw_b1, tw_b2):
 
     # Update yaxis properties
     fig.update_yaxes(title_text=r"$\beta_{x,y}$ [m]", range=[0, 10000], row=1, col=1)
-    fig.update_yaxes(title_text=r"(Closed orbit)$_{x,y}$ [m]", range=[-0.05, 0.05], row=2, col=1)
-    fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-1.5, 2.5], row=3, col=1)
+    fig.update_yaxes(title_text=r"(Closed orbit)$_{x,y}$ [m]", range=[-0.03, 0.03], row=2, col=1)
+    fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-3, 3], row=3, col=1)
     fig.update_xaxes(title_text=r"$s$", row=3, col=1)
     fig.update_yaxes(fixedrange=True)
 
@@ -934,7 +934,7 @@ def return_plot_filling_scheme(array_b1, array_b2):
     mat = np.stack((array_b1_colored, array_b2_colored), dtype=np.uint8)
 
     # Plot filling scheme with plotly
-    fig = go.Figure(go.Image(z=mat))
+    fig = go.Figure(go.Image(z=mat, colormodel="rgba"))
 
     fig.update_yaxes(
         scaleanchor="x",

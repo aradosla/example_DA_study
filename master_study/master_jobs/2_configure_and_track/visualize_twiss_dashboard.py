@@ -62,10 +62,12 @@ def return_configuration_layout(path_configuration):
     with open(path_configuration, "r") as file:
         configuration_str = file.read()
 
-    configuration_layout = dmc.Prism(
-        language="yaml",
-        children=configuration_str,
-        style={"height": "90vh", "overflowY": "auto", "width": "80%"},
+    configuration_layout = dmc.Center(
+        dmc.Prism(
+            language="yaml",
+            children=configuration_str,
+            style={"height": "90vh", "overflowY": "auto", "width": "80%"},
+        )
     )
 
     return configuration_layout
@@ -106,7 +108,7 @@ def return_survey_layout():
                                 id="LHC-layout",
                                 mathjax=True,
                                 config={
-                                    "displayModeBar": True,
+                                    "displayModeBar": False,
                                     "scrollZoom": True,
                                     "responsive": True,
                                     "displaylogo": False,
@@ -164,20 +166,31 @@ def return_survey_layout():
 
 
 def return_filling_scheme_layout():
-    scheme_layout = dmc.Center(
-        dcc.Graph(
-            id="filling-scheme-graph",
-            mathjax=True,
-            config={
-                "displayModeBar": False,
-                "scrollZoom": True,
-                "responsive": True,
-                "displaylogo": False,
-            },
-            figure=dashboard_functions.return_plot_filling_scheme(array_b1, array_b2),
-            style={"height": "30vh", "width": "100%"},
-        ),
-        style={"width": "100%"},
+    scheme_layout = dmc.Stack(
+        children=[
+            dmc.Center(
+                dmc.Alert(
+                    (
+                        "I may add a plot displaying the number of long-ranges and head-on"
+                        " interaction for each bunch is it's deemed relevant."
+                    ),
+                    title="Alert!",
+                    style={"width": "70%", "margin-top": "10px"},
+                ),
+            ),
+            dcc.Graph(
+                id="filling-scheme-graph",
+                mathjax=True,
+                config={
+                    "displayModeBar": False,
+                    "scrollZoom": True,
+                    "responsive": True,
+                    "displaylogo": False,
+                },
+                figure=dashboard_functions.return_plot_filling_scheme(array_b1, array_b2),
+                style={"height": "30vh", "width": "100%", "margin": "auto"},
+            ),
+        ]
     )
     return scheme_layout
 
@@ -305,7 +318,7 @@ layout = html.Div(
                                         style={"width": "100%", "margin": "auto"},
                                     ),
                                     value="display-twiss",
-                                    style={"height": "90vh", "margin": "80%"},
+                                    style={"height": "90vh", "width": "80%"},
                                 ),
                                 dmc.TabsPanel(
                                     children=return_filling_scheme_layout(), value="display-scheme"
