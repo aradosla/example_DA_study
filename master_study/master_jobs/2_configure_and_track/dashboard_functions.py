@@ -22,7 +22,7 @@ def return_dataframe_elements_from_line(line):
 
 
 def return_survey_and_twiss_dataframes_from_line(line, correct_x_axis=True):
-    """Return the survey and twiss dataframes from a tracker."""
+    """Return the survey and twiss dataframes from a line."""
     # Get survey dataframes
     df_sv = line.survey().to_pandas()
 
@@ -35,7 +35,7 @@ def return_survey_and_twiss_dataframes_from_line(line, correct_x_axis=True):
         df_sv["X"] = -df_sv["X"]
         df_tw["x"] = -df_tw["x"]
 
-    return df_sv, df_tw
+    return tw, df_sv, df_tw
 
 
 def return_dataframe_corrected_for_thin_lens_approx(df_elements, df_tw):
@@ -93,18 +93,18 @@ def return_all_loaded_variables(collider_path=None, collider=None):
     df_elements = return_dataframe_elements_from_line(collider.lhcb1)
 
     # Compute twiss and survey for both lines
-    df_sv_b1, df_tw_b1 = return_survey_and_twiss_dataframes_from_line(
+    tw_b1, df_sv_b1, df_tw_b1 = return_survey_and_twiss_dataframes_from_line(
         collider.lhcb1, correct_x_axis=True
     )
-    df_sv_b2, df_tw_b2 = return_survey_and_twiss_dataframes_from_line(
-        collider.lhcb1, correct_x_axis=True
+    tw_b2, df_sv_b2, df_tw_b2 = return_survey_and_twiss_dataframes_from_line(
+        collider.lhcb2, correct_x_axis=False
     )
 
     # Correct df elements for thin lens approximation
     df_elements_corrected = return_dataframe_corrected_for_thin_lens_approx(df_elements, df_tw_b1)
 
     # Return all variables
-    return collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected
+    return collider, tw_b1, df_sv_b1, df_tw_b1, tw_b2, df_sv_b2, df_tw_b2, df_elements_corrected
 
 
 def get_indices_of_interest(df_tw, element_1, element_2):
@@ -632,106 +632,397 @@ def return_plot_lattice_with_tracking(
     return fig
 
 
-def plot_around_IP(tw_part):
+# def plot_around_IP(tw_part):
+#     # Build figure
+#     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["betx"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$\beta_x$",
+#             legendgroup="1",
+#             line=dict(color="cyan"),
+#         ),
+#         row=1,
+#         col=1,
+#     )
+
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["bety"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$\beta_y$",
+#             legendgroup="1",
+#             line=dict(color="cyan", dash="dash"),
+#         ),
+#         row=1,
+#         col=1,
+#     )
+
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["x"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$x$",
+#             xaxis="x",
+#             yaxis="y2",
+#             legendgroup="2",
+#         ),
+#         row=2,
+#         col=1,
+#     )
+
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["y"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$y$",
+#             xaxis="x",
+#             yaxis="y2",
+#             legendgroup="2",
+#         ),
+#         row=2,
+#         col=1,
+#     )
+
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["dx"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$D_x$",
+#             xaxis="x",
+#             yaxis="y3",
+#             legendgroup="3",
+#         ),
+#         row=3,
+#         col=1,
+#     )
+
+#     fig.append_trace(
+#         go.Scatter(
+#             x=tw_part["s"],
+#             y=tw_part["dy"],
+#             mode="lines",
+#             showlegend=True,
+#             name=r"$D_y$",
+#             xaxis="x",
+#             yaxis="y3",
+#             legendgroup="3",
+#         ),
+#         row=3,
+#         col=1,
+#     )
+
+#     # Update overall layout
+#     fig.update_layout(
+#         title_text=r"$q_x = " + f'{tw_part["qx"]:.5f}' + r"\hspace{0.5cm}" + r" q_y = "
+#         f'{tw_part["qy"]:.5f}' + r"\hspace{0.5cm}" + r"Q'_x = "
+#         f'{tw_part["dqx"]:.2f}' + r"\hspace{0.5cm}" + r" Q'_y = "
+#         f'{tw_part["dqy"]:.2f}'
+#         + r"\hspace{0.5cm}"
+#         + r" \gamma_{tr} = "
+#         + f'{1/np.sqrt(tw_part["momentum_compaction_factor"]):.2f}'
+#         + r"$",  # "Transverse dynamics evolution with crossing angle",
+#         title_x=0.5,
+#         showlegend=True,
+#         xaxis_showgrid=True,
+#         yaxis_showgrid=True,
+#         # xaxis_title=r'$s$',
+#         # yaxis_title=r'$[m]$',
+#         width=1000,
+#         height=1000,
+#         legend_tracegroupgap=190,
+#         dragmode="pan",
+#         uirevision="Don't change",
+#     )
+
+#     # Make background transparent
+#     fig.update_layout(
+#         template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+#     )
+
+#     # Update yaxis properties
+#     fig.update_yaxes(title_text=r"$\beta_{x,y}$ [m]", range=[0, 10000], row=1, col=1)
+#     fig.update_yaxes(title_text=r"(Closed orbit)$_{x,y}$ [m]", range=[-0.05, 0.05], row=2, col=1)
+#     fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-1.5, 2.5], row=3, col=1)
+#     fig.update_xaxes(title_text=r"$s$", row=3, col=1)
+#     fig.update_yaxes(fixedrange=True)
+
+#     return fig
+
+
+def add_scatter_trace(
+    fig,
+    x,
+    y,
+    name,
+    row,
+    col,
+    xaxis,
+    yaxis,
+    visible=None,
+    color=None,
+    legendgroup=None,
+    dashed=False,
+):
+    fig.append_trace(
+        go.Scattergl(
+            x=x,
+            y=y,
+            mode="lines",
+            showlegend=True,
+            name=name,
+            xaxis=xaxis,
+            yaxis=yaxis,
+            visible=visible,
+            line=dict(color=color) if not dashed else dict(color=color, dash="dash"),
+            # Deactivate legendgroup for now as it doesn't work
+            # legendgroup=legendgroup,
+        ),
+        row=row,
+        col=col,
+    )
+    return fig
+
+
+def return_plot_optics(tw_b1, tw_b2):
     # Build figure
     fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["betx"],
-            mode="lines",
-            showlegend=True,
-            name=r"$\beta_x$",
-            legendgroup="1",
-        ),
-        row=1,
-        col=1,
+
+    # Add traces for beta functions
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["betx"],
+        r"$\beta_{x_1}$",
+        1,
+        1,
+        "x",
+        "y",
+        color="cyan",
+        legendgroup="beta",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["bety"],
+        r"$\beta_{y_1}$",
+        1,
+        1,
+        "x",
+        "y",
+        visible="legendonly",
+        color="cyan",
+        legendgroup="beta",
+        dashed=True,
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["betx"],
+        r"$\beta_{x_2}$",
+        1,
+        1,
+        "x",
+        "y",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="beta",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["bety"],
+        r"$\beta_{y_2}$",
+        1,
+        1,
+        "x",
+        "y",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="beta",
+        dashed=True,
     )
 
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["bety"],
-            mode="lines",
-            showlegend=True,
-            name=r"$\beta_y$",
-            legendgroup="1",
-        ),
-        row=1,
-        col=1,
+    # Add traces for position functions
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["x"],
+        r"$x_1$",
+        2,
+        1,
+        "x",
+        "y2",
+        color="cyan",
+        legendgroup="position",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["y"],
+        r"$y_1$",
+        2,
+        1,
+        "x",
+        "y2",
+        visible="legendonly",
+        color="cyan",
+        legendgroup="position",
+        dashed=True,
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["x"],
+        r"$x_2$",
+        2,
+        1,
+        "x",
+        "y2",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="position",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["y"],
+        r"$y_2$",
+        2,
+        1,
+        "x",
+        "y2",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="position",
+        dashed=True,
     )
 
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["x"],
-            mode="lines",
-            showlegend=True,
-            name=r"$x$",
-            xaxis="x",
-            yaxis="y2",
-            legendgroup="2",
-        ),
-        row=2,
-        col=1,
+    # Add traces for dispersion functions
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["dx"],
+        r"$D_{x_1}$",
+        3,
+        1,
+        "x",
+        "y3",
+        color="cyan",
+        legendgroup="dispersion",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b1["s"],
+        tw_b1["dy"],
+        r"$D_{y_1}$",
+        3,
+        1,
+        "x",
+        "y3",
+        visible="legendonly",
+        color="cyan",
+        legendgroup="dispersion",
+        dashed=True,
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["dx"],
+        r"$D_{x_2}$",
+        3,
+        1,
+        "x",
+        "y3",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="dispersion",
+    )
+    fig = add_scatter_trace(
+        fig,
+        tw_b2["s"],
+        tw_b2["dy"],
+        r"$D_{y_2}$",
+        3,
+        1,
+        "x",
+        "y3",
+        visible="legendonly",
+        color="tomato",
+        legendgroup="dispersion",
+        dashed=True,
     )
 
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["y"],
-            mode="lines",
-            showlegend=True,
-            name=r"$y$",
-            xaxis="x",
-            yaxis="y2",
-            legendgroup="2",
-        ),
-        row=2,
-        col=1,
+    # Add horizontal lines for ip1 and ip5
+    fig.add_vline(
+        x=float(tw_b1.rows["ip1"].cols["s"].to_pandas().s),
+        line_width=1,
+        line_dash="dash",
+        line_color="pink",
+        annotation_text="IP 1",
+        annotation_position="top right",
     )
 
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["dx"],
-            mode="lines",
-            showlegend=True,
-            name=r"$D_x$",
-            xaxis="x",
-            yaxis="y3",
-            legendgroup="3",
-        ),
-        row=3,
-        col=1,
-    )
-
-    fig.append_trace(
-        go.Scatter(
-            x=tw_part["s"],
-            y=tw_part["dy"],
-            mode="lines",
-            showlegend=True,
-            name=r"$D_y$",
-            xaxis="x",
-            yaxis="y3",
-            legendgroup="3",
-        ),
-        row=3,
-        col=1,
+    fig.add_vline(
+        x=float(tw_b1.rows["ip5"].cols["s"].to_pandas().s),
+        line_width=1,
+        line_dash="dash",
+        line_color="pink",
+        annotation_text="IP 5",
+        annotation_position="top right",
     )
 
     # Update overall layout
-    fig.update_layout(
-        title_text=r"$q_x = " + f'{tw_part["qx"]:.5f}' + r"\hspace{0.5cm}" + r" q_y = "
-        f'{tw_part["qy"]:.5f}' + r"\hspace{0.5cm}" + r"Q'_x = "
-        f'{tw_part["dqx"]:.2f}' + r"\hspace{0.5cm}" + r" Q'_y = "
-        f'{tw_part["dqy"]:.2f}'
+    title_1 = (
+        r"$q_{x_{1}} = "
+        + f'{tw_b1["qx"]:.5f}'
         + r"\hspace{0.5cm}"
-        + r" \gamma_{tr} = "
-        + f'{1/np.sqrt(tw_part["momentum_compaction_factor"]):.2f}'
-        + r"$",  # "Transverse dynamics evolution with crossing angle",
-        title_x=0.5,
+        + r" q_{y_{1}} = "
+        + f'{tw_b1["qy"]:.5f}'
+        + r"\hspace{0.5cm}"
+        + r"Q'_{x_{1}} = "
+        + f'{tw_b1["dqx"]:.2f}'
+        + r"\hspace{0.5cm}"
+        + r" Q'_{y_{1}} = "
+        + f'{tw_b1["dqy"]:.2f}'
+        + r"\hspace{0.5cm}"
+        # + r" \gamma_{tr_{1}} = "
+        # + f'{1/np.sqrt(tw_b1["momentum_compaction_factor"]):.2f}'
+    )
+    title_2 = (
+        r"\\ "
+        + r"q_{x_{2}} = "
+        + f'{tw_b2["qx"]:.5f}'
+        + r"\hspace{0.5cm}"
+        + r" q_{y_{2}} = "
+        + f'{tw_b2["qy"]:.5f}'
+        + r"\hspace{0.5cm}"
+        + r"Q'_{x_{2}} = "
+        + f'{tw_b2["dqx"]:.2f}'
+        + r"\hspace{0.5cm}"
+        + r" Q'_{y_{2}} = "
+        + f'{tw_b2["dqy"]:.2f}'
+        + r"\hspace{0.5cm}"
+        # + r" \gamma_{tr_{2}} = "
+        # + f'{1/np.sqrt(tw_b2["momentum_compaction_factor"]):.2f}'
+        + r"$"
+    )
+    title = title_1 + title_2
+
+    fig.update_layout(
+        title_text=title,
+        title_x=0.2,
         showlegend=True,
         xaxis_showgrid=True,
         yaxis_showgrid=True,
@@ -739,7 +1030,8 @@ def plot_around_IP(tw_part):
         # yaxis_title=r'$[m]$',
         width=1000,
         height=1000,
-        legend_tracegroupgap=190,
+        legend_tracegroupgap=200,
+        template="plotly_white",
         dragmode="pan",
         uirevision="Don't change",
     )

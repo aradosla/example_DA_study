@@ -22,7 +22,7 @@ dashboard_functions.build_CSS()
 path_configuration = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/scans/opt_flathv_75_1500_withBB_chroma5_1p4_eol_bunch_scan/base_collider/xtrack_0002/config.yaml"
 
 # Get collider variables
-collider, df_sv_b1, df_tw_b1, df_sv_b2, df_tw_b2, df_elements_corrected = (
+collider, tw_b1, df_sv_b1, df_tw_b1, tw_b2, df_sv_b2, df_tw_b2, df_elements_corrected = (
     dashboard_functions.return_all_loaded_variables(
         collider_path="/afs/cern.ch/work/c/cdroin/private/comparison_pymask_xmask/xmask/xsuite_lines/collider_03_tuned_and_leveled_bb_off.json"
     )
@@ -156,33 +156,40 @@ def return_optics_layout():
     optics_layout = dmc.Center(
         dmc.Stack(
             children=[
-                dmc.Center(
-                    dmc.Group(
-                        children=[
-                            dmc.Select(
-                                id="knob-select",
-                                data=list(collider.vars._owner.keys()),
-                                searchable=True,
-                                nothingFound="No options found",
-                                style={"width": 200},
-                                value="on_x1",
-                                label="Knob selection",
-                            ),
-                            dmc.NumberInput(
-                                id="knob-input",
-                                label="Knob value",
-                                value=collider.vars["on_x1"]._value,
-                                step=1,
-                                style={"width": 200},
-                            ),
-                            dmc.Button("Update knob", id="update-knob-button", mr=10),
-                            dmc.Button("Display whole ring", id="display-ring-button"),
-                            dmc.Button("Display around IR 1", id="display-ir1-button"),
-                            dmc.Button("Display around IR 5", id="display-ir5-button"),
-                        ],
-                        align="end",
-                    ),
-                ),
+                # dmc.Center(
+                #     dmc.Group(
+                #         children=[
+                #             # dmc.Select(
+                #             #     id="knob-select",
+                #             #     data=list(collider.vars._owner.keys()),
+                #             #     searchable=True,
+                #             #     nothingFound="No options found",
+                #             #     style={"width": 200},
+                #             #     value="on_x1",
+                #             #     label="Knob selection",
+                #             # ),
+                #             # dmc.NumberInput(
+                #             #     id="knob-input",
+                #             #     label="Knob value",
+                #             #     value=collider.vars["on_x1"]._value,
+                #             #     step=1,
+                #             #     style={"width": 200},
+                #             # ),
+                #             # dmc.Button("Update knob", id="update-knob-button", mr=10),
+                #             dmc.Button(
+                #                 "Display whole ring", id="display-ring-button", color="cyan"
+                #             ),
+                #             dmc.Button(
+                #                 "Display around IR 1", id="display-ir1-button", color="cyan"
+                #             ),
+                #             dmc.Button(
+                #                 "Display around IR 5", id="display-ir5-button", color="cyan"
+                #             ),
+                #         ],
+                #         align="end",
+                #         style={"margin-top": "10px"},
+                #     ),
+                # ),
                 dmc.Group(
                     children=[
                         # dcc.Loading(
@@ -196,6 +203,7 @@ def return_optics_layout():
                                 "responsive": True,
                                 "displaylogo": False,
                             },
+                            figure=dashboard_functions.return_plot_optics(tw_b1, tw_b2),
                         ),
                         #    type="circle",
                         # ),
@@ -218,7 +226,7 @@ layout = html.Div(
                 children=dmc.Text(
                     "Simulation dashboard",
                     size=30,
-                    color="green",
+                    color="cyan",
                     # variant="gradient",
                     # gradient={"from": "blue", "to": "green", "deg": 45},
                 )
@@ -271,16 +279,19 @@ layout = html.Div(
                                 dmc.TabsPanel(
                                     children=html.Div(
                                         children=[
-                                            dmc.Alert(
-                                                (
-                                                    "The datatables are slow as they are heavy to"
-                                                    " download from the server. If we want to keep"
-                                                    " this feature, I will try to implement a lazy"
-                                                    " loading, sorting and filtering in the"
-                                                    " backend to speed things up."
+                                            dmc.Center(
+                                                dmc.Alert(
+                                                    (
+                                                        "The datatables are slow as they are heavy"
+                                                        " to download from the server. If we want"
+                                                        " to keep this feature, I will try to"
+                                                        " implement a lazy loading, sorting and"
+                                                        " filtering in the backend to speed"
+                                                        " things up."
+                                                    ),
+                                                    title="Alert!",
+                                                    style={"width": "70%", "margin-top": "10px"},
                                                 ),
-                                                title="Alert!",
-                                                mt=10,
                                             ),
                                             dmc.Center(
                                                 dmc.SegmentedControl(
@@ -315,7 +326,7 @@ layout = html.Div(
                             ],
                             value="display-configuration",
                             variant="pills",
-                            color="teal",
+                            color="cyan",
                         ),
                     ],
                 ),
@@ -379,129 +390,111 @@ def update_graph_LHC_layout(l_values):
     return fig
 
 
-@app.callback(
-    Output("knob-input", "value"),
-    Input("knob-select", "value"),
-)
-def update_knob_input(value):
-    return collider.vars[value]._value
+# @app.callback(
+#     Output("knob-input", "value"),
+#     Input("knob-select", "value"),
+# )
+# def update_knob_input(value):
+#     return collider.vars[value]._value
 
 
-@app.callback(
-    Output("LHC-2D-near-IP", "figure"),
-    Output("LHC-2D-near-IP", "relayoutData"),
-    Input("update-knob-button", "n_clicks"),
-    Input("display-ring-button", "n_clicks"),
-    Input("display-ir1-button", "n_clicks"),
-    Input("display-ir5-button", "n_clicks"),
-    State("knob-input", "value"),
-    State("knob-select", "value"),
-    State("LHC-2D-near-IP", "relayoutData"),
-    State("LHC-2D-near-IP", "figure"),
-    prevent_initial_call=False,
-)
-def update_graph_LHC_2D(
-    n_click_knob, n_click_whole_ring, n_click_ir1, n_click_ir5, knob_value, knob, relayoutData, fig
-):
-    # Prevent problems if figure is not defined for any reason
-    # if fig is None:
-    #    return dash.no_update
+# @app.callback(
+#     Output("LHC-2D-near-IP", "figure"),
+#     Output("LHC-2D-near-IP", "relayoutData"),
+#     # Input("update-knob-button", "n_clicks"),
+#     Input("display-ring-button", "n_clicks"),
+#     Input("display-ir1-button", "n_clicks"),
+#     Input("display-ir5-button", "n_clicks"),
+#     # State("knob-input", "value"),
+#     # State("knob-select", "value"),
+#     State("LHC-2D-near-IP", "relayoutData"),
+#     State("LHC-2D-near-IP", "figure"),
+#     prevent_initial_call=False,
+# )
+# # def update_graph_LHC_2D(
+# #    n_click_knob, n_click_whole_ring, n_click_ir1, n_click_ir5, knob_value, knob, relayoutData, fig
+# # ):
+# def update_graph_LHC_2D(n_click_whole_ring, n_click_ir1, n_click_ir5, relayoutData, fig):
+#     # Prevent problems if figure is not defined for any reason
+#     # if fig is None:
+#     #    return dash.no_update
 
-    # Update knob if needed
-    collider.vars[knob] = knob_value
-    tw_b1 = collider.lhcb1.twiss()
+#     # Update knob if needed
+#     # ! Not implemented anymore
+#     # collider.vars[knob] = knob_value
+#     # tw_b1 = collider.lhcb1.twiss()
 
-    if ctx.triggered_id == "update-knob-button" or ctx.triggered_id is None:
-        fig = dashboard_functions.plot_around_IP(tw_b1)
+#     if ctx.triggered_id == "update-knob-button" or ctx.triggered_id is None:
+#         fig = dashboard_functions.return_plot_optics(tw_b1, tw_b2)
 
-        # Update figure ranges according to relayoutData
-        if relayoutData is not None:
-            fig["layout"]["xaxis"]["range"] = [
-                relayoutData["xaxis.range[0]"],
-                relayoutData["xaxis.range[1]"],
-            ]
-            fig["layout"]["xaxis2"]["range"] = [
-                relayoutData["xaxis2.range[0]"],
-                relayoutData["xaxis2.range[1]"],
-            ]
-            fig["layout"]["xaxis3"]["range"] = [
-                relayoutData["xaxis3.range[0]"],
-                relayoutData["xaxis3.range[1]"],
-            ]
-            fig["layout"]["xaxis"]["autorange"] = False
+#         # Update figure ranges according to relayoutData
+#         if relayoutData is not None:
+#             fig["layout"]["xaxis"]["range"] = [
+#                 relayoutData["xaxis.range[0]"],
+#                 relayoutData["xaxis.range[1]"],
+#             ]
+#             fig["layout"]["xaxis2"]["range"] = [
+#                 relayoutData["xaxis2.range[0]"],
+#                 relayoutData["xaxis2.range[1]"],
+#             ]
+#             fig["layout"]["xaxis3"]["range"] = [
+#                 relayoutData["xaxis3.range[0]"],
+#                 relayoutData["xaxis3.range[1]"],
+#             ]
+#             fig["layout"]["xaxis"]["autorange"] = False
 
-    else:
-        # Update zoom level depending on button clicked
-        match ctx.triggered_id:
-            case "display-ring-button":
-                x, y = [0, 26658.8832]
-            case "display-ir1-button":
-                x, y = [16247.725780457391, 23675.296424202796]
-            case "display-ir5-button":
-                x, y = [2833.530005905868, 10407.388328867295]
-            case _:
-                x, y = [0, 26658.8832]
+#     else:
+#         # Update zoom level depending on button clicked
+#         match ctx.triggered_id:
+#             case "display-ring-button":
+#                 x, y = [0, 26658.8832]
+#             case "display-ir1-button":
+#                 x, y = [16247.725780457391, 23675.296424202796]
+#             case "display-ir5-button":
+#                 x, y = [2833.530005905868, 10407.388328867295]
+#             case _:
+#                 x, y = [0, 26658.8832]
 
-        # Update figure ranges
-        if "range" in fig["layout"]["xaxis"]:
-            fig["layout"]["xaxis"]["range"] = [x, y]
-            fig["layout"]["xaxis"]["autorange"] = False
-        else:
-            fig["layout"]["xaxis"] = {"range": [x, y], "autorange": False}
+#         # Update figure ranges
+#         if "range" in fig["layout"]["xaxis"]:
+#             fig["layout"]["xaxis"]["range"] = [x, y]
+#             fig["layout"]["xaxis"]["autorange"] = False
+#         else:
+#             fig["layout"]["xaxis"] = {"range": [x, y], "autorange": False}
 
-        if "range" in fig["layout"]["xaxis2"]:
-            fig["layout"]["xaxis2"]["range"] = [x, y]
-            fig["layout"]["xaxis2"]["autorange"] = False
-        else:
-            fig["layout"]["xaxis2"] = {"range": [x, y]}
-            fig["layout"]["xaxis2"] = {"range": [x, y], "autorange": False}
+#         if "range" in fig["layout"]["xaxis2"]:
+#             fig["layout"]["xaxis2"]["range"] = [x, y]
+#             fig["layout"]["xaxis2"]["autorange"] = False
+#         else:
+#             fig["layout"]["xaxis2"] = {"range": [x, y]}
+#             fig["layout"]["xaxis2"] = {"range": [x, y], "autorange": False}
 
-        if "range" in fig["layout"]["xaxis3"]:
-            fig["layout"]["xaxis3"]["range"] = [x, y]
-            fig["layout"]["xaxis3"]["autorange"] = False
-        else:
-            fig["layout"]["xaxis3"] = {"range": [x, y]}
-            fig["layout"]["xaxis3"] = {"range": [x, y], "autorange": False}
+#         if "range" in fig["layout"]["xaxis3"]:
+#             fig["layout"]["xaxis3"]["range"] = [x, y]
+#             fig["layout"]["xaxis3"]["autorange"] = False
+#         else:
+#             fig["layout"]["xaxis3"] = {"range": [x, y]}
+#             fig["layout"]["xaxis3"] = {"range": [x, y], "autorange": False}
 
-        # Update relayoutData as well
-        if relayoutData is not None:
-            relayoutData["xaxis.range[0]"] = x
-            relayoutData["xaxis.range[1]"] = y
-            relayoutData["xaxis2.range[0]"] = x
-            relayoutData["xaxis2.range[1]"] = y
-            relayoutData["xaxis3.range[0]"] = x
-            relayoutData["xaxis3.range[1]"] = y
-        else:
-            relayoutData = {
-                "xaxis.range[0]": x,
-                "xaxis.range[1]": y,
-                "xaxis2.range[0]": x,
-                "xaxis2.range[1]": y,
-                "xaxis3.range[0]": x,
-                "xaxis3.range[1]": y,
-            }
+#         # Update relayoutData as well
+#         if relayoutData is not None:
+#             relayoutData["xaxis.range[0]"] = x
+#             relayoutData["xaxis.range[1]"] = y
+#             relayoutData["xaxis2.range[0]"] = x
+#             relayoutData["xaxis2.range[1]"] = y
+#             relayoutData["xaxis3.range[0]"] = x
+#             relayoutData["xaxis3.range[1]"] = y
+#         else:
+#             relayoutData = {
+#                 "xaxis.range[0]": x,
+#                 "xaxis.range[1]": y,
+#                 "xaxis2.range[0]": x,
+#                 "xaxis2.range[1]": y,
+#                 "xaxis3.range[0]": x,
+#                 "xaxis3.range[1]": y,
+#             }
 
-    # Update title
-    fig["layout"]["title"]["text"] = (
-        r"$q_x = "
-        + f'{tw_b1["qx"]:.5f}'
-        + r"\hspace{0.5cm}"
-        + r" q_y = "
-        + f'{tw_b1["qy"]:.5f}'
-        + r"\hspace{0.5cm}"
-        + r"Q'_x = "
-        + f'{tw_b1["dqx"]:.2f}'
-        + r"\hspace{0.5cm}"
-        + r" Q'_y = "
-        + f'{tw_b1["dqy"]:.2f}'
-        + r"\hspace{0.5cm}"
-        + r" \gamma_{tr} = "
-        + f'{1/np.sqrt(tw_b1["momentum_compaction_factor"]):.2f}'
-        + r"$"
-    )
-
-    fig["layout"]["title"]["x"] = 0.3
-    return fig, relayoutData
+#     return fig, relayoutData
 
 
 @app.callback(
