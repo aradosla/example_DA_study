@@ -80,32 +80,40 @@ def return_header_layout():
         fixed=True,
         px=25,
         children=[
-            dmc.Center(
-                dmc.Grid(
+            dmc.Stack(
+                justify="center",
+                style={"height": 70, "width": "100%"},
+                children=dmc.Group(
+                    position="apart",
+                    style={"width": "100%"},
                     children=[
-                        dmc.Col(
-                            [
-                                dmc.Text(
-                                    "Simulation dashboard",
-                                    size=30,
-                                    color="cyan",
-                                )
-                            ],
-                            span="content",
-                            pt=12,
+                        dmc.Text(
+                            "Simulation dashboard",
+                            size=30,
+                            color="cyan",
                         ),
-                        dmc.Col(
-                            span="auto",
-                            children=dmc.Group(
-                                position="right",
-                                spacing="xl",
-                                children=[
-                                    create_header_link(
-                                        "radix-icons:github-logo",
-                                        "https://github.com/ColasDroin/example_DA_study",
-                                    ),
-                                ],
-                            ),
+                        dmc.SegmentedControl(
+                            id="tab-titles",
+                            value="display-configuration",
+                            data=[
+                                {"value": "display-configuration", "label": "Configuration"},
+                                {"value": "display-twiss", "label": "Twiss tables"},
+                                {"value": "display-scheme", "label": "Filling scheme"},
+                                {"value": "display-optics", "label": "Optics"},
+                                {"value": "display-survey", "label": "Survey"},
+                            ],
+                            # color="cyan",
+                            style={"margin-right": "10%"},
+                        ),
+                        dmc.Group(
+                            position="right",
+                            spacing="xl",
+                            children=[
+                                create_header_link(
+                                    "radix-icons:github-logo",
+                                    "https://github.com/ColasDroin/example_DA_study",
+                                ),
+                            ],
                         ),
                     ],
                 ),
@@ -129,6 +137,48 @@ def return_configuration_layout(path_configuration):
     )
 
     return configuration_layout
+
+
+def return_tables_layout():
+    layout = html.Div(
+        children=[
+            dmc.Center(
+                dmc.Alert(
+                    (
+                        "The datatables are slow as they are"
+                        " heavy to download from the server. If"
+                        " we want to keep this feature, I will"
+                        " try to implement a lazy loading,"
+                        " sorting and filtering in the backend"
+                        " to speed things up."
+                    ),
+                    title="Alert!",
+                    style={
+                        "width": "70%",
+                        "margin-top": "10px",
+                    },
+                ),
+            ),
+            dmc.Center(
+                dmc.SegmentedControl(
+                    id="segmented-data-table",
+                    data=[
+                        "Twiss table beam 1",
+                        "Survey table beam 1",
+                        "Twiss table beam 2",
+                        "Survey table beam 2",
+                    ],
+                    radius="md",
+                    mt=10,
+                    value="Twiss table beam 1",
+                    color="cyan",
+                ),
+            ),
+            html.Div(id="placeholder-data-table"),
+        ],
+        style={"width": "100%", "margin": "auto"},
+    )
+    return layout
 
 
 def return_survey_layout():
@@ -298,100 +348,29 @@ layout = html.Div(
                     id="main-div",
                     style={"width": "100%", "margin": "auto"},
                     children=[
-                        dmc.Tabs(
-                            [
-                                dmc.TabsList(
-                                    position="center",
-                                    children=[
-                                        dmc.Tab(
-                                            "Configuration",
-                                            value="display-configuration",
-                                            style={"font-size": "18px"},
-                                        ),
-                                        dmc.Tab(
-                                            "Twiss table",
-                                            value="display-twiss",
-                                            style={"font-size": "18px"},
-                                        ),
-                                        dmc.Tab(
-                                            "Filling scheme",
-                                            value="display-scheme",
-                                            style={"font-size": "18px"},
-                                        ),
-                                        dmc.Tab(
-                                            "Optics",
-                                            value="display-optics",
-                                            style={"font-size": "18px"},
-                                        ),
-                                        dmc.Tab(
-                                            "Survey",
-                                            value="display-survey",
-                                            style={"font-size": "18px"},
-                                        ),
-                                    ],
-                                ),
-                                dmc.TabsPanel(
-                                    children=return_configuration_layout(path_configuration),
-                                    value="display-configuration",
-                                ),
-                                dmc.TabsPanel(
-                                    children=html.Div(
-                                        children=[
-                                            dmc.Center(
-                                                dmc.Alert(
-                                                    (
-                                                        "The datatables are slow as they are heavy"
-                                                        " to download from the server. If we want"
-                                                        " to keep this feature, I will try to"
-                                                        " implement a lazy loading, sorting and"
-                                                        " filtering in the backend to speed"
-                                                        " things up."
-                                                    ),
-                                                    title="Alert!",
-                                                    style={"width": "70%", "margin-top": "10px"},
-                                                ),
-                                            ),
-                                            dmc.Center(
-                                                dmc.SegmentedControl(
-                                                    id="segmented-data-table",
-                                                    data=[
-                                                        "Twiss table beam 1",
-                                                        "Survey table beam 1",
-                                                        "Twiss table beam 2",
-                                                        "Survey table beam 2",
-                                                    ],
-                                                    radius="md",
-                                                    mt=10,
-                                                    value="Twiss table beam 1",
-                                                    color="cyan",
-                                                ),
-                                            ),
-                                            html.Div(id="placeholder-data-table"),
-                                        ],
-                                        style={"width": "100%", "margin": "auto"},
-                                    ),
-                                    value="display-twiss",
-                                    style={"height": "90vh", "width": "80%", "margin": "auto"},
-                                ),
-                                dmc.TabsPanel(
-                                    children=return_filling_scheme_layout(), value="display-scheme"
-                                ),
-                                dmc.TabsPanel(
-                                    children=return_optics_layout(), value="display-optics"
-                                ),
-                                dmc.TabsPanel(
-                                    children=return_survey_layout(),
-                                    value="display-survey",
-                                ),
-                            ],
-                            value="display-configuration",
-                            variant="pills",
-                            color="cyan",
-                        ),
+                        html.Div(id="placeholder-tabs"),
+                        # dmc.TabsPanel(
+                        #     children=return_configuration_layout(path_configuration),
+                        #     value="display-configuration",
+                        # ),
+                        # dmc.TabsPanel(
+                        #     children=return_tables_layout(),
+                        #     value="display-twiss",
+                        #     style={"height": "90vh", "width": "80%", "margin": "auto"},
+                        # ),
+                        # dmc.TabsPanel(
+                        #     children=return_filling_scheme_layout(),
+                        #     value="display-scheme",
+                        # ),
+                        # dmc.TabsPanel(children=return_optics_layout(), value="display-optics"),
+                        # dmc.TabsPanel(
+                        #     children=return_survey_layout(),
+                        #     value="display-survey",
+                        # ),
                     ],
                 ),
             ],
-            style = {"margin-top": "75px"},
+            style={"margin-top": "75px"},
         ),
     ],
 )
@@ -407,6 +386,23 @@ app.layout = layout
 
 
 #################### App Callbacks ####################
+
+
+@app.callback(Output("placeholder-tabs", "children"), Input("tab-titles", "value"))
+def select_tab(value):
+    match value:
+        case "display-configuration":
+            return return_configuration_layout(path_configuration)
+        case "display-twiss":
+            return return_tables_layout()
+        case "display-scheme":
+            return return_filling_scheme_layout()
+        case "display-optics":
+            return return_optics_layout()
+        case "display-survey":
+            return return_survey_layout()
+        case _:
+            return return_configuration_layout(path_configuration)
 
 
 @app.callback(Output("placeholder-data-table", "children"), Input("segmented-data-table", "value"))
