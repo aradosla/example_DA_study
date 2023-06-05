@@ -25,14 +25,15 @@ source make_miniconda.sh
 
 This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
 
-ℹ️ The following lines in the ```make_miniconda.sh``` script may require to add the xmask repository as a safe directory in your git configuration (assuming you're in the ```modules/xmask/``` folder):
-
+Then do:
+  
 ```bash
-git submodule init
+cd modules/xmask/
+git submodules init
 git submodule update
 ```
 
-Just enter the command git is suggesting to you if ```git submodule init``` triggers an error (you can do this a posteriori if needed).
+Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` again.
 
 ⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 

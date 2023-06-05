@@ -8,8 +8,6 @@ git clone -b experimental_for_xmask git@github.com:colasdroin/tree_maker.git
 python -m pip install -e tree_maker
 git clone https://github.com/xsuite/xmask.git
 cd xmask
-git submodule init
-git submodule update
 pip install -e .
 cd ..
 git clone https://github.com/xsuite/xdeps.git
