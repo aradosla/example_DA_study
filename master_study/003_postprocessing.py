@@ -16,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol"  # "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_intensity"  # "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -70,6 +70,9 @@ for node in root.generation(1):
         df_sim["i_bunch_b2"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
             "i_bunch_b2"
         ]
+        df_sim["num_particles_per_bunch"] = dic_child_collider["config_beambeam"][
+            "num_particles_per_bunch"
+        ]
 
         # Merge with particle data
         df_sim_with_particle = pd.merge(df_sim, particle, on=["particle_id"])
@@ -91,7 +94,7 @@ if df_lost_particles.empty:
 
 # Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "qy"]  #
+groupby = ["qx", "num_particles_per_bunch"]  #
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
@@ -99,6 +102,7 @@ my_final = pd.DataFrame(
         df_lost_particles.groupby(groupby)["qy"].median(),
         df_lost_particles.groupby(groupby)["i_bunch_b1"].median(),
         df_lost_particles.groupby(groupby)["i_bunch_b2"].median(),
+        df_lost_particles.groupby(groupby)["num_particles_per_bunch"].median(),
     ]
 ).transpose()
 
