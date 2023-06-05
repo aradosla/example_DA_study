@@ -16,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_intensity"  # "example_HL_tunescan"
+study_name = "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -58,10 +58,6 @@ for node in root.generation(1):
         dic_parent_particles = node.parameters["config_particles"]
 
         # Get scanned parameters (complete with the scanned parameters)
-        print(
-            dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"],
-            dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"],
-        )
         df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
         df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
         df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
@@ -94,7 +90,7 @@ if df_lost_particles.empty:
 
 # Groupe by working point (Update this with the knobs you want to group by !)
 # Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "num_particles_per_bunch"]  #
+groupby = ["qx", "qy"]
 my_final = pd.DataFrame(
     [
         df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
