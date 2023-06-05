@@ -2,6 +2,7 @@
 
 # Import standard libraries
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 from dash import Dash, html, dcc, Input, Output, State, ctx
 import dash
 import numpy as np
@@ -55,6 +56,63 @@ app = Dash(
 server = app.server
 
 #################### App Layout ####################
+
+
+def return_header_layout():
+    def create_header_link(icon, href, size=22, color="cyan"):
+        return dmc.Anchor(
+            dmc.ThemeIcon(
+                DashIconify(
+                    icon=icon,
+                    width=size,
+                ),
+                variant="outline",
+                radius=30,
+                size=36,
+                color=color,
+            ),
+            href=href,
+            target="_blank",
+        )
+
+    header = dmc.Header(
+        height=70,
+        fixed=True,
+        px=25,
+        children=[
+            dmc.Center(
+                dmc.Grid(
+                    children=[
+                        dmc.Col(
+                            [
+                                dmc.Text(
+                                    "Simulation dashboard",
+                                    size=30,
+                                    color="cyan",
+                                )
+                            ],
+                            span="content",
+                            pt=12,
+                        ),
+                        dmc.Col(
+                            span="auto",
+                            children=dmc.Group(
+                                position="right",
+                                spacing="xl",
+                                children=[
+                                    create_header_link(
+                                        "radix-icons:github-logo",
+                                        "https://github.com/ColasDroin/example_DA_study",
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )
+    return header
 
 
 def return_configuration_layout(path_configuration):
@@ -233,20 +291,7 @@ layout = html.Div(
     children=[
         # Interval for the logging handler
         # dcc.Interval(id="interval1", interval=5 * 1000, n_intervals=0),
-        dmc.Header(
-            height=50,
-            children=dmc.Center(
-                children=dmc.Text(
-                    "Simulation dashboard",
-                    size=30,
-                    color="cyan",
-                    # variant="gradient",
-                    # gradient={"from": "blue", "to": "green", "deg": 45},
-                )
-            ),
-            style={"margin": "auto"},
-        ),
-        # html.Iframe(id="console-out", srcDoc="", style={"width": "100%", "height": 400}),
+        return_header_layout(),
         dmc.Center(
             children=[
                 html.Div(
@@ -346,6 +391,7 @@ layout = html.Div(
                     ],
                 ),
             ],
+            style = {"margin-top": "75px"},
         ),
     ],
 )

@@ -188,7 +188,7 @@ def return_multipole_trace(
             order,
             strength_magnification_factor=5000,
             add_ghost_trace=True,
-            l_indices_to_keep=None,
+            l_indices_to_keep=l_indices_to_keep,
         )
 
 
@@ -297,7 +297,7 @@ def return_flat_multipole_trace(
     elif order == 1:
         color = px.colors.qualitative.Plotly[1]
         name = "Quadrupoles"
-        strength_magnification_factor = strength_magnification_factor * 8
+        strength_magnification_factor = strength_magnification_factor * 6
     elif order == 2:
         color = px.colors.qualitative.Plotly[-1]
         name = "Sextupoles"
@@ -305,7 +305,7 @@ def return_flat_multipole_trace(
     elif order == 3:
         color = px.colors.qualitative.Plotly[2]
         name = "Octupoles"
-        strength_magnification_factor = strength_magnification_factor / 3
+        strength_magnification_factor = strength_magnification_factor / 2
 
     # Get strength of all multipoles of the requested order
     s_knl = df_elements[df_elements.order == order]["knl"].apply(lambda x: x[order])
@@ -333,7 +333,7 @@ def return_flat_multipole_trace(
                 legendgroup=name,
                 xaxis=xaxis,
                 yaxis=yaxis,
-                visible="legendonly",
+                # visible="legendonly",
             )
         else:
             ghost_trace = go.Scattergl(
@@ -354,13 +354,13 @@ def return_flat_multipole_trace(
         )
         if width in dic_trace:
             dic_trace[width]["x"].extend([row["s"], row["s"], None])
-            dic_trace[width]["y"].extend([-s_knl[i] / 2, s_knl[i] / 2, None])
+            dic_trace[width]["y"].extend([0, s_knl[i], None])
             dic_trace[width]["customdata"].extend([row["name"], row["name"], None])
         else:
             if xaxis is not None and yaxis is not None:
                 dic_trace[width] = {
                     "x": [row["s"], row["s"], None],
-                    "y": [-s_knl[i] / 2, s_knl[i] / 2, None],
+                    "y": [0, s_knl[i], None],
                     "customdata": [row["name"], row["name"], None],
                     "mode": "lines",
                     "line": dict(
@@ -377,7 +377,7 @@ def return_flat_multipole_trace(
             else:
                 dic_trace[width] = {
                     "x": [row["s"], row["s"], None],
-                    "y": [-s_knl[i] / 2, s_knl[i] / 2, None],
+                    "y": [0, s_knl[i], None],
                     "customdata": [row["name"], row["name"], None],
                     "mode": "lines",
                     "line": dict(
@@ -440,7 +440,14 @@ def return_IP_trace(df_sv, add_ghost_trace=True):
     return [ghost_trace] + l_traces if add_ghost_trace else l_traces
 
 
-def return_optic_trace(df_sv, df_tw, type_trace, hide_optics_traces_initially=True, beam_2=False):
+def return_optic_trace(
+    df_sv,
+    df_tw,
+    type_trace,
+    hide_optics_traces_initially=True,
+    beam_2=False,
+    l_indices_to_keep=None,
+):
     # Get the right twiss dataframe and plotting parameters
     match type_trace:
         case "betax":
@@ -500,17 +507,37 @@ def return_optic_trace(df_sv, df_tw, type_trace, hide_optics_traces_initially=Tr
     else:
         correction = 1
 
+    # Only keep requested indices
+    if l_indices_to_keep is not None:
+        df_sv_temp = df_sv[df_sv.index.isin(l_indices_to_keep)]
+        df_tw_temp = df_tw[df_tw.index.isin(l_indices_to_keep)]
+    else:
+        df_sv_temp = df_sv
+        df_tw_temp = df_tw
+
     # Return the trace
     return go.Scattergl(
-        x=df_sv["X"]
-        - df_tw[tw_name] ** exponent * correction * magnification_factor * np.cos(df_sv["theta"]),
-        y=df_sv["Z"] - df_tw[tw_name] ** exponent * magnification_factor * np.sin(df_sv["theta"]),
+        x=[None]
+        + list(
+            df_sv_temp["X"]
+            - df_tw_temp[tw_name] ** exponent
+            * correction
+            * magnification_factor
+            * np.cos(df_sv_temp["theta"])
+        )
+        + [None],
+        y=[None]
+        + list(
+            df_sv_temp["Z"]
+            - df_tw_temp[tw_name] ** exponent * magnification_factor * np.sin(df_sv_temp["theta"])
+        )
+        + [None],
         mode="lines",
         line=dict(color=color, width=2, dash=dash),
         showlegend=True,
         name=name,
         # visible="legendonly" if hide_optics_traces_initially else True,
-        visible="legendonly" if beam_2 else True,
+        visible=True if (not beam_2 and "bet" in type_trace) else "legendonly",
     )
 
 
@@ -529,83 +556,41 @@ def add_multipoles_to_fig(
     xaxis=None,
     yaxis=None,
 ):
-    # Add dipoles if requested
-    if add_dipoles:
-        if row is not None and col is not None:
-            l_traces = return_multipole_trace(
-                df_elements,
-                df_sv,
-                order=0,
-                strength_magnification_factor=5000,
-                l_indices_to_keep=l_indices_to_keep,
-                flat=flat,
-                xaxis=xaxis,
-                yaxis=yaxis,
-            )
-            for trace in l_traces:
-                fig.append_trace(
-                    trace,
-                    row=row,
-                    col=col,
-                )
-        else:
-            fig.add_traces(
-                return_multipole_trace(
+    for order, add in zip(
+        [0, 1, 2, 3], [add_dipoles, add_quadrupoles, add_sextupoles, add_octupoles]
+    ):
+        # Add multipole if requested
+        if add:
+            if row is not None and col is not None:
+                l_traces = return_multipole_trace(
                     df_elements,
                     df_sv,
-                    order=0,
+                    order=order,
                     strength_magnification_factor=5000,
                     l_indices_to_keep=l_indices_to_keep,
                     flat=flat,
                     xaxis=xaxis,
                     yaxis=yaxis,
                 )
-            )
-
-    # Add quadrupoles if requested
-    if add_quadrupoles:
-        fig.add_traces(
-            return_multipole_trace(
-                df_elements,
-                df_sv,
-                order=1,
-                strength_magnification_factor=5000,
-                l_indices_to_keep=l_indices_to_keep,
-                flat=flat,
-                xaxis=xaxis,
-                yaxis=yaxis,
-            )
-        )
-
-    # Add sextupoles if requested
-    if add_sextupoles:
-        fig.add_traces(
-            return_multipole_trace(
-                df_elements,
-                df_sv,
-                order=2,
-                strength_magnification_factor=5000,
-                l_indices_to_keep=l_indices_to_keep,
-                flat=flat,
-                xaxis=xaxis,
-                yaxis=yaxis,
-            )
-        )
-
-    # Add octupoles if requested
-    if add_octupoles:
-        fig.add_traces(
-            return_multipole_trace(
-                df_elements,
-                df_sv,
-                order=3,
-                strength_magnification_factor=100,
-                l_indices_to_keep=l_indices_to_keep,
-                flat=flat,
-                xaxis=xaxis,
-                yaxis=yaxis,
-            )
-        )
+                for trace in l_traces:
+                    fig.append_trace(
+                        trace,
+                        row=row,
+                        col=col,
+                    )
+            else:
+                fig.add_traces(
+                    return_multipole_trace(
+                        df_elements,
+                        df_sv,
+                        order=order,
+                        strength_magnification_factor=5000,
+                        l_indices_to_keep=l_indices_to_keep,
+                        flat=flat,
+                        xaxis=xaxis,
+                        yaxis=yaxis,
+                    )
+                )
 
     return fig
 
@@ -621,30 +606,55 @@ def add_optics_to_fig(
     df_sv,
     df_tw,
     beam_2=False,
+    l_indices_to_keep=None,
 ):
     # Add horizontal betatron if requested
     if plot_horizontal_betatron:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="betax", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="betax", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     # Add vertical betatron if requested
     if plot_vertical_betatron:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="bety", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="bety", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     # Add horizontal dispersion if requested
     if plot_horizontal_dispersion:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="dx", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="dx", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     # Add vertical dispersion if requested
     if plot_vertical_dispersion:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="dy", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="dy", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     # Add horizontal position if requested
     if plot_horizontal_position:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="x", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="x", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     # Add vertical position if requested
     if plot_vertical_position:
-        fig.add_trace(return_optic_trace(df_sv, df_tw, type_trace="y", beam_2=beam_2))
+        fig.add_trace(
+            return_optic_trace(
+                df_sv, df_tw, type_trace="y", beam_2=beam_2, l_indices_to_keep=l_indices_to_keep
+            )
+        )
 
     return fig
 
@@ -716,6 +726,7 @@ def return_plot_lattice_with_tracking(
         df_sv,
         df_tw,
         beam_2=False,
+        l_indices_to_keep=l_indices_to_keep,
     )
 
     # Add optics traces for beam_2 if requested
@@ -734,6 +745,7 @@ def return_plot_lattice_with_tracking(
                 df_sv_2,
                 df_tw_2,
                 beam_2=True,
+                l_indices_to_keep=l_indices_to_keep,
             )
 
     # Set general layout for figure
@@ -753,7 +765,7 @@ def return_plot_lattice_with_tracking(
         legend_tracegroupgap=30,
         # width=1000,
         # height=1000,
-        # margin=dict(l=10, r=10, b=100, t=100, pad=10),
+        margin=dict(l=10, r=10, b=10, t=10, pad=10),
         dragmode="pan",
     )
 
@@ -1070,6 +1082,7 @@ def return_plot_optics(
     )
 
     # Update yaxis properties
+    fig.update_xaxes(range=[0, tw_b1["s"][-1] + 1])
     fig.update_yaxes(title_text=r"$\beta_{x,y}$ [m]", range=[0, 10000], row=2, col=1)
     fig.update_yaxes(title_text=r"(Closed orbit)$_{x,y}$ [m]", range=[-0.03, 0.03], row=3, col=1)
     fig.update_yaxes(title_text=r"$D_{x,y}$ [m]", range=[-3, 3], row=4, col=1)
