@@ -4,7 +4,7 @@ source miniconda/bin/activate
 python -m pip install -r requirements.txt
 mkdir modules
 cd modules
-git clone -b experimental_for_xmask git@github.com:colasdroin/tree_maker.git
+git clone git@github.com:xsuite/tree_maker.git
 python -m pip install -e tree_maker
 git clone https://github.com/xsuite/xmask.git
 cd xmask
