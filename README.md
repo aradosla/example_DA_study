@@ -13,7 +13,7 @@ Jobs can be efficiently stored and parallelized using the
 The simplest way to start is to clone the repository and install the dependencies using conda:
 
 ```bash
-git clone git@github.com:ColasDroin/example_DA_study.git
+git clone git@github.com:xsuite/example_DA_study.git
 ```
 
 Then:
