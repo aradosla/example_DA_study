@@ -85,7 +85,6 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 5.0
 
 # Value to be added to linear coupling knobs
-# ! Not working for now
 d_config_tune_and_chroma["delta_cmr"] = 0.001
 d_config_tune_and_chroma["delta_cmi"] = 0.0
 
@@ -329,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_intensity"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
