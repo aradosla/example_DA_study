@@ -327,6 +327,8 @@ def configure_collider(config_sim, config_collider, save_collider=True):
 # --- Function to prepare particles distribution for tracking
 # ==================================================================================================
 def prepare_particle_distribution(config_sim, collider, config_bb):
+    beam = config_sim["beam"]
+
     particle_df = pd.read_parquet(config_sim["particle_file"])
 
     r_vect = particle_df["normalized amplitude in xy-plane"].values
@@ -335,7 +337,7 @@ def prepare_particle_distribution(config_sim, collider, config_bb):
     A1_in_sigma = r_vect * np.cos(theta_vect)
     A2_in_sigma = r_vect * np.sin(theta_vect)
 
-    particles = collider.lhcb1.build_particles(
+    particles = collider[beam].build_particles(
         x_norm=A1_in_sigma,
         y_norm=A2_in_sigma,
         delta=config_sim["delta_max"],
@@ -350,8 +352,11 @@ def prepare_particle_distribution(config_sim, collider, config_bb):
 # --- Function to do the tracking
 # ==================================================================================================
 def track(collider, particles, config_sim):
+    # Get beam being tracked
+    beam = config_sim["beam"]
+
     # Optimize line for tracking
-    collider.lhcb1.optimize_for_tracking()
+    collider[beam].optimize_for_tracking()
 
     # Save initial coordinates
     pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
@@ -359,7 +364,7 @@ def track(collider, particles, config_sim):
     # Track
     num_turns = config_sim["n_turns"]
     a = time.time()
-    collider.lhcb1.track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
+    collider[beam].track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
     b = time.time()
 
     print(f"Elapsed time: {b-a} s")

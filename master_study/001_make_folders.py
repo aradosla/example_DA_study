@@ -247,6 +247,8 @@ d_config_simulation["n_turns"] = 200
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
 
+# Beam to track
+d_config_simulation["beam"] = "lhcb1"
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
