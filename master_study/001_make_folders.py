@@ -247,7 +247,7 @@ d_config_simulation["n_turns"] = 200
 d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
-d_config_simulation["beam"] = "lhcb2"
+d_config_simulation["beam"] = "lhcb1"
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #

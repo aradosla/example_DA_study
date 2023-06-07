@@ -5,6 +5,3 @@ pandas
 psutil
 xsuite
 cpymad
-dash
-dash-mantine-components
-dash_iconify
