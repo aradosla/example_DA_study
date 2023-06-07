@@ -207,13 +207,12 @@ if check_bunch_number:
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
         # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
         print(
-            "The bunch number for beam 2 has not been provided. Bunch tracking for beam 2 is not"
-            " implemented yet in this script, so you can ignore this warning."
+            "The bunch number for beam 2 has not been provided. By default, the same bunch as for"
+            " beam 1 is taken."
         )
-        worst_bunch_b2 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
-        )
-        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
+        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = d_config_beambeam[
+            "mask_with_filling_pattern"
+        ]["i_bunch_b1"]
 
 
 # ==================================================================================================
@@ -247,8 +246,8 @@ d_config_simulation["n_turns"] = 200
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
 
-# Beam to track
-d_config_simulation["beam"] = "lhcb1"
+# Beam to track (lhcb1 or lhcb2)
+d_config_simulation["beam"] = "lhcb2"
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #

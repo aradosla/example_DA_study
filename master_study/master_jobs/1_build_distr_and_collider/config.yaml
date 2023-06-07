@@ -9,7 +9,7 @@ config_collider:
   config_mad:
     # Links to be made for tools and scripts
     links:
-      acc-models-lhc: /afs/cern.ch/eng/lhc/optics/HLLHCV1.5
+      acc-models-lhc: ../../../../modules/hllhc15 #/afs/cern.ch/eng/lhc/optics/HLLHCV1.5
 
     # Optics file
     optics_file: acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx # round/opt_round_150_1500_thin.madx #

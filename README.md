@@ -35,8 +35,6 @@ git submodule update
 
 Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` again.
 
-⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
-
 ## Running a simple parameter scan simulation
 
 This section introduces the basic steps to run a simple parameter scan simulation. The simulation consists in tracking a set of particles for a given number of turns, and computing the dynamics aperture for each particle. To get a more refined understanding of what the scripts used below are actually doing, please check the section [What happens under the hood](#what-happens-under-the-hood).
@@ -202,13 +200,13 @@ The code is now well formatted and well commented, such that any question should
 
 At the moment, all the collider parameters can be scanned without requiring extensive scripts modifications. This includes (but is not limited to):
 
-- separation at IP2 (```on_sep2```)
 - intensity (```num_particles_per_bunch```)
 - crossing-angle (```on_x1, on_x5```)
 - tune (```qx, qy```)
 - chromaticity (```dqx, dqy```)
 - octupole current (```i_oct_b1, i_oct_b2```)
 - bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+- separation at IP2 (```on_sep2```)
 
 At generation 1, the base collider is built with a default set of parameters for the optics (which are explicitely set in ```001_make_folder.py```). At generation 2, the base collider is tailored to the parameters being scanned. That is,
  the tune and chroma are matched, the luminosity leveling is computed (if leveling is required), and the beam-beam lenses

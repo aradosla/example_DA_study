@@ -88,7 +88,7 @@ def write_particle_distribution(particle_list):
 # ==================================================================================================
 # --- Function to build collider from mad model
 # ==================================================================================================
-def build_collider_from_mad(config_collider)
+def build_collider_from_mad(config_collider):
     config_mad_model = config_collider["config_mad"]
 
     # Make mad environment
@@ -118,9 +118,10 @@ def build_collider_from_mad(config_collider)
         ver_lhc_run=config_mad_model["ver_lhc_run"],
         ver_hllhc_optics=config_mad_model["ver_hllhc_optics"],
     )
-    
+
     # Return collider
     return collider
+
 
 def clean():
     # Remove all the temporaty files created in the process of building collider
@@ -130,40 +131,40 @@ def clean():
     os.unlink("errors")
     os.unlink("acc-models-lhc")
 
+
 # ==================================================================================================
 # --- Main function for building distribution and collider
 # ==================================================================================================
 def build_distr_and_collider(config_file="config.yaml"):
-    
     # Get configuration
     configuration, config_particles, config_collider = load_configuration(config_file)
-    
+
     # Tag start of the job
     tree_maker_tagging(configuration, tag="started")
-    
+
     # Build particle distribution
     particle_list = build_particle_distribution(config_particles)
-    
+
     # Write particle distribution to file
     write_particle_distribution(particle_list)
-    
+
     # Build collider from mad model
     collider = build_collider_from_mad(config_collider)
-    
+
     # Clean temporary files
     clean()
-    
+
     # Save collider to json
     os.makedirs("collider", exist_ok=True)
     collider.to_json("collider/collider.json")
-    
+
     # Tag end of the job
     tree_maker_tagging(configuration, tag="completed")
-    
+
+
 # ==================================================================================================
 # --- Script for execution
 # ==================================================================================================
 
 if __name__ == "__main__":
     build_distr_and_collider()
-
