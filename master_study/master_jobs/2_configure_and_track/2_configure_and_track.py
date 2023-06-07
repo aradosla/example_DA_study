@@ -161,6 +161,13 @@ if "config_lumi_leveling" in config_collider and not config_collider["skip_level
             targets=targets,
         )
 
+    print("Levelling step done")
+    print(f"Tune: {collider.lhcb1.twiss().qx}, {collider.lhcb1.twiss().qy}")
+    print(f"Chromaticity: {collider.lhcb1.twiss().dqx}, {collider.lhcb1.twiss().dqy}")
+    print(f"Linear coupling (matched to 0): {collider.lhcb1.twiss().c_minus}")
+    print("Rematching tune and chroma")
+
+
 else:
     print(
         "No leveling is done as no configuration has been provided, or skip_leveling"
@@ -173,10 +180,8 @@ else:
 
 # Add linear coupling as the target in the tuning of the base collider was 0
 # (not possible to set it the target to 0.001 for now)
-# ! This is commented as this affects the tune/chroma too much
-# ! We need to wait for the possibility to set the linear coupling as a target along with tune/chroma
-# collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-# collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
 
 # Rematch tune and chromaticity
 for line_name in ["lhcb1", "lhcb2"]:
@@ -225,16 +230,15 @@ for line_name in ["lhcb1", "lhcb2"]:
         f"chromaticity_y is not correct for {line_name}. Expected"
         f" {conf_knobs_and_tuning['dqy'][line_name]}, got {tw.dqy}"
     )
-    # ! Commented as the linear coupling is not optimized anymore
-    # ! This should be updated when possible
-    # assert np.isclose(
-    #     tw.c_minus,
-    #     conf_knobs_and_tuning["delta_cmr"],
-    #     atol=5e-3,
-    # ), (
-    #     f"linear coupling is not correct for {line_name}. Expected"
-    #     f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"
-    # )
+
+    assert np.isclose(
+        tw.c_minus,
+        conf_knobs_and_tuning["delta_cmr"],
+        atol=5e-3,
+    ), (
+        f"linear coupling is not correct for {line_name}. Expected"
+        f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"
+    )
 
 # ==================================================================================================
 # --- Configure beam-beam
