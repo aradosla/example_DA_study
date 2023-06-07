@@ -1,6 +1,7 @@
 """This script is used to configure the collider and track the particles. Functions in this script
-are called in the order in which they are defined. Modularity has been favored over simple scripting
-for reproducibility, to allow rebuilding the collider from a different program (e.g. dahsboard)."""
+are called sequentially, in the order in which they are defined. Modularity has been favored over 
+simple scripting for reproducibility, to allow rebuilding the collider from a different program 
+(e.g. dahsboard)."""
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
@@ -19,23 +20,26 @@ from gen_config_orbit_correction import generate_orbit_correction_setup
 
 
 # ==================================================================================================
-# --- Functions to read configuration files and tag start of the job
+# --- Function for tree_maker tagging
 # ==================================================================================================
-def read_configuration(config_file="config.yaml"):
-    # Read configuration for simulations
-    with open("config.yaml", "r") as fid:
-        config = yaml.safe_load(fid)
-    config_sim = config["config_simulation"]
-    config_collider = config["config_collider"]
-    return config, config_sim, config_collider
-
-
 def tree_maker_tagging(config, tag="started"):
     # Start tree_maker logging if log_file is present in config
     if tree_maker is not None and "log_file" in config:
         tree_maker.tag_json.tag_it(config["log_file"], tag)
     else:
         logging.warning("tree_maker loging not available")
+
+
+# ==================================================================================================
+# --- Functions to read configuration files and generate configuration files for orbit correction
+# ==================================================================================================
+def read_configuration(config_path="config.yaml"):
+    # Read configuration for simulations
+    with open(config_path, "r") as fid:
+        config = yaml.safe_load(fid)
+    config_sim = config["config_simulation"]
+    config_collider = config["config_collider"]
+    return config, config_sim, config_collider
 
 
 def generate_configuration_correction_files(output_folder="correction"):
@@ -367,9 +371,9 @@ def track(collider, particles, config_sim):
 # ==================================================================================================
 # --- Main function for collider configuration and tracking
 # ==================================================================================================
-def configure_and_track(config_file="config.yaml"):
+def configure_and_track(config_path="config.yaml"):
     # Get configuration
-    config, config_sim, config_collider = read_configuration(config_file)
+    config, config_sim, config_collider = read_configuration(config_path)
 
     # Tag start of the job
     tree_maker_tagging(config, tag="started")
