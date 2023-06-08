@@ -317,5 +317,5 @@ if __name__ == "__main__":
     #     "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
     # )
     reformat_filling_scheme_from_lpc(
-        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8807_test_fill.json"
+        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/25ns_2374b_2361_1730_1773_236bpi_13inj_hybrid_2INDIV.json"
     )
