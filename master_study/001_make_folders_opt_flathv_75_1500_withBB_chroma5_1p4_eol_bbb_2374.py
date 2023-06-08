@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2064) ** 0.5
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2361) ** 0.5
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -140,7 +140,7 @@ d_config_beambeam["nemitt_y"] = 2.5e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_2076b_2064_1327_1928_216bpi_12inj_800ns_bs200ns_with_identical_bunches.json"
+    "master_jobs/filling_scheme/25ns_2374b_2361_1730_1773_236bpi_13inj_hybrid_2INDIV_converted_with_identical_bunches.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -324,7 +324,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bbb_2076"
+study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bbb_2374"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
