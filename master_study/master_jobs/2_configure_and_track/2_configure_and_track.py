@@ -267,7 +267,7 @@ def configure_beam_beam(collider, config_bb):
 # ==================================================================================================
 # --- Main function for collider configuration
 # ==================================================================================================
-def configure_collider(config_sim, config_collider, save_collider=True):
+def configure_collider(config_sim, config_collider, skip_beam_beam=False, save_collider=True):
     # Generate configuration files for orbit correction
     generate_configuration_correction_files()
 
@@ -313,8 +313,9 @@ def configure_collider(config_sim, config_collider, save_collider=True):
     # Assert that tune, chromaticity and linear coupling are correct one last time
     assert_tune_chroma_coupling(collider, conf_knobs_and_tuning)
 
-    # Configure beam-beam
-    collider = configure_beam_beam(collider, config_bb)
+    if not skip_beam_beam:
+        # Configure beam-beam
+        collider = configure_beam_beam(collider, config_bb)
 
     if save_collider:
         # Save the final collider before tracking
