@@ -34,6 +34,8 @@ def _compute_LR_per_bunch(
     else:
         raise ValueError("beam must be either 'beam_1' or 'beam_2'")
 
+    B2_bunches = np.array(_array_b2) == 1.0
+
     # Define number of LR to consider
     if isinstance(numberOfLRToConsider, int):
         numberOfLRToConsider = [numberOfLRToConsider, numberOfLRToConsider, numberOfLRToConsider]
@@ -64,6 +66,12 @@ def _compute_LR_per_bunch(
         for i in range(0, 3):
             collide_factor = colide_factor_list[i]
             m = (n + factor * collide_factor) % number_of_bunches
+
+            # ! Must check this
+            # if this Bunch is true, than there is head on collision
+            # yet we want the worst bunch, so we skip it if no head-on
+            if not B2_bunches[m]:
+                continue
 
             ## Check if beam 2 has bunches in range  m - numberOfLRToConsider to m + numberOfLRToConsider
             ## Also have to check if bunches wrap around from 3563 to 0 or vice versa
