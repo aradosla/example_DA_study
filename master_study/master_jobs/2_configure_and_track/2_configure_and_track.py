@@ -267,7 +267,13 @@ def configure_beam_beam(collider, config_bb):
 # ==================================================================================================
 # --- Main function for collider configuration
 # ==================================================================================================
-def configure_collider(config_sim, config_collider, skip_beam_beam=False, save_collider=True):
+def configure_collider(
+    config_sim,
+    config_collider,
+    skip_beam_beam=False,
+    save_collider=False,
+    return_collider_before_bb=False,
+):
     # Generate configuration files for orbit correction
     generate_configuration_correction_files()
 
@@ -313,6 +319,11 @@ def configure_collider(config_sim, config_collider, skip_beam_beam=False, save_c
     # Assert that tune, chromaticity and linear coupling are correct one last time
     assert_tune_chroma_coupling(collider, conf_knobs_and_tuning)
 
+    # Return twiss and survey before beam-beam if requested
+    if return_collider_before_bb:
+        print("Saving collider before beam-beam configuration")
+        collider_before_bb = xt.Multiline.from_dict(collider.to_dict())
+
     if not skip_beam_beam:
         # Configure beam-beam
         collider = configure_beam_beam(collider, config_bb)
@@ -321,7 +332,10 @@ def configure_collider(config_sim, config_collider, skip_beam_beam=False, save_c
         # Save the final collider before tracking
         collider.to_json("final_collider.json")
 
-    return collider, config_bb
+    if return_collider_before_bb:
+        return collider, config_bb, collider_before_bb
+    else:
+        return collider, config_bb
 
 
 # ==================================================================================================
