@@ -41,9 +41,9 @@ def load_configuration(config_path="config.yaml"):
 
     # Get configuration for the particles distribution and the collider separately
     config_particles = configuration["config_particles"]
-    config_collider = configuration["config_collider"]
+    config_mad = configuration["config_mad"]
 
-    return configuration, config_particles, config_collider
+    return configuration, config_particles, config_mad
 
 
 # ==================================================================================================
@@ -88,11 +88,9 @@ def write_particle_distribution(particle_list):
 # ==================================================================================================
 # --- Function to build collider from mad model
 # ==================================================================================================
-def build_collider_from_mad(config_collider):
-    config_mad_model = config_collider["config_mad"]
-
+def build_collider_from_mad(config_mad):
     # Make mad environment
-    xm.make_mad_environment(links=config_mad_model["links"])
+    xm.make_mad_environment(links=config_mad["links"])
 
     # Start mad
     mad_b1b2 = Madx(command_log="mad_collider.log")
@@ -103,20 +101,20 @@ def build_collider_from_mad(config_collider):
     ost.build_sequence(mad_b4, mylhcbeam=4)
 
     # Apply optics (only for b1b2, b4 will be generated from b1b2)
-    ost.apply_optics(mad_b1b2, optics_file=config_mad_model["optics_file"])
+    ost.apply_optics(mad_b1b2, optics_file=config_mad["optics_file"])
 
     # Build xsuite collider
     collider = xlhc.build_xsuite_collider(
         sequence_b1=mad_b1b2.sequence.lhcb1,
         sequence_b2=mad_b1b2.sequence.lhcb2,
         sequence_b4=mad_b4.sequence.lhcb2,
-        beam_config=config_mad_model["beam_config"],
-        enable_imperfections=config_mad_model["enable_imperfections"],
-        enable_knob_synthesis=config_mad_model["enable_knob_synthesis"],
-        rename_coupling_knobs=config_mad_model["rename_coupling_knobs"],
-        pars_for_imperfections=config_mad_model["pars_for_imperfections"],
-        ver_lhc_run=config_mad_model["ver_lhc_run"],
-        ver_hllhc_optics=config_mad_model["ver_hllhc_optics"],
+        beam_config=config_mad["beam_config"],
+        enable_imperfections=config_mad["enable_imperfections"],
+        enable_knob_synthesis=config_mad["enable_knob_synthesis"],
+        rename_coupling_knobs=config_mad["rename_coupling_knobs"],
+        pars_for_imperfections=config_mad["pars_for_imperfections"],
+        ver_lhc_run=config_mad["ver_lhc_run"],
+        ver_hllhc_optics=config_mad["ver_hllhc_optics"],
     )
 
     # Return collider
@@ -137,7 +135,7 @@ def clean():
 # ==================================================================================================
 def build_distr_and_collider(config_file="config.yaml"):
     # Get configuration
-    configuration, config_particles, config_collider = load_configuration(config_file)
+    configuration, config_particles, config_mad = load_configuration(config_file)
 
     # Tag start of the job
     tree_maker_tagging(configuration, tag="started")
@@ -149,7 +147,7 @@ def build_distr_and_collider(config_file="config.yaml"):
     write_particle_distribution(particle_list)
 
     # Build collider from mad model
-    collider = build_collider_from_mad(config_collider)
+    collider = build_collider_from_mad(config_mad)
 
     # Clean temporary files
     clean()

@@ -277,7 +277,7 @@ children = {"base_collider": {"config_particles": {}, "config_collider": {}, "ch
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================
