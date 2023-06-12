@@ -79,8 +79,8 @@ d_config_tune_and_chroma = {
     "dqy": {},
 }
 for beam in ["lhcb1", "lhcb2"]:
-    d_config_tune_and_chroma["qx"][beam] = 62.316
-    d_config_tune_and_chroma["qy"][beam] = 60.321
+    d_config_tune_and_chroma["qx"][beam] = 62.31
+    d_config_tune_and_chroma["qy"][beam] = 60.32
     d_config_tune_and_chroma["dqx"][beam] = 5.0
     d_config_tune_and_chroma["dqy"][beam] = 5.0
 
@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2064) ** 0.5
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2216) ** 0.5
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -140,7 +140,7 @@ d_config_beambeam["nemitt_y"] = 2.5e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_2076b_2064_1327_1928_216bpi_12inj_800ns_bs200ns_with_identical_bunches.json"
+    "master_jobs/filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj_with_identical_bunches.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -175,7 +175,7 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
-check_bunch_number = False
+check_bunch_number = True
 if check_bunch_number:
     # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
     # elements), must be specified otherwise)
@@ -240,7 +240,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 200
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -253,12 +253,15 @@ d_config_simulation["beam"] = "lhcb1"
 # Below, the user defines the grid for the machine parameters that must be scanned to find the
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
-# Scan first bunch of each family
-l_bunch_to_scan = []
-for l_of_bunch_per_family in d_filling_scheme["beam1_identical_bunches"]:
-    l_bunch_to_scan.append(int(l_of_bunch_per_family[0]))
+# Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
 
-l_bunch_to_scan = l_bunch_to_scan[:2]
+# In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
+# working points too close to resonance. Otherwise just delete this variable in the loop at the end
+# of the script
+only_keep_upper_triangle = True
+
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -287,15 +290,16 @@ children["base_collider"]["config_collider"] = d_config_mad
 # ! otherwise the dictionnary will be mutated for all the children.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
-for idx_job, (track, bunch_nb) in enumerate(itertools.product(track_array, l_bunch_to_scan)):
+for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
+    # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
+    if only_keep_upper_triangle:
+        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
+            continue
+
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
-        d_config_collider["config_beambeam"]["mask_with_filling_pattern"]["i_bunch_b1"] = int(
-            bunch_nb
-        )
-        d_config_collider["config_beambeam"]["mask_with_filling_pattern"]["i_bunch_b2"] = int(
-            bunch_nb
-        )
+        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
+        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -324,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bbb_2076"
+study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_tune_2228"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

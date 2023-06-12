@@ -81,8 +81,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -271,13 +271,13 @@ only_keep_upper_triangle = True
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================
@@ -328,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_tune_tune_2228"  # "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma15_eol_tune_tune_2228"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

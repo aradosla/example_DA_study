@@ -260,8 +260,7 @@ array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-only_keep_upper_triangle = True
-
+keep = "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -292,9 +291,14 @@ children["base_collider"]["config_mad"] = d_config_mad
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
-    if only_keep_upper_triangle:
+    if keep == "upper_triangle":
         if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
             continue
+    elif keep == "lower_triangle":
+        if qy >= (qx + 2 - 0.0039):
+            continue
+    else:
+        pass
 
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
