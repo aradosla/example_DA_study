@@ -43,7 +43,7 @@ d_config_particles["n_split"] = 5
 #
 # Below, the user defines the optics collider parameters. These parameters cannot be scanned.
 # Path for the collider configuration:
-# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_collider]
+# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_mad]
 # ==================================================================================================
 
 ### Mad configuration
@@ -271,7 +271,7 @@ only_keep_upper_triangle = True
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
