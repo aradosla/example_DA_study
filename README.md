@@ -29,7 +29,6 @@ Then do:
   
 ```bash
 cd modules/xmask/
-git submodules init
 git submodule update
 ```
 
