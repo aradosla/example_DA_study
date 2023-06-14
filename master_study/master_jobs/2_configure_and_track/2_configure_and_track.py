@@ -366,15 +366,16 @@ def prepare_particle_distribution(config_sim, collider, config_bb):
 # ==================================================================================================
 # --- Function to do the tracking
 # ==================================================================================================
-def track(collider, particles, config_sim):
+def track(collider, particles, config_sim, save_input_particles=False):
     # Get beam being tracked
     beam = config_sim["beam"]
 
     # Optimize line for tracking
     collider[beam].optimize_for_tracking()
 
-    # Save initial coordinates
-    pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
+    # Save initial coordinates if requested
+    if save_input_particles:
+        pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
 
     # Track
     num_turns = config_sim["n_turns"]
