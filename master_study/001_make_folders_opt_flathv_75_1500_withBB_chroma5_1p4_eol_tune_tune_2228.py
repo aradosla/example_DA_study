@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2216) ** 0.5
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -240,7 +240,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 200
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -254,8 +254,8 @@ d_config_simulation["beam"] = "lhcb1"
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
