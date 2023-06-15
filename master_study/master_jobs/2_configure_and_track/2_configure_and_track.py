@@ -411,6 +411,13 @@ def configure_and_track(config_path="config.yaml"):
     # Save output
     pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
 
+    # Remote the correction folder, and potential C files remaining
+    try:
+        os.system("rm -rf correction")
+        os.system("rm -f *.cc")
+    except:
+        pass
+
     # Tag end of the job
     tree_maker_tagging(config, tag="completed")
 
