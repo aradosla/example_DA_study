@@ -240,7 +240,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 200
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -258,7 +258,7 @@ l_bunch_to_scan = []
 for l_of_bunch_per_family in d_filling_scheme["beam1_identical_bunches"]:
     l_bunch_to_scan.append(int(l_of_bunch_per_family[0]))
 
-l_bunch_to_scan = l_bunch_to_scan[:2]
+l_bunch_to_scan = l_bunch_to_scan
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
