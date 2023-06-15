@@ -54,7 +54,10 @@ for node in root.generation(1):
         # Get node parameters as dictionnaries for parameter assignation
         dic_child_collider = node_child.parameters["config_collider"]
         dic_child_simulation = node_child.parameters["config_simulation"]
-        dic_parent_collider = node.parameters["config_mad"]
+        try:
+            dic_parent_collider = node.parameters["config_mad"]
+        except:
+            print("No parent collider could be loaded")
         dic_parent_particles = node.parameters["config_particles"]
 
         # Get which beam is being tracked
