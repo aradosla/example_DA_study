@@ -63,15 +63,13 @@ def _compute_LR_per_bunch(
         # i == 1 for ATLAS and CMS
         # i == 2 for LHCB
         num_of_long_range = 0
+        l_HO = [False, False, False]
         for i in range(0, 3):
             collide_factor = colide_factor_list[i]
             m = (n + factor * collide_factor) % number_of_bunches
 
-            # ! Must check this
-            # if this Bunch is true, than there is head on collision
-            # yet we want the worst bunch, so we skip it if no head-on
-            if not B2_bunches[m]:
-                continue
+            # if this bunch is true, then there is head on collision
+            l_HO[i] = B2_bunches[m]
 
             ## Check if beam 2 has bunches in range  m - numberOfLRToConsider to m + numberOfLRToConsider
             ## Also have to check if bunches wrap around from 3563 to 0 or vice versa
@@ -118,6 +116,10 @@ def _compute_LR_per_bunch(
 
             # Add to total number of long range collisions
             num_of_long_range += num_of_long_range_curren_ip
+
+        # If a head-on collision is missing, discard the bunch by setting LR to 0
+        if False in l_HO:
+            num_of_long_range = 0
 
         # Add to list of long range collisions per bunch
         l_long_range_per_bunch.append(num_of_long_range)

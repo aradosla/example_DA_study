@@ -52,7 +52,7 @@ d_config_particles["n_split"] = 8
 d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
 
 # Optic file path (round or flat)
-d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_500_1000_thin.madx"
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -81,8 +81,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -108,8 +108,8 @@ d_config_knobs["on_crab1"] = -190
 d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 410.0
+d_config_knobs["i_oct_b2"] = 410.0
 
 ### leveling configuration
 
@@ -119,7 +119,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 # Luminosity and particles
 
 # skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
+skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 2216) ** 0.5
+d_config_beambeam["num_particles_per_bunch"] = 2.3e11 * (1960 / 2216) ** 0.5
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -271,13 +271,13 @@ only_keep_upper_triangle = True
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================
@@ -328,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_tune_tune_2228"  # "example_HL_tunescan"
+study_name = "opt_flathv_500_1000_withBB_chroma15_2p3_sol_tune_tune_2228"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

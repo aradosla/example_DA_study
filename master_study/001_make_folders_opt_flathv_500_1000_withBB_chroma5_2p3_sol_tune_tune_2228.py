@@ -36,14 +36,14 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 5
+d_config_particles["n_split"] = 8
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
 #
 # Below, the user defines the optics collider parameters. These parameters cannot be scanned.
 # Path for the collider configuration:
-# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_mad]
+# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_collider]
 # ==================================================================================================
 
 ### Mad configuration
@@ -52,7 +52,7 @@ d_config_particles["n_split"] = 5
 d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
 
 # Optic file path (round or flat)
-d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_500_1000_thin.madx"
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -108,8 +108,8 @@ d_config_knobs["on_crab1"] = -190
 d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 410.0
+d_config_knobs["i_oct_b2"] = 410.0
 
 ### leveling configuration
 
@@ -119,7 +119,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 # Luminosity and particles
 
 # skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
+skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
+d_config_beambeam["num_particles_per_bunch"] = 2.3e11 * (1960 / 2216) ** 0.5
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -140,7 +140,7 @@ d_config_beambeam["nemitt_y"] = 2.5e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    "master_jobs/filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj_with_identical_bunches.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -240,7 +240,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 200
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -254,13 +254,14 @@ d_config_simulation["beam"] = "lhcb1"
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "upper_triangle"  # 'lower_triangle', 'all'
+only_keep_upper_triangle = True
+
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -291,14 +292,9 @@ children["base_collider"]["config_mad"] = d_config_mad
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
-    if keep == "upper_triangle":
+    if only_keep_upper_triangle:
         if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
             continue
-    elif keep == "lower_triangle":
-        if qy >= (qx + 2 - 0.0039):
-            continue
-    else:
-        pass
 
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
@@ -332,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_intensity"  # "example_HL_tunescan"
+study_name = "opt_flathv_500_1000_withBB_chroma5_2p3_sol_tune_tune_2228"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

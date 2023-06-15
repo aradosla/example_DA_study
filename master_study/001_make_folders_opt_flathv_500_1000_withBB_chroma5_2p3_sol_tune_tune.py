@@ -271,13 +271,13 @@ only_keep_upper_triangle = True
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================

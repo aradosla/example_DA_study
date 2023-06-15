@@ -29,11 +29,12 @@ Then do:
   
 ```bash
 cd modules/xmask/
-git submodules init
+git submodule init
 git submodule update
 ```
 
-Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` again.
+Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` and ```git submodule update``` again. If this still doesn't work, you can try to manually get into ```modules/xmask/xmask/lhc``` , manually remove ```lhcerrors``` with ```rm -rf lhcerrors``` (which is potentially empty), and finally git clone ```https://github.com/lhcopt/lhcerrors.git```.
+
 
 ## Running a simple parameter scan simulation
 
@@ -81,10 +82,11 @@ If not already done, activate the conda environment:
 source miniconda/bin/activate
 ```
 
-Now, build the tree and write it on disk with:
+Now, move to the master_study folder, and run to script to build the tree and write it on disk:
 
 ```bash
-python master_study/001_make_folders.py
+cd master_study
+python 001_make_folders.py
 ```
 
 This should create a folder named after ```study_name``` in ```master_study/scans```. This folder contains the tree structure of your study: the parent generation is in the subfolder ```base_collider```, while the subsequent children are in the ```xtrack_iiii```. The tree_maker ```.json``` and ```.log``` files are used by tree_maker to keep track of the jobs that have been run and the ones that are still to be run.
@@ -104,7 +106,7 @@ Note that, to run without errors, children nodes will most likley need the files
 First, update the study name in ```master_study/002_chronjob.py```. You can now execute the script:
 
 ```bash
-python master_study/002_chronjob.py
+python 002_chronjob.py
 ```
 
 Here, this will run the first generation (```base_collider```), which consists of only one job (building the particles distribution and the base collider).
@@ -124,7 +126,7 @@ groupby = ["qx", "qy"]
 Finally, run the script:
 
 ```bash
-python master_study/003_postprocessing.py
+python 003_postprocessing.py
 ```
 
 This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.

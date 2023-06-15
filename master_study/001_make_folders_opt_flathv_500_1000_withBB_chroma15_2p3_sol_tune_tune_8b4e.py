@@ -52,7 +52,7 @@ d_config_particles["n_split"] = 8
 d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
 
 # Optic file path (round or flat)
-d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_500_1000_thin.madx"
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -79,10 +79,10 @@ d_config_tune_and_chroma = {
     "dqy": {},
 }
 for beam in ["lhcb1", "lhcb2"]:
-    d_config_tune_and_chroma["qx"][beam] = 62.316
-    d_config_tune_and_chroma["qy"][beam] = 60.321
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["qx"][beam] = 62.31
+    d_config_tune_and_chroma["qy"][beam] = 60.32
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -108,8 +108,8 @@ d_config_knobs["on_crab1"] = -190
 d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 410.0
+d_config_knobs["i_oct_b2"] = 410.0
 
 ### leveling configuration
 
@@ -119,7 +119,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 # Luminosity and particles
 
 # skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
+skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -132,7 +132,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11 * (1960 / 1960) ** 0.5
+d_config_beambeam["num_particles_per_bunch"] = 2.3e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -181,7 +181,7 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 1963
     d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
@@ -240,7 +240,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 200
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -253,8 +253,15 @@ d_config_simulation["beam"] = "lhcb1"
 # Below, the user defines the grid for the machine parameters that must be scanned to find the
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
-# Scan first bunch of each family
-l_bunch_to_scan = [1963]
+# Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
+
+# In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
+# working points too close to resonance. Otherwise just delete this variable in the loop at the end
+# of the script
+only_keep_upper_triangle = True
+
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -264,13 +271,13 @@ l_bunch_to_scan = [1963]
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================
@@ -283,15 +290,16 @@ children["base_collider"]["config_collider"] = d_config_mad
 # ! otherwise the dictionnary will be mutated for all the children.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
-for idx_job, (track, bunch_nb) in enumerate(itertools.product(track_array, l_bunch_to_scan)):
+for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
+    # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
+    if only_keep_upper_triangle:
+        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
+            continue
+
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
-        d_config_collider["config_beambeam"]["mask_with_filling_pattern"]["i_bunch_b1"] = int(
-            bunch_nb
-        )
-        d_config_collider["config_beambeam"]["mask_with_filling_pattern"]["i_bunch_b2"] = int(
-            bunch_nb
-        )
+        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
+        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -320,7 +328,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bbb_1972"
+study_name = "opt_flathv_500_1000_withBB_chroma15_2p3_sol_tune_tune_8b4e"  # "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

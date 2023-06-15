@@ -16,7 +16,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "opt_flathv_75_1500_withBB_chroma5_1p4_eol_bbb_2228"  # "example_HL_tunescan"
+study_name = "opt_flathv_75_1500_withBB_chroma15_eol_tune_tune_2228"  # "example_HL_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -54,7 +54,7 @@ for node in root.generation(1):
         # Get node parameters as dictionnaries for parameter assignation
         dic_child_collider = node_child.parameters["config_collider"]
         dic_child_simulation = node_child.parameters["config_simulation"]
-        dic_parent_collider = node.parameters["config_collider"]
+        dic_parent_collider = node.parameters["config_mad"]
         dic_parent_particles = node.parameters["config_particles"]
 
         # Get which beam is being tracked
