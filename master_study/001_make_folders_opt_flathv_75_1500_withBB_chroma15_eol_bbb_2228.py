@@ -36,7 +36,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 8
+d_config_particles["n_split"] = 10
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -79,8 +79,8 @@ d_config_tune_and_chroma = {
     "dqy": {},
 }
 for beam in ["lhcb1", "lhcb2"]:
-    d_config_tune_and_chroma["qx"][beam] = 62.316
-    d_config_tune_and_chroma["qy"][beam] = 60.321
+    d_config_tune_and_chroma["qx"][beam] = 62.313
+    d_config_tune_and_chroma["qy"][beam] = 60.320
     d_config_tune_and_chroma["dqx"][beam] = 15.0
     d_config_tune_and_chroma["dqy"][beam] = 15.0
 
