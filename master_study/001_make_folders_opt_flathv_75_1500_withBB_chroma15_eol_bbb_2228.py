@@ -36,7 +36,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 10
+d_config_particles["n_split"] = 8
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
