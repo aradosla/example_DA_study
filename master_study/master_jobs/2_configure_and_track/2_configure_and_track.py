@@ -256,8 +256,8 @@ def configure_beam_beam(collider, config_bb):
                 # Note that a bunch number must be provided if a filling pattern is provided
                 # Apply filling pattern
                 collider.apply_filling_pattern(
-                    filling_pattern_cw=filling["beam1"],
-                    filling_pattern_acw=filling["beam2"],
+                    filling_pattern_cw=filling_pattern_cw,
+                    filling_pattern_acw=filling_pattern_acw,
                     i_bunch_cw=i_bunch_cw,
                     i_bunch_acw=i_bunch_acw,
                 )
