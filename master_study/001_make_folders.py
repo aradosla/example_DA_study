@@ -332,7 +332,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma5_eol_tune_intensity"  # "example_HL_tunescan"
+study_name = "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
