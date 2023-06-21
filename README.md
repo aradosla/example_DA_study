@@ -20,10 +20,10 @@ Then:
 
 ```bash
 cd example_DA_study
-source make_miniconda.sh
+source make_miniforge.sh
 ```
 
-This should install miniconda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniconda.sh``` script manually, one line after the other.
+This should install conda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniforge.sh``` script manually, one line after the other.
 
 Then do:
   
@@ -79,7 +79,7 @@ run_on: 'local_pc'
 If not already done, activate the conda environment:
 
 ```bash
-source miniconda/bin/activate
+source miniforge/bin/activate
 ```
 
 Now, move to the master_study folder, and run to script to build the tree and write it on disk:

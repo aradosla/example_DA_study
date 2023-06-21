@@ -329,7 +329,7 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = os.getcwd() + "/../miniconda/bin/activate"
+config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 
 # ==================================================================================================
 # --- Build tree and write it to the filesystem

@@ -3,10 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Miniconda
-Miniconda3-latest-Linux-x86_64.sh
-miniconda/*
-!miniconda/.gitkeep
+# Miniforge and miniconda
+Miniforge3-Linux-x86_64.sh
+miniforge/*
+!miniforge/.gitkeep
 
 # Modules
 modules/*
@@ -23,7 +23,6 @@ master_study/scans/*
 # Analysis
 master_study/analysis/*
 !master_study/analysis/.gitkeep
-!master_study/analysis/analysis_functions.py
 
 # Other make_folder studies
 master_study/001_make_folders_*
