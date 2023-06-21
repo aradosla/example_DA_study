@@ -296,7 +296,7 @@ def plot_heatmap(
     plt.show()
 
 
-def copy_study_on_eos(study_name):
+def copy_study_on_eos(study_name, type_analysis="tune_scan"):
     path_study = "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/"
     path_EOS = "/eos/home-c/cdroin/save_simulations/"
     path_archive = path_EOS + study_name + "/"
@@ -313,7 +313,7 @@ def copy_study_on_eos(study_name):
     #                 dirs_exist_ok=True)
 
     # Copy analysis
-    suffix_analysis = "analysis/tune_scan/analysis_" + study_name + ".ipynb"
+    suffix_analysis = f"analysis/{type_analysis}/analysis_" + study_name + ".ipynb"
     path_source_analysis = path_study + suffix_analysis
     path_destination_analysis = path_archive + suffix_analysis
     os.makedirs(os.path.dirname(path_destination_analysis), exist_ok=True)
