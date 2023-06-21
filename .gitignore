@@ -3,10 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Miniconda
-Miniconda3-latest-Linux-x86_64.sh
+# Miniforge and miniconda
+Miniforge3-Linux-x86_64.sh
+miniforge/*
+!miniforge/.gitkeep
 miniconda/*
-!miniconda/.gitkeep
 
 # Modules
 modules/*
