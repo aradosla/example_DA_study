@@ -34,6 +34,8 @@ def _compute_LR_per_bunch(
     else:
         raise ValueError("beam must be either 'beam_1' or 'beam_2'")
 
+    B2_bunches = np.array(_array_b2) == 1.0
+
     # Define number of LR to consider
     if isinstance(numberOfLRToConsider, int):
         numberOfLRToConsider = [numberOfLRToConsider, numberOfLRToConsider, numberOfLRToConsider]
@@ -61,9 +63,13 @@ def _compute_LR_per_bunch(
         # i == 1 for ATLAS and CMS
         # i == 2 for LHCB
         num_of_long_range = 0
+        l_HO = [False, False, False]
         for i in range(0, 3):
             collide_factor = colide_factor_list[i]
             m = (n + factor * collide_factor) % number_of_bunches
+
+            # if this bunch is true, then there is head on collision
+            l_HO[i] = B2_bunches[m]
 
             ## Check if beam 2 has bunches in range  m - numberOfLRToConsider to m + numberOfLRToConsider
             ## Also have to check if bunches wrap around from 3563 to 0 or vice versa
@@ -110,6 +116,10 @@ def _compute_LR_per_bunch(
 
             # Add to total number of long range collisions
             num_of_long_range += num_of_long_range_curren_ip
+
+        # If a head-on collision is missing, discard the bunch by setting LR to 0
+        if False in l_HO:
+            num_of_long_range = 0
 
         # Add to list of long range collisions per bunch
         l_long_range_per_bunch.append(num_of_long_range)
@@ -317,5 +327,5 @@ if __name__ == "__main__":
     #     "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
     # )
     reformat_filling_scheme_from_lpc(
-        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/8807_test_fill.json"
+        "/afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/master_jobs/filling_scheme/25ns_2374b_2361_1730_1773_236bpi_13inj_hybrid_2INDIV.json"
     )

@@ -33,9 +33,8 @@ git submodule init
 git submodule update
 ```
 
-Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` again.
+Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` and ```git submodule update``` again. If this still doesn't work, you can try to manually get into ```modules/xmask/xmask/lhc``` , manually remove ```lhcerrors``` with ```rm -rf lhcerrors``` (which is potentially empty), and finally git clone ```https://github.com/lhcopt/lhcerrors.git```.
 
-⚠️ **Please note that this example makes use of the HL-LHC optics files on the CERN AFS disk (e.g. ```/afs/cern.ch/eng/lhc/optics/HLLHCV1.5```)**. If you don't have access to AFS, you will have to install the files manually, [as done in the previous versions of this repository](https://github.com/xsuite/example_DA_study/blob/release/v0.1.1/make_miniconda.sh).
 
 ## Running a simple parameter scan simulation
 
@@ -83,10 +82,11 @@ If not already done, activate the conda environment:
 source miniconda/bin/activate
 ```
 
-Now, build the tree and write it on disk with:
+Now, move to the master_study folder, and run to script to build the tree and write it on disk:
 
 ```bash
-python master_study/001_make_folders.py
+cd master_study
+python 001_make_folders.py
 ```
 
 This should create a folder named after ```study_name``` in ```master_study/scans```. This folder contains the tree structure of your study: the parent generation is in the subfolder ```base_collider```, while the subsequent children are in the ```xtrack_iiii```. The tree_maker ```.json``` and ```.log``` files are used by tree_maker to keep track of the jobs that have been run and the ones that are still to be run.
@@ -106,7 +106,7 @@ Note that, to run without errors, children nodes will most likley need the files
 First, update the study name in ```master_study/002_chronjob.py```. You can now execute the script:
 
 ```bash
-python master_study/002_chronjob.py
+python 002_chronjob.py
 ```
 
 Here, this will run the first generation (```base_collider```), which consists of only one job (building the particles distribution and the base collider).
@@ -126,7 +126,7 @@ groupby = ["qx", "qy"]
 Finally, run the script:
 
 ```bash
-python master_study/003_postprocessing.py
+python 003_postprocessing.py
 ```
 
 This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.
@@ -202,13 +202,13 @@ The code is now well formatted and well commented, such that any question should
 
 At the moment, all the collider parameters can be scanned without requiring extensive scripts modifications. This includes (but is not limited to):
 
-- separation at IP2 (```on_sep2```)
 - intensity (```num_particles_per_bunch```)
 - crossing-angle (```on_x1, on_x5```)
 - tune (```qx, qy```)
 - chromaticity (```dqx, dqy```)
 - octupole current (```i_oct_b1, i_oct_b2```)
 - bunch being tracked (```i_bunch_b1, i_bunch_b2```)
+- separation at IP2 (```on_sep2```)
 
 At generation 1, the base collider is built with a default set of parameters for the optics (which are explicitely set in ```001_make_folder.py```). At generation 2, the base collider is tailored to the parameters being scanned. That is,
  the tune and chroma are matched, the luminosity leveling is computed (if leveling is required), and the beam-beam lenses

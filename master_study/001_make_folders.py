@@ -21,7 +21,7 @@ from user_defined_functions import (
 #
 # Below, the user defines the parameters for the initial particles distribution.
 # Path for the particle distribution configuration:
-# mmaster_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_particles]
+# mmaster_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_particles]
 # ==================================================================================================
 
 # Define dictionary for the initial particle distribution
@@ -43,7 +43,7 @@ d_config_particles["n_split"] = 5
 #
 # Below, the user defines the optics collider parameters. These parameters cannot be scanned.
 # Path for the collider configuration:
-# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_collider]
+# master_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_mad]
 # ==================================================================================================
 
 ### Mad configuration
@@ -85,7 +85,6 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 5.0
 
 # Value to be added to linear coupling knobs
-# ! Not working for now
 d_config_tune_and_chroma["delta_cmr"] = 0.001
 d_config_tune_and_chroma["delta_cmi"] = 0.0
 
@@ -205,14 +204,16 @@ if check_bunch_number:
                 )
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
-        # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
-        print(
-            "The bunch number for beam 2 has not been provided. Bunch tracking for beam 2 is not"
-            " implemented yet in this script, so you can ignore this warning."
-        )
         worst_bunch_b2 = get_worst_bunch(
             filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
         )
+        # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
+        print(
+            "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
+            " taken. It is the bunch number "
+            + str(worst_bunch_b2)
+        )
+
         d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
 
@@ -247,6 +248,8 @@ d_config_simulation["n_turns"] = 200
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
 
+# Beam to track (lhcb1 or lhcb2)
+d_config_simulation["beam"] = "lhcb1"
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
@@ -260,8 +263,7 @@ array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-only_keep_upper_triangle = True
-
+keep = "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -271,13 +273,13 @@ only_keep_upper_triangle = True
 # ==================================================================================================
 
 # Build empty tree: first generation (later added to the root), and second generation
-children = {"base_collider": {"config_particles": {}, "config_collider": {}, "children": {}}}
+children = {"base_collider": {"config_particles": {}, "config_mad": {}, "children": {}}}
 
 # Add particles distribution parameters to the first generation
 children["base_collider"]["config_particles"] = d_config_particles
 
 # Add base machine parameters to the first generation
-children["base_collider"]["config_collider"] = d_config_mad
+children["base_collider"]["config_mad"] = d_config_mad
 
 
 # ==================================================================================================
@@ -292,9 +294,14 @@ children["base_collider"]["config_collider"] = d_config_mad
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
-    if only_keep_upper_triangle:
+    if keep == "upper_triangle":
         if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
             continue
+    elif keep == "lower_triangle":
+        if qy >= (qx + 2 - 0.0039):
+            continue
+    else:
+        pass
 
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:

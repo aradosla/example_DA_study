@@ -54,10 +54,16 @@ for node in root.generation(1):
         # Get node parameters as dictionnaries for parameter assignation
         dic_child_collider = node_child.parameters["config_collider"]
         dic_child_simulation = node_child.parameters["config_simulation"]
-        dic_parent_collider = node.parameters["config_collider"]
+        try:
+            dic_parent_collider = node.parameters["config_mad"]
+        except:
+            print("No parent collider could be loaded")
         dic_parent_particles = node.parameters["config_particles"]
 
-        # Get scanned parameters (complete with the scanned parameters)
+        # Get which beam is being tracked
+        df_sim["beam"] = dic_child_simulation["beam"]
+
+        # Get scanned parameters (complete with the requested scanned parameters)
         df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
         df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
         df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
@@ -88,24 +94,29 @@ df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
 if df_lost_particles.empty:
     print("No unstable particles found, the output dataframe will be empty.")
 
-# Groupe by working point (Update this with the knobs you want to group by !)
-# Median is computed in the groupby function, but values are assumed identical
-groupby = ["qx", "qy"]
+# Group by working point (Update this with the knobs you want to group by !)
+group_by_parameters = ["qx", "qy"]
+# We always want to keep beam in the final result
+group_by_parameters = ["beam"] + group_by_parameters
+l_parameters_to_keep = [
+    "normalized amplitude in xy-plane",
+    "qx",
+    "qy",
+    "i_bunch_b1",
+    "i_bunch_b2",
+    "num_particles_per_bunch",
+]
+
+# Min is computed in the groupby function, but values should be identical
 my_final = pd.DataFrame(
     [
-        df_lost_particles.groupby(groupby)["normalized amplitude in xy-plane"].min(),
-        df_lost_particles.groupby(groupby)["qx"].median(),
-        df_lost_particles.groupby(groupby)["qy"].median(),
-        df_lost_particles.groupby(groupby)["i_bunch_b1"].median(),
-        df_lost_particles.groupby(groupby)["i_bunch_b2"].median(),
-        df_lost_particles.groupby(groupby)["num_particles_per_bunch"].median(),
+        df_lost_particles.groupby(group_by_parameters)[parameter].min()
+        for parameter in l_parameters_to_keep
     ]
 ).transpose()
 
-print(my_final)
-
 # Save data and print time
 my_final.to_parquet(f"scans/{study_name}/da.parquet")
-print(my_final)
+print("Final dataframe for current set of simulations: ", my_final)
 end = time.time()
-print(end - start)
+print("Elapsed time: ", end - start)
