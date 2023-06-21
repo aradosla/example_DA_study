@@ -21,7 +21,7 @@ from user_defined_functions import (
 #
 # Below, the user defines the parameters for the initial particles distribution.
 # Path for the particle distribution configuration:
-# mmaster_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_particles]
+# mmaster_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_particles]
 # ==================================================================================================
 
 # Define dictionary for the initial particle distribution
@@ -43,7 +43,7 @@ d_config_particles["n_split"] = 5
 #
 # Below, the user defines the optics collider parameters. These parameters cannot be scanned.
 # Path for the collider configuration:
-# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_mad]
+# master_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_mad]
 # ==================================================================================================
 
 ### Mad configuration
@@ -204,14 +204,17 @@ if check_bunch_number:
                 )
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
+        worst_bunch_b2 = get_worst_bunch(
+            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
+        )
         # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
         print(
-            "The bunch number for beam 2 has not been provided. By default, the same bunch as for"
-            " beam 1 is taken."
+            "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
+            " taken. It is the bunch number "
+            + str(worst_bunch_b2)
         )
-        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = d_config_beambeam[
-            "mask_with_filling_pattern"
-        ]["i_bunch_b1"]
+
+        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
 
 # ==================================================================================================
