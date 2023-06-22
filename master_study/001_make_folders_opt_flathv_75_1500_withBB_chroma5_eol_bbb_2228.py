@@ -21,7 +21,7 @@ from user_defined_functions import (
 #
 # Below, the user defines the parameters for the initial particles distribution.
 # Path for the particle distribution configuration:
-# mmaster_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_particles]
+# mmaster_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_particles]
 # ==================================================================================================
 
 # Define dictionary for the initial particle distribution
@@ -43,7 +43,7 @@ d_config_particles["n_split"] = 8
 #
 # Below, the user defines the optics collider parameters. These parameters cannot be scanned.
 # Path for the collider configuration:
-# master_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_mad]
+# master_study/master_jobs/1_build_distr_and_collider/config_collider.yaml [field config_collider]
 # ==================================================================================================
 
 ### Mad configuration
@@ -175,14 +175,14 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
-check_bunch_number = True
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 1144
+check_bunch_number = False
 if check_bunch_number:
     # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
@@ -204,17 +204,14 @@ if check_bunch_number:
                 )
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
-        worst_bunch_b2 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
-        )
         # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
         print(
-            "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
-            " taken. It is the bunch number "
-            + str(worst_bunch_b2)
+            "The bunch number for beam 2 has not been provided. By default, the same bunch as for"
+            " beam 1 is taken."
         )
-
-        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
+        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = d_config_beambeam[
+            "mask_with_filling_pattern"
+        ]["i_bunch_b1"]
 
 
 # ==================================================================================================
@@ -256,8 +253,12 @@ d_config_simulation["beam"] = "lhcb1"
 # Below, the user defines the grid for the machine parameters that must be scanned to find the
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
-l_bunch = [58, 952]
-l_chromax = np.linspace(5, 15, 11, endpoint=True)
+# Scan first bunch of each family
+l_bunch_to_scan = []
+for l_of_bunch_per_family in d_filling_scheme["beam1_identical_bunches"]:
+    l_bunch_to_scan.append(int(l_of_bunch_per_family[0]))
+
+l_bunch_to_scan = l_bunch_to_scan
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -286,15 +287,12 @@ children["base_collider"]["config_mad"] = d_config_mad
 # ! otherwise the dictionnary will be mutated for all the children.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
-for idx_job, (track, bunch_nb, chromax) in enumerate(
-    itertools.product(track_array, l_bunch, l_chromax)
-):
+for idx_job, (track, bunch_nb) in enumerate(itertools.product(track_array, l_bunch_to_scan)):
     # Mutate the appropriate collider parameters
     for beam in ["lhcb1", "lhcb2"]:
         d_config_collider["config_beambeam"]["mask_with_filling_pattern"]["i_bunch_b1"] = int(
             bunch_nb
         )
-        d_config_collider["config_knobs_and_tuning"]["dqx"][beam] = float(chromax)
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -323,7 +321,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "opt_flathv_75_1500_withBB_chroma15_eol_evolution_chroma_2228"
+study_name = "opt_flathv_75_1500_withBB_chroma5_eol_bbb_2228"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
