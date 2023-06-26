@@ -124,7 +124,7 @@ class cluster:
 # ==================================================================================================
 # Load the tree from a yaml
 if __name__ == "__main__":
-    study_name = "opt_flathv_500_2000_withBB_chroma15_2p3_soc_tune_tune_2228"
+    study_name = "example_HL_tunescan"
     fix = "/scans/" + study_name
     root = tree_maker.tree_from_json(fix[1:] + "/tree_maker_" + study_name + ".json")
     # Add suffix to the root node path to handle scans that are not in the root directory

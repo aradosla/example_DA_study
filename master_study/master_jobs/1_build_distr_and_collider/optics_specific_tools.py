@@ -27,14 +27,14 @@ def build_sequence(
         "acc-models-lhc/toolkit/macro.madx";
       """)
 
-    mad.input("""
+    mad.input(f"""
       ! Build sequence
       option, -echo,-warn,-info;
-      if (mylhcbeam==4){
+      if (mylhcbeam==4){{
         call,file="acc-models-lhc/{path}lhcb4.seq";
-      } else {
+      }} else {{
         call,file="acc-models-lhc/{path}lhc.seq";
-      };
+      }};
       option, -echo, warn,-info;
       """)
 
@@ -66,7 +66,8 @@ def build_sequence(
         seqedit, sequence=lhcb2; flatten; cycle, start=IP3; flatten; endedit;
         """)
 
-    if not ignore_CC:
+    # Force ignore CC for 1.6 for now
+    if not ignore_CC and optics_version == 1.5:
         mad.input("""
         ! Install crab cavities (they are off)
         call, file='acc-models-lhc/toolkit/enable_crabcavities.madx';
