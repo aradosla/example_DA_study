@@ -8,10 +8,10 @@ config_particles:
 config_mad:
   # Links to be made for tools and scripts
   links:
-    acc-models-lhc: ../../../../modules/hllhc16  # ../../../../modules/hllhc15 #/afs/cern.ch/eng/lhc/optics/HLLHCV1.5
+    acc-models-lhc: ../../../../modules/hllhc15 #/afs/cern.ch/eng/lhc/optics/HLLHCV1.5
 
   # Optics file
-  optics_file: acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx # round/opt_round_150_1500_thin.madx #
+  optics_file: round/opt_round_150_1500_thin.madx #
 
   # Beam parameters
   beam_config:
@@ -24,11 +24,11 @@ config_mad:
   enable_imperfections: false
 
   # Enable knob synthesis (for coupling correction, if no imperfections)
-  enable_knob_synthesis: false
+  enable_knob_synthesis: true
 
   # Rename the coupling knobs to avoid conflict between b1 and b2
   # (for hllhc using old fortran code to generate the knobs)
-  rename_coupling_knobs: false
+  rename_coupling_knobs: true
 
   # Optics version, for choice of correction algorithms
   # (ver_lhc_run or ver_hllhc_optics)

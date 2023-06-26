@@ -15,7 +15,7 @@ def build_sequence(
 
     # Adapt path optics
     if optics_version == 1.5:
-        path = "lhc/"
+        path = "/lhc/"
     elif optics_version == 1.6:
         path = "/"
     else:
@@ -31,9 +31,9 @@ def build_sequence(
       ! Build sequence
       option, -echo,-warn,-info;
       if (mylhcbeam==4){{
-        call,file="acc-models-lhc/{path}lhcb4.seq";
+        call,file="acc-models-lhc{path}lhcb4.seq";
       }} else {{
-        call,file="acc-models-lhc/{path}lhc.seq";
+        call,file="acc-models-lhc{path}lhc.seq";
       }};
       option, -echo, warn,-info;
       """)

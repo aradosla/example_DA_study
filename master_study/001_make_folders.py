@@ -56,10 +56,13 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 ### For v1.6 optics
 d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
 d_config_mad["optics_file"] = "acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx"
+d_config_mad["ver_hllhc_optics"] = 1.6
 
 ### For v1.5 optics
 # d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc15"
 # d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+# d_config_mad["ver_hllhc_optics"] = 1.5
+
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -115,8 +118,8 @@ d_config_knobs["on_crab1"] = 0  # -190
 d_config_knobs["on_crab5"] = 0  # -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 410  # 60.0
-d_config_knobs["i_oct_b2"] = 410  # 60.0
+d_config_knobs["i_oct_b1"] = 410  # 60
+d_config_knobs["i_oct_b2"] = 410  # 60
 
 ### leveling configuration
 
