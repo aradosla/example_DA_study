@@ -92,13 +92,16 @@ def build_collider_from_mad(config_mad):
     # Make mad environment
     xm.make_mad_environment(links=config_mad["links"])
 
+    # Get version LHC
+    ver_lhc = config_mad["ver_hllhc_optics"]
+
     # Start mad
     mad_b1b2 = Madx(command_log="mad_collider.log")
     mad_b4 = Madx(command_log="mad_b4.log")
 
     # Build sequences
-    ost.build_sequence(mad_b1b2, mylhcbeam=1)
-    ost.build_sequence(mad_b4, mylhcbeam=4)
+    ost.build_sequence(mad_b1b2, mylhcbeam=1, optics_version=ver_lhc)
+    ost.build_sequence(mad_b4, mylhcbeam=4, optics_version=ver_lhc)
 
     # Apply optics (only for b1b2, b4 will be generated from b1b2)
     ost.apply_optics(mad_b1b2, optics_file=config_mad["optics_file"])
