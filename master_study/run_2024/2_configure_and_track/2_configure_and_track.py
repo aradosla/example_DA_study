@@ -404,13 +404,13 @@ def configure_and_track(config_path="config.yaml"):
     collider, config_bb = configure_collider(config_sim, config_collider, save_collider=False)
 
     # Prepare particle distribution
-    # particles = prepare_particle_distribution(config_sim, collider, config_bb)
+    particles = prepare_particle_distribution(config_sim, collider, config_bb)
 
     # Track
-    # particles = track(collider, particles, config_sim)
+    particles = track(collider, particles, config_sim)
 
     # Save output
-    # pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
+    pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
 
     # Remote the correction folder, and potential C files remaining
     try:
