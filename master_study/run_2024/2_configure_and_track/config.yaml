@@ -3,17 +3,17 @@ config_collider:
 
   config_knobs_and_tuning:
     knob_settings:
-      # Orbit knobs
-      on_x1: 250 # [urad]
-      on_sep1: 0 # [mm]
-      on_x2: -170 # [urad]
-      on_sep2: 0.138 # 0.1443593672910653 # 0.138 # [mm]
-      on_x5: 250 # [urad]
-      on_sep5: 0 # [mm]
-      on_x8h: 0.0
-      on_x8v: 170
-      on_sep8h: -0.01 # different from 0 so that the levelling algorithm is not stuck
-      on_sep8v: 0.01 # idem
+      # # Orbit knobs
+      # on_x1: 250 # [urad]
+      # on_sep1: 0 # [mm]
+      # on_x2: -170 # [urad]
+      # on_sep2: 0.138 # 0.1443593672910653 # 0.138 # [mm]
+      # on_x5: 250 # [urad]
+      # on_sep5: 0 # [mm]
+      # on_x8h: 0.0
+      # on_x8v: 170
+      # on_sep8h: -0.01 # different from 0 so that the levelling algorithm is not stuck
+      # on_sep8v: 0.01 # idem
       on_a1: 0 # [urad]
       on_o1: 0 # [mm]
       on_a2: 0 # [urad]
@@ -24,9 +24,9 @@ config_collider:
       on_o8: 0 # [mm]
       on_disp: 1 # Value to choose could be optics-dependent
 
-      # Crab cavities
-      on_crab1: -190 # [urad]
-      on_crab5: -190 # [urad]
+      # # Crab cavities
+      # on_crab1: 0 # [urad]
+      # on_crab5: 0 # [urad]
 
       # Magnets of the experiments
       on_alice_normalized: 1
@@ -36,7 +36,7 @@ config_collider:
       on_sol_alice: 0
 
       # RF voltage and phases
-      vrf400: 16.0 # [MV]
+      vrf400: 12.0 # [MV]
       lagrf400.b1: 0.5 # [rad]
       lagrf400.b2: 0. # [rad]
 
@@ -56,11 +56,11 @@ config_collider:
       lhcb1: 60.32
       lhcb2: 60.32
     dqx:
-      lhcb1: 0
-      lhcb2: 0
+      lhcb1: 5.0
+      lhcb2: 5.0
     dqy:
-      lhcb1: 0
-      lhcb2: 0
+      lhcb1: 5.0
+      lhcb2: 5.0
     
     # Linear coupling
     delta_cmr: 0.001
@@ -68,17 +68,17 @@ config_collider:
 
     knob_names:
       lhcb1:
-        q_knob_1: kqtf.b1
-        q_knob_2: kqtd.b1
-        dq_knob_1: ksf.b1
-        dq_knob_2: ksd.b1
+        q_knob_1: dqx.b1_sq
+        q_knob_2: dqy.b1_sq
+        dq_knob_1: dqpx.b1_sq
+        dq_knob_2: dqpy.b1_sq
         c_minus_knob_1: c_minus_re_b1
         c_minus_knob_2: c_minus_im_b1
       lhcb2:
-        q_knob_1: kqtf.b2
-        q_knob_2: kqtd.b2
-        dq_knob_1: ksf.b2
-        dq_knob_2: ksd.b2
+        q_knob_1: dqx.b2_sq
+        q_knob_2: dqy.b2_sq
+        dq_knob_1: dqpx.b2_sq
+        dq_knob_2: dqpy.b2_sq
         c_minus_knob_1: c_minus_re_b2
         c_minus_knob_2: c_minus_im_b2
 
@@ -92,12 +92,12 @@ config_collider:
       ip8: 20
     sigma_z: 0.0761
     num_particles_per_bunch: 1.15e11
-    nemitt_x: 2.5e-6
-    nemitt_y: 2.5e-6
+    nemitt_x: 2.2e-6
+    nemitt_y: 2.2e-6
     mask_with_filling_pattern:
       pattern_fname: /afs/cern.ch/work/c/cdroin/private/example_DA_study/master_study/run_2024/filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj.json
-      i_bunch_b1: 1963 # If not specified, the bunch with the worst schedule is chosen
-      i_bunch_b2: 1963 # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
+      i_bunch_b1: 1147 # If not specified, the bunch with the worst schedule is chosen
+      i_bunch_b2: 1147 # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
   skip_leveling: true
   config_lumi_leveling:
