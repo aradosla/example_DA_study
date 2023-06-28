@@ -4,10 +4,7 @@ from xmask.lhc import install_errors_placeholders_hllhc
 def build_sequence(
     mad,
     mylhcbeam,
-    optics_version=1.5,
-    apply_fix_1p6=False,
     ignore_cycling=False,
-    ignore_CC=True,
     **kwargs,
 ):
     # Select beam
@@ -32,7 +29,7 @@ def build_sequence(
 
     mad.input("""
       ! Slice nominal sequence
-      ! exec, myslice;
+      exec, myslice;
       """)
 
     mad.input(f"""
