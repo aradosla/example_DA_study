@@ -129,7 +129,7 @@ skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33
+d_config_leveling["ip8"]["luminosity"] = 2.0e32
 # "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
 
 ### Beam beam configuration
@@ -138,9 +138,9 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 2.3e11
-d_config_beambeam["nemitt_x"] = 2.5e-6
-d_config_beambeam["nemitt_y"] = 2.5e-6
+d_config_beambeam["num_particles_per_bunch"] = 1.15e11
+d_config_beambeam["nemitt_x"] = 2.2e-6
+d_config_beambeam["nemitt_y"] = 2.2e-6
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),

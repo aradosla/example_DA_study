@@ -27,18 +27,18 @@ config_collider:
 
       # Exp. configuration in IR1, IR2, IR5 and IR8***
       on_x1   : -145.000  
-      on_sep1 :   -0.550  
+      on_sep1 :   0.0 #-0.550  
       on_oh1  :    0.000  
       on_ov1  :    0.000  
       phi_IR1 :  180.000  
-      on_ssep1 : -0.550 
+      on_ssep1 : 0.0 # -0.550 
       on_xx1  : -145.000  
       on_x5   :  145.000  
-      on_sep5 :    0.550  
+      on_sep5 :    0.0 # 0.550  
       on_oh5  :    0.000  
       on_ov5  :    0.000  
       phi_IR5 :   90.000  
-      on_ssep5 : 0.550 
+      on_ssep5 : 0.0 # 0.550 
       on_xx5  : 145.000 
 
       # Spurious dispersion correction
@@ -137,7 +137,7 @@ config_collider:
       i_bunch_b1: 1147 # If not specified, the bunch with the worst schedule is chosen
       i_bunch_b2: 1147 # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
-  skip_leveling: true
+  skip_leveling: false
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
@@ -171,7 +171,7 @@ config_collider:
         - corr_co_acbcvs5.r2b1
 
     ip8:
-      luminosity: 2.0e+33
+      luminosity: 2.0e+32
       num_colliding_bunches: null # This will be set automatically according to the filling scheme 
       impose_separation_orthogonal_to_crossing: true
       knobs:

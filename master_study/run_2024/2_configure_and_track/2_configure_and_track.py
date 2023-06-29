@@ -174,6 +174,9 @@ def add_linear_coupling(conf_knobs_and_tuning, collider):
     # (not possible to set it the target to 0.001 for now)
     collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
     collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+
+    # collider.vars["CMRS.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
+    # collider.vars["CMRS.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
     return collider
 
 
