@@ -139,7 +139,7 @@ config_collider:
         - corr_co_acbcvs5.r2b1
 
     ip8:
-      luminosity: 2.0e+33
+      luminosity: 2.0e+32
       num_colliding_bunches: null # This will be set automatically according to the filling scheme 
       impose_separation_orthogonal_to_crossing: true
       knobs:

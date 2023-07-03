@@ -129,7 +129,7 @@ skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33
+d_config_leveling["ip8"]["luminosity"] = 2.0e32
 # "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
 
 ### Beam beam configuration
@@ -263,8 +263,8 @@ d_config_simulation["beam"] = "lhcb1"
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = [62.31]  # np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
+array_qy = [60.32]  # np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
@@ -341,7 +341,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "2024_test"
+study_name = "2024"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
