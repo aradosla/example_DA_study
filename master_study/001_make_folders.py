@@ -55,7 +55,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 ### For run III
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.34"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.49"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -98,6 +98,7 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 
 # Define dictionary for the knobs settings
 d_config_knobs = {}
+
 
 # Octupoles
 d_config_knobs["i_oct_b1"] = 100.0  # 60
@@ -337,7 +338,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "2023"
+study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
