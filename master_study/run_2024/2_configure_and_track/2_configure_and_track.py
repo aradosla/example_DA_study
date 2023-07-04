@@ -12,11 +12,13 @@ import logging
 import numpy as np
 import pandas as pd
 import os
+from scipy.optimize import minimize_scalar
 import xtrack as xt
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
-from gen_config_orbit_correction import generate_orbit_correction_setup
+from misc import generate_orbit_correction_setup
+from misc import luminosity_leveling
 
 
 # ==================================================================================================
@@ -151,22 +153,91 @@ def compute_collision_from_scheme(config_bb):
 # ==================================================================================================
 # --- Function to do the Levelling
 # ==================================================================================================
-def do_levelling(config_collider, config_bb, n_collisions_ip8, collider):
+def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_collisions_ip1_and_5):
     # Read knobs and tuning settings from config file (already updated with the number of collisions)
     config_lumi_leveling = config_collider["config_lumi_leveling"]
 
     # Update the number of bunches in the configuration file
     config_lumi_leveling["ip8"]["num_colliding_bunches"] = int(n_collisions_ip8)
 
-    # # Level luminosity
-    # xlhc.luminosity_leveling(
-    #     collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-    # )
-
     # First level luminosity in IP 1/5 changing the intensity
+    if "config_lumi_leveling_ip1_5" in config_collider:
+        print("Leveling luminosity in IP 1/5 varying the intensity")
+        # Update the number of bunches in the configuration file
+        config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"] = int(
+            n_collisions_ip1_and_5
+        )
+
+        # Get crab cavities
+        if "on_crab1" in config_collider["config_knobs_and_tuning"]["knob_settings"]:
+            crab = config_collider["config_knobs_and_tuning"]["knob_settings"]["on_crab1"]
+        else:
+            crab = False
+
+        # Get cross section and frequency for pile-up computation
+        cross_section = 81e-27
+
+        def f(I):
+            # Get Twiss
+            twiss_b1 = collider["lhcb1"].twiss()
+            twiss_b2 = collider["lhcb2"].twiss()
+
+            luminosity = xt.lumi.luminosity_from_twiss(
+                n_colliding_bunches=config_collider["config_lumi_leveling_ip1_5"][
+                    "num_colliding_bunches"
+                ],
+                num_particles_per_bunch=I,
+                ip_name="ip1",
+                nemitt_x=config_bb["nemitt_x"],
+                nemitt_y=config_bb["nemitt_y"],
+                sigma_z=config_bb["sigma_z"],
+                twiss_b1=twiss_b1,
+                twiss_b2=twiss_b2,
+                crab=crab,
+            )
+
+            PU = (
+                luminosity
+                / config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"]
+                * cross_section
+                * twiss_b1["T_rev0"]
+            )
+            penalty_PU = max(
+                0,
+                (PU - config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_PU"])
+                * 1e35,
+            )
+
+            return (
+                abs(luminosity - config_collider["config_lumi_leveling_ip1_5"]["luminosity"])
+                + penalty_PU
+            )
+
+        # Do the optimization
+        res = minimize_scalar(
+            f,
+            bounds=(
+                1e10,
+                config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_intensity"],
+            ),
+            method="bounded",
+            options={"xatol": 1e7},
+        )
+        if not res.success:
+            raise ValueError(
+                "Optimization for leveling in IP 1/5 failed. Please check the constraints."
+            )
+        config_bb["num_particles_per_bunch"] = res.x
 
     # Then level luminosity in IP 2/8 changing the separation
-
+    luminosity_leveling(
+        collider,
+        config_lumi_leveling=config_lumi_leveling,
+        config_beambeam=config_bb,
+        # additional_targets_lumi=[
+        #    xt.TargetInequality("y", "<=", 0, at="ip8", tol=1e-6),
+        # ],
+    )
     return collider
 
 
@@ -309,7 +380,9 @@ def configure_collider(
 
     # Do the leveling if requested
     if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
-        collider = do_levelling(config_collider, config_bb, n_collisions_ip8, collider)
+        collider = do_levelling(
+            config_collider, config_bb, n_collisions_ip8, collider, n_collisions_ip1_and_5
+        )
     else:
         print(
             "No leveling is done as no configuration has been provided, or skip_leveling"

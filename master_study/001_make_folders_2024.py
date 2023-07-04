@@ -100,18 +100,6 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 d_config_knobs = {}
 
 # Knobs at IPs
-# d_config_knobs["on_x1"] = 250
-# d_config_knobs["on_sep1"] = 0
-# d_config_knobs["on_x2"] = -170
-# d_config_knobs["on_sep2"] = 0.138
-# d_config_knobs["on_x5"] = 250
-# d_config_knobs["on_sep5"] = 0
-# d_config_knobs["on_x8h"] = 0.0
-# d_config_knobs["on_x8v"] = 170
-
-# Crab cavities
-d_config_knobs["on_crab1"] = 0  # -190
-d_config_knobs["on_crab5"] = 0  # -190
 
 # Octupoles
 d_config_knobs["i_oct_b1"] = 100.0  # 60
@@ -119,8 +107,18 @@ d_config_knobs["i_oct_b2"] = 100.0  # 60
 
 ### leveling configuration
 
+# Leveling in IP 1/5
+d_config_leveling_ip1_5 = {"constraints": {}}
+d_config_leveling_ip1_5["luminosity"] = 2.0e34
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
+
+
 # Define dictionary for the leveling settings
-d_config_leveling = {"ip2": {}, "ip8": {}}
+d_config_leveling = {
+    "ip2": {},
+    "ip8": {},
+}
 
 # Luminosity and particles
 
@@ -128,9 +126,9 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
+d_config_leveling["level_intensity"] = True
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
 d_config_leveling["ip8"]["luminosity"] = 2.0e32
-# "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
 
 ### Beam beam configuration
 
@@ -236,6 +234,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
 d_config_collider["skip_leveling"] = skip_leveling
+d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration
