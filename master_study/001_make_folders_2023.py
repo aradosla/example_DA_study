@@ -187,8 +187,8 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided

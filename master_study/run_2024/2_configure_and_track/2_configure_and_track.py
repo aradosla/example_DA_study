@@ -158,10 +158,14 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider):
     # Update the number of bunches in the configuration file
     config_lumi_leveling["ip8"]["num_colliding_bunches"] = int(n_collisions_ip8)
 
-    # Level luminosity
-    xlhc.luminosity_leveling(
-        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-    )
+    # # Level luminosity
+    # xlhc.luminosity_leveling(
+    #     collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
+    # )
+
+    # First level luminosity in IP 1/5 changing the intensity
+
+    # Then level luminosity in IP 2/8 changing the separation
 
     return collider
 

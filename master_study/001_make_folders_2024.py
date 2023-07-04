@@ -55,7 +55,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 ### For run III
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.34"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.49"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -187,8 +187,8 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
+    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
 
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
@@ -341,7 +341,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "2024"
+study_name = "2024_flat"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
