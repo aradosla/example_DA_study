@@ -1,6 +1,8 @@
 # Imports
 import json
+import logging
 from scipy.constants import c as clight
+from scipy.optimize import minimize_scalar
 import xtrack as xt
 
 
@@ -285,6 +287,8 @@ def luminosity_leveling(
                     nemitt_y=config_beambeam["nemitt_y"],
                 )
             )
+
+            # Added this line for constraints
             targets.extend(additional_targets_lumi)
         elif "separation_in_sigmas" in config_this_ip.keys():
             targets.append(
@@ -341,6 +345,64 @@ def luminosity_leveling(
             targets=targets,
             vary=vary,
         )
+
+
+def luminosity_leveling_ip1_5(
+    collider,
+    config_collider,
+    config_bb,
+    cross_section,
+    crab=False,
+):
+    def f(I):
+        # Get Twiss
+        twiss_b1 = collider["lhcb1"].twiss()
+        twiss_b2 = collider["lhcb2"].twiss()
+
+        luminosity = xt.lumi.luminosity_from_twiss(
+            n_colliding_bunches=config_collider["config_lumi_leveling_ip1_5"][
+                "num_colliding_bunches"
+            ],
+            num_particles_per_bunch=I,
+            ip_name="ip1",
+            nemitt_x=config_bb["nemitt_x"],
+            nemitt_y=config_bb["nemitt_y"],
+            sigma_z=config_bb["sigma_z"],
+            twiss_b1=twiss_b1,
+            twiss_b2=twiss_b2,
+            crab=crab,
+        )
+
+        PU = (
+            luminosity
+            / config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"]
+            * cross_section
+            * twiss_b1["T_rev0"]
+        )
+        penalty_PU = max(
+            0,
+            (PU - config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_PU"]) * 1e35,
+        )
+
+        return (
+            abs(luminosity - config_collider["config_lumi_leveling_ip1_5"]["luminosity"])
+            + penalty_PU
+        )
+
+    # Do the optimization
+    res = minimize_scalar(
+        f,
+        bounds=(
+            1e10,
+            config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_intensity"],
+        ),
+        method="bounded",
+        options={"xatol": 1e7},
+    )
+    if not res.success:
+        # Raise a warning
+        logging.warning("Optimization for leveling in IP 1/5 failed. Please check the constraints.")
+    return res.x
 
 
 if __name__ == "__main__":

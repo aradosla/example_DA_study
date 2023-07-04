@@ -18,7 +18,7 @@ import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
 from misc import generate_orbit_correction_setup
-from misc import luminosity_leveling
+from misc import luminosity_leveling, luminosity_leveling_ip1_5
 
 
 # ==================================================================================================
@@ -177,66 +177,37 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
         # Get cross section and frequency for pile-up computation
         cross_section = 81e-27
 
-        def f(I):
-            # Get Twiss
-            twiss_b1 = collider["lhcb1"].twiss()
-            twiss_b2 = collider["lhcb2"].twiss()
-
-            luminosity = xt.lumi.luminosity_from_twiss(
-                n_colliding_bunches=config_collider["config_lumi_leveling_ip1_5"][
-                    "num_colliding_bunches"
-                ],
-                num_particles_per_bunch=I,
-                ip_name="ip1",
-                nemitt_x=config_bb["nemitt_x"],
-                nemitt_y=config_bb["nemitt_y"],
-                sigma_z=config_bb["sigma_z"],
-                twiss_b1=twiss_b1,
-                twiss_b2=twiss_b2,
-                crab=crab,
-            )
-
-            PU = (
-                luminosity
-                / config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"]
-                * cross_section
-                * twiss_b1["T_rev0"]
-            )
-            penalty_PU = max(
-                0,
-                (PU - config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_PU"])
-                * 1e35,
-            )
-
-            return (
-                abs(luminosity - config_collider["config_lumi_leveling_ip1_5"]["luminosity"])
-                + penalty_PU
-            )
-
-        # Do the optimization
-        res = minimize_scalar(
-            f,
-            bounds=(
-                1e10,
-                config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_intensity"],
-            ),
-            method="bounded",
-            options={"xatol": 1e7},
+        # Do the levelling
+        I = luminosity_leveling_ip1_5(
+            collider,
+            config_collider,
+            config_bb,
+            cross_section,
+            crab=False,
         )
-        if not res.success:
-            raise ValueError(
-                "Optimization for leveling in IP 1/5 failed. Please check the constraints."
-            )
-        config_bb["num_particles_per_bunch"] = res.x
+
+        config_bb["num_particles_per_bunch"] = I
 
     # Then level luminosity in IP 2/8 changing the separation
+    additional_targets_lumi = []
+    if "constraints" in config_lumi_leveling["ip8"]:
+        for constraint in config_lumi_leveling["ip8"]["constraints"]:
+            at = constraint.split("_")[1]
+            if "<" in constraint:
+                obs = constraint.split("<")[0]
+                val = float(constraint.split("<")[1].split("_")[0])
+                sign = "<"
+            elif ">" in constraint:
+                obs = constraint.split(">")[0]
+                val = float(constraint.split(">")[1].split("_")[0])
+                sign = ">"
+            target = xt.TargetInequality(obs, sign, val, at=at, line="lhcb1", tol=1e-6)
+            additional_targets_lumi.append(target)
     luminosity_leveling(
         collider,
         config_lumi_leveling=config_lumi_leveling,
         config_beambeam=config_bb,
-        # additional_targets_lumi=[
-        #    xt.TargetInequality("y", "<=", 0, at="ip8", tol=1e-6),
-        # ],
+        additional_targets_lumi=additional_targets_lumi,
     )
     return collider
 
@@ -247,9 +218,6 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
 def add_linear_coupling(conf_knobs_and_tuning, collider):
     # Add linear coupling as the target in the tuning of the base collider was 0
     # (not possible to set it the target to 0.001 for now)
-    # collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-    # collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
-
     collider.vars["cmrs.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
     collider.vars["cmrs.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
     return collider

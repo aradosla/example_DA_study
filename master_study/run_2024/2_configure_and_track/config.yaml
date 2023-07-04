@@ -154,6 +154,8 @@ config_collider:
       knobs:
         - on_sep8h
         - on_sep8v
+      constraints:
+        - x<0_ip8
       bump_range:
         lhcb1:
           - e.ds.l8.b1

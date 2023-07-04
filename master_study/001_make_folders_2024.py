@@ -126,7 +126,6 @@ d_config_leveling = {
 skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
-d_config_leveling["level_intensity"] = True
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
 d_config_leveling["ip8"]["luminosity"] = 2.0e32
 
