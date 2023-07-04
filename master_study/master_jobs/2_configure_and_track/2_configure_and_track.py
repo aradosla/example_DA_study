@@ -12,11 +12,13 @@ import logging
 import numpy as np
 import pandas as pd
 import os
+from scipy.optimize import minimize_scalar
 import xtrack as xt
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
-from gen_config_orbit_correction import generate_orbit_correction_setup
+from misc import generate_orbit_correction_setup
+from misc import luminosity_leveling, luminosity_leveling_ip1_5
 
 
 # ==================================================================================================
@@ -77,14 +79,15 @@ def install_beam_beam(collider, config_collider):
 # ==================================================================================================
 # --- Function to match knobs and tuning
 # ==================================================================================================
-def set_knobs(config_collider, collider):
+def set_knobs(config_collider, collider, ignore_assignation=False):
     # Read knobs and tuning settings from config file
     conf_knobs_and_tuning = config_collider["config_knobs_and_tuning"]
 
     # Set all knobs (crossing angles, dispersion correction, rf, crab cavities,
     # experimental magnets, etc.)
-    for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
-        collider.vars[kk] = vv
+    if not ignore_assignation:
+        for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
+            collider.vars[kk] = vv
 
     return collider, conf_knobs_and_tuning
 
@@ -150,18 +153,62 @@ def compute_collision_from_scheme(config_bb):
 # ==================================================================================================
 # --- Function to do the Levelling
 # ==================================================================================================
-def do_levelling(config_collider, config_bb, n_collisions_ip8, collider):
+def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_collisions_ip1_and_5):
     # Read knobs and tuning settings from config file (already updated with the number of collisions)
     config_lumi_leveling = config_collider["config_lumi_leveling"]
 
     # Update the number of bunches in the configuration file
     config_lumi_leveling["ip8"]["num_colliding_bunches"] = int(n_collisions_ip8)
 
-    # Level luminosity
-    xlhc.luminosity_leveling(
-        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-    )
+    # First level luminosity in IP 1/5 changing the intensity
+    if "config_lumi_leveling_ip1_5" in config_collider:
+        print("Leveling luminosity in IP 1/5 varying the intensity")
+        # Update the number of bunches in the configuration file
+        config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"] = int(
+            n_collisions_ip1_and_5
+        )
 
+        # Get crab cavities
+        if "on_crab1" in config_collider["config_knobs_and_tuning"]["knob_settings"]:
+            crab = config_collider["config_knobs_and_tuning"]["knob_settings"]["on_crab1"]
+        else:
+            crab = False
+
+        # Get cross section and frequency for pile-up computation
+        cross_section = 81e-27
+
+        # Do the levelling
+        I = luminosity_leveling_ip1_5(
+            collider,
+            config_collider,
+            config_bb,
+            cross_section,
+            crab=False,
+        )
+
+        config_bb["num_particles_per_bunch"] = I
+
+    # Then level luminosity in IP 2/8 changing the separation
+    additional_targets_lumi = []
+    if "constraints" in config_lumi_leveling["ip8"]:
+        for constraint in config_lumi_leveling["ip8"]["constraints"]:
+            at = constraint.split("_")[1]
+            if "<" in constraint:
+                obs = constraint.split("<")[0]
+                val = float(constraint.split("<")[1].split("_")[0])
+                sign = "<"
+            elif ">" in constraint:
+                obs = constraint.split(">")[0]
+                val = float(constraint.split(">")[1].split("_")[0])
+                sign = ">"
+            target = xt.TargetInequality(obs, sign, val, at=at, line="lhcb1", tol=1e-6)
+            additional_targets_lumi.append(target)
+    luminosity_leveling(
+        collider,
+        config_lumi_leveling=config_lumi_leveling,
+        config_beambeam=config_bb,
+        additional_targets_lumi=additional_targets_lumi,
+    )
     return collider
 
 
@@ -171,8 +218,8 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider):
 def add_linear_coupling(conf_knobs_and_tuning, collider):
     # Add linear coupling as the target in the tuning of the base collider was 0
     # (not possible to set it the target to 0.001 for now)
-    collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-    collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+    collider.vars["cmrs.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
+    collider.vars["cmrs.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
     return collider
 
 
@@ -287,7 +334,7 @@ def configure_collider(
     collider.build_trackers()
 
     # Set knobs
-    collider, conf_knobs_and_tuning = set_knobs(config_collider, collider)
+    collider, conf_knobs_and_tuning = set_knobs(config_collider, collider, ignore_assignation=False)
 
     # Match tune and chromaticity
     collider = match_tune_and_chroma(
@@ -301,7 +348,9 @@ def configure_collider(
 
     # Do the leveling if requested
     if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
-        collider = do_levelling(config_collider, config_bb, n_collisions_ip8, collider)
+        collider = do_levelling(
+            config_collider, config_bb, n_collisions_ip8, collider, n_collisions_ip1_and_5
+        )
     else:
         print(
             "No leveling is done as no configuration has been provided, or skip_leveling"
@@ -311,7 +360,7 @@ def configure_collider(
     # Add linear coupling
     collider = add_linear_coupling(conf_knobs_and_tuning, collider)
 
-    # Rematch tune and chromaticity
+    # # Rematch tune and chromaticity
     collider = match_tune_and_chroma(
         collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=False
     )

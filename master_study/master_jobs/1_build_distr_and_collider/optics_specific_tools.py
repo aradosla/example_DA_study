@@ -4,22 +4,11 @@ from xmask.lhc import install_errors_placeholders_hllhc
 def build_sequence(
     mad,
     mylhcbeam,
-    optics_version=1.5,
-    apply_fix_1p6=True,
     ignore_cycling=False,
-    ignore_CC=False,
     **kwargs,
 ):
     # Select beam
     mad.input(f"mylhcbeam = {mylhcbeam}")
-
-    # Adapt path optics
-    if optics_version == 1.5:
-        path = "/lhc/"
-    elif optics_version == 1.6:
-        path = "/"
-    else:
-        raise ValueError("Optics version not supported")
 
     mad.input(f"""
       ! Get the toolkit
@@ -31,31 +20,23 @@ def build_sequence(
       ! Build sequence
       option, -echo,-warn,-info;
       if (mylhcbeam==4){{
-        call,file="acc-models-lhc{path}lhcb4.seq";
+        call,file="acc-models-lhc/lhc_acc-models-lhc_b4.seq";
       }} else {{
-        call,file="acc-models-lhc{path}lhc.seq";
+        call,file="acc-models-lhc/lhc_acc-models-lhc.seq";
       }};
       option, -echo, warn,-info;
       """)
 
-    if apply_fix_1p6:
-        mad.input("""
-        l.mbh = 0.001000;
-        """)
-
-    mad.input(
-        f"""
-      !Install HL-LHC
-      call, file=
-        "acc-models-lhc/hllhc_sequence.madx";
-      """
-        """
+    mad.input("""
       ! Slice nominal sequence
       exec, myslice;
-      """
-    )
+      """)
 
-    install_errors_placeholders_hllhc(mad)
+    mad.input(f"""
+    nrj=6800;
+    beam,particle=proton,sequence=lhcb1,energy=nrj,npart=1.15E11,sige=4.5e-4;
+    beam,particle=proton,sequence=lhcb2,energy=nrj,bv = -1,npart=1.15E11,sige=4.5e-4;
+    """)
 
     if not ignore_cycling:
         mad.input("""
@@ -64,15 +45,6 @@ def build_sequence(
         seqedit, sequence=lhcb1; flatten; cycle, start=IP3; flatten; endedit;
         };
         seqedit, sequence=lhcb2; flatten; cycle, start=IP3; flatten; endedit;
-        """)
-
-    # Force ignore CC for 1.6 for now
-    if not ignore_CC and optics_version == 1.5:
-        mad.input("""
-        ! Install crab cavities (they are off)
-        call, file='acc-models-lhc/toolkit/enable_crabcavities.madx';
-        on_crab1 = 0;
-        on_crab5 = 0;
         """)
 
     mad.input("""
