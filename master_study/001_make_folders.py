@@ -49,13 +49,19 @@ d_config_particles["n_split"] = 5
 ### Mad configuration
 
 # Define dictionary for the Mad configuration
-d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
+d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
-# Optic file path (round or flat)
-d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+# Optic file path (version, and round or flat)
+
+### For run III
+d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
+d_config_mad["ver_hllhc_optics"] = None
+d_config_mad["ver_lhc_run"] = 3.0
+
 
 # Beam energy (for both beams)
-beam_energy_tot = 7000
+beam_energy_tot = 6800
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -93,28 +99,25 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-# Knobs at IPs
-d_config_knobs["on_x1"] = 250
-d_config_knobs["on_sep1"] = 0
-d_config_knobs["on_x2"] = -170
-d_config_knobs["on_sep2"] = 0.138
-d_config_knobs["on_x5"] = 250
-d_config_knobs["on_sep5"] = 0
-d_config_knobs["on_x8h"] = 0.0
-d_config_knobs["on_x8v"] = 170
-
-# Crab cavities
-d_config_knobs["on_crab1"] = -190
-d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 100.0  # 60
+d_config_knobs["i_oct_b2"] = 100.0  # 60
 
 ### leveling configuration
 
+# Leveling in IP 1/5
+d_config_leveling_ip1_5 = {"constraints": {}}
+d_config_leveling_ip1_5["luminosity"] = 2.0e34
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
+
+
 # Define dictionary for the leveling settings
-d_config_leveling = {"ip2": {}, "ip8": {}}
+d_config_leveling = {
+    "ip2": {},
+    "ip8": {},
+}
 
 # Luminosity and particles
 
@@ -123,8 +126,7 @@ skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33
-# "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
+d_config_leveling["ip8"]["luminosity"] = 2.0e32
 
 ### Beam beam configuration
 
@@ -132,15 +134,15 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
-d_config_beambeam["nemitt_x"] = 2.5e-6
-d_config_beambeam["nemitt_y"] = 2.5e-6
+d_config_beambeam["num_particles_per_bunch"] = 1.15e11
+d_config_beambeam["nemitt_x"] = 2.2e-6
+d_config_beambeam["nemitt_y"] = 2.2e-6
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    "master_jobs/filling_scheme/25ns_1886b_1873_1217_1173_236bpi_12inj_hybrid_2INDIV.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -173,6 +175,8 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
 check_bunch_number = True
@@ -181,9 +185,6 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
-
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
@@ -230,6 +231,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
 d_config_collider["skip_leveling"] = skip_leveling
+d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration
@@ -257,8 +259,8 @@ d_config_simulation["beam"] = "lhcb1"
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = [62.31]  # np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
+array_qy = [60.32]  # np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
@@ -335,7 +337,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
