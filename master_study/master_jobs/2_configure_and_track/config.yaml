@@ -20,18 +20,13 @@ config_collider:
       phi_IR5 :   90.000  
       
       on_x8h  :    0.000  
-      on_sep8h:   0.0 #-1.000  
+      on_sep8h:   -0.01 #-1.000  
       on_x8v  :  200.000  
       on_sep8v:    0.000 
       phi_IR8 :  180.000  
 
       # Spurious dispersion correction
       on_disp  :    1.000  
-  
-
-      # # Crab cavities
-      # on_crab1: 0 # [urad]
-      # on_crab5: 0 # [urad]
 
       # Magnets of the experiments
       on_alice_normalized: 1
