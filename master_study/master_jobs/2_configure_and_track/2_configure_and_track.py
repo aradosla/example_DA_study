@@ -79,15 +79,14 @@ def install_beam_beam(collider, config_collider):
 # ==================================================================================================
 # --- Function to match knobs and tuning
 # ==================================================================================================
-def set_knobs(config_collider, collider, ignore_assignation=False):
+def set_knobs(config_collider, collider):
     # Read knobs and tuning settings from config file
     conf_knobs_and_tuning = config_collider["config_knobs_and_tuning"]
 
     # Set all knobs (crossing angles, dispersion correction, rf, crab cavities,
     # experimental magnets, etc.)
-    if not ignore_assignation:
-        for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
-            collider.vars[kk] = vv
+    for kk, vv in conf_knobs_and_tuning["knob_settings"].items():
+        collider.vars[kk] = vv
 
     return collider, conf_knobs_and_tuning
 
@@ -334,7 +333,7 @@ def configure_collider(
     collider.build_trackers()
 
     # Set knobs
-    collider, conf_knobs_and_tuning = set_knobs(config_collider, collider, ignore_assignation=False)
+    collider, conf_knobs_and_tuning = set_knobs(config_collider, collider)
 
     # Match tune and chromaticity
     collider = match_tune_and_chroma(
@@ -360,7 +359,7 @@ def configure_collider(
     # Add linear coupling
     collider = add_linear_coupling(conf_knobs_and_tuning, collider)
 
-    # # Rematch tune and chromaticity
+    # Rematch tune and chromaticity
     collider = match_tune_and_chroma(
         collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=False
     )
