@@ -175,6 +175,8 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
 check_bunch_number = True
@@ -183,9 +185,6 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
-
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
