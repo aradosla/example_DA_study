@@ -20,7 +20,7 @@ config_collider:
       phi_IR5 :   90.000  
       
       on_x8h  :    0.000  
-      on_sep8h:   -0.05 #-1.000  
+      on_sep8h:   0.0 #-1.000  
       on_x8v  :  200.000  
       on_sep8v:    0.000 
       phi_IR8 :  180.000  
