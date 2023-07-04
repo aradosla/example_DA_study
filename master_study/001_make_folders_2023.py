@@ -325,7 +325,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 # --- Simulation configuration
 # ==================================================================================================
 # Load the tree_maker simulation configuration
-config = yaml.safe_load(open("config_2024.yaml"))
+config = yaml.safe_load(open("config.yaml"))
 
 # # Set the root children to the ones defined above
 config["root"]["children"] = children
