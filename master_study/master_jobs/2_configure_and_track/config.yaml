@@ -150,7 +150,10 @@ config_collider:
         - on_sep8h
         - on_sep8v
       constraints:
-        - x<0_ip8
+      - x_lhcb1_<_0_ip8
+      # - x_lhcb2_>_0_ip8
+      # - y_lhcb1_>_0_ip8
+      # - y_lhcb2_<_0_ip8
       bump_range:
         lhcb1:
           - e.ds.l8.b1
