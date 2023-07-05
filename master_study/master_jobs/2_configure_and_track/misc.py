@@ -400,8 +400,11 @@ def luminosity_leveling_ip1_5(
         options={"xatol": 1e7},
     )
     if not res.success:
-        # Raise a warning
         logging.warning("Optimization for leveling in IP 1/5 failed. Please check the constraints.")
+    else:
+        print(
+            f"Optimization for leveling in IP 1/5 succeeded with I={res.x:.2e} particles per bunch"
+        )
     return res.x
 
 

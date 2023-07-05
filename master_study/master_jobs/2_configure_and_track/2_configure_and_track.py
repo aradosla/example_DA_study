@@ -184,23 +184,14 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
             cross_section,
             crab=False,
         )
-
         config_bb["num_particles_per_bunch"] = I
 
     # Then level luminosity in IP 2/8 changing the separation
     additional_targets_lumi = []
     if "constraints" in config_lumi_leveling["ip8"]:
         for constraint in config_lumi_leveling["ip8"]["constraints"]:
-            at = constraint.split("_")[1]
-            if "<" in constraint:
-                obs = constraint.split("<")[0]
-                val = float(constraint.split("<")[1].split("_")[0])
-                sign = "<"
-            elif ">" in constraint:
-                obs = constraint.split(">")[0]
-                val = float(constraint.split(">")[1].split("_")[0])
-                sign = ">"
-            target = xt.TargetInequality(obs, sign, val, at=at, line="lhcb1", tol=1e-6)
+            obs, beam, sign, val, at = constraint.split("_")
+            target = xt.TargetInequality(obs, sign, float(val), at=at, line=beam, tol=1e-6)
             additional_targets_lumi.append(target)
     luminosity_leveling(
         collider,
