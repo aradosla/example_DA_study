@@ -374,7 +374,7 @@ for idx_optics, optics in enumerate(array_optics):
 # --- Simulation configuration
 # ==================================================================================================
 # Load the tree_maker simulation configuration
-config = yaml.safe_load(open("config.yaml"))
+config = yaml.safe_load(open("config_htc.yaml"))
 
 # # Set the root children to the ones defined above
 config["root"]["children"] = children

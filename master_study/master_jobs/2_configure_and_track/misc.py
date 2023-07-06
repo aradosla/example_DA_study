@@ -394,7 +394,7 @@ def luminosity_leveling_ip1_5(
         f,
         bounds=(
             1e10,
-            config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_intensity"],
+            float(config_collider["config_lumi_leveling_ip1_5"]["constraints"]["max_intensity"]),
         ),
         method="bounded",
         options={"xatol": 1e7},
