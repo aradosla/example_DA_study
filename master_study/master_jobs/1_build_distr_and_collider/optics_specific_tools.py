@@ -41,6 +41,7 @@ def build_sequence(
     if apply_fix_1p6:
         mad.input("""
         l.mbh = 0.001000;
+        ACSCA, HARMON := HRF400;
         """)
 
     mad.input(

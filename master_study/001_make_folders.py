@@ -128,7 +128,6 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
 
-# skip_leveling should be set to True if the study is done at start of leveling
 skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
