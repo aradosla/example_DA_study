@@ -309,6 +309,7 @@ def configure_collider(
     config_collider,
     skip_beam_beam=False,
     save_collider=False,
+    save_config=False,
     return_collider_before_bb=False,
 ):
     # Generate configuration files for orbit correction
@@ -332,14 +333,20 @@ def configure_collider(
     )
 
     # Compute the number of collisions in the different IPs
-    n_collisions_ip1_and_5, n_collisions_ip2, n_collisions_ip8 = compute_collision_from_scheme(
-        config_bb
-    )
+    (
+        n_collisions_ip1_and_5,
+        n_collisions_ip2,
+        n_collisions_ip8,
+    ) = compute_collision_from_scheme(config_bb)
 
     # Do the leveling if requested
     if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
         collider = do_levelling(
-            config_collider, config_bb, n_collisions_ip8, collider, n_collisions_ip1_and_5
+            config_collider,
+            config_bb,
+            n_collisions_ip8,
+            collider,
+            n_collisions_ip1_and_5,
         )
     else:
         print(
@@ -369,7 +376,25 @@ def configure_collider(
 
     if save_collider:
         # Save the final collider before tracking
-        collider.to_json("final_collider.json")
+        print('Saving "final_collider.json')
+        if save_config:
+            collider_dict = collider.to_dict()
+            collider_dict["config_yaml"] = config_collider
+
+            class NpEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, np.integer):
+                        return int(obj)
+                    if isinstance(obj, np.floating):
+                        return float(obj)
+                    if isinstance(obj, np.ndarray):
+                        return obj.tolist()
+                    return super(NpEncoder, self).default(obj)
+
+            with open("final_collider.json", "w") as fid:
+                json.dump(collider_dict, fid, cls=NpEncoder)
+        else:
+            collider.to_json("final_collider.json")
 
     if return_collider_before_bb:
         return collider, config_bb, collider_before_bb
@@ -439,7 +464,9 @@ def configure_and_track(config_path="config.yaml"):
     tree_maker_tagging(config, tag="started")
 
     # Configure collider (not saved, since it may trigger overload of afs)
-    collider, config_bb = configure_collider(config_sim, config_collider, save_collider=False)
+    collider, config_bb = configure_collider(
+        config_sim, config_collider, save_collider=True, save_config=True
+    )
 
     # Prepare particle distribution
     particles = prepare_particle_distribution(config_sim, collider, config_bb)
