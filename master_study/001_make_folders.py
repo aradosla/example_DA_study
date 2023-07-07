@@ -49,10 +49,20 @@ d_config_particles["n_split"] = 5
 ### Mad configuration
 
 # Define dictionary for the Mad configuration
-d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
+d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
-# Optic file path (round or flat)
-d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+# Optic file path (version, and round or flat)
+
+### For v1.6 optics
+d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
+d_config_mad["optics_file"] = "acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx"
+d_config_mad["ver_hllhc_optics"] = 1.6
+
+### For v1.5 optics
+# d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc15"
+# d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+# d_config_mad["ver_hllhc_optics"] = 1.5
+
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -104,12 +114,12 @@ d_config_knobs["on_x8h"] = 0.0
 d_config_knobs["on_x8v"] = 170
 
 # Crab cavities
-d_config_knobs["on_crab1"] = -190
-d_config_knobs["on_crab5"] = -190
+d_config_knobs["on_crab1"] = 0  # -190
+d_config_knobs["on_crab5"] = 0  # -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 410  # 60
+d_config_knobs["i_oct_b2"] = 410  # 60
 
 ### leveling configuration
 
@@ -119,7 +129,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 # Luminosity and particles
 
 # skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
+skip_leveling = True
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -132,7 +142,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
+d_config_beambeam["num_particles_per_bunch"] = 2.3e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
