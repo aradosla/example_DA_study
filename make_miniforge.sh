@@ -4,7 +4,7 @@ source miniforge/bin/activate
 python -m pip install -r requirements.txt
 mkdir modules
 cd modules
-git clone git@github.com:lhcopt/hllhc15.git
+git clone https://github.com/lhcopt/hllhc15.git
 git clone https://github.com/xsuite/tree_maker.git
 python -m pip install -e tree_maker
 git clone https://github.com/xsuite/xmask.git
