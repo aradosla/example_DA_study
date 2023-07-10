@@ -89,8 +89,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -103,8 +103,8 @@ d_config_knobs = {}
 
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 100.0  # 60
-d_config_knobs["i_oct_b2"] = 100.0  # 60
+d_config_knobs["i_oct_b1"] = 300.0  # 60
+d_config_knobs["i_oct_b2"] = 300.0  # 60
 
 ### leveling configuration
 

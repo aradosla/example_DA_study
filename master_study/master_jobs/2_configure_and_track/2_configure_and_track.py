@@ -184,6 +184,7 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
             cross_section,
             crab=False,
         )
+        initial_I = config_bb["num_particles_per_bunch"]
         config_bb["num_particles_per_bunch"] = I
 
     # Then level luminosity in IP 2/8 changing the separation
@@ -199,7 +200,24 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
         config_beambeam=config_bb,
         additional_targets_lumi=additional_targets_lumi,
     )
-    return collider
+
+    # Update configuration
+    config_bb["num_particles_per_bunch_after_optimization"] = I
+    config_bb["num_particles_per_bunch"] = initial_I
+    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2h"] = collider.vars[
+        "on_sep2h"
+    ]._value
+    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2v"] = collider.vars[
+        "on_sep2v"
+    ]._value
+    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8h"] = collider.vars[
+        "on_sep8h"
+    ]._value
+    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8v"] = collider.vars[
+        "on_sep8v"
+    ]._value
+
+    return collider, config_collider
 
 
 # ==================================================================================================
@@ -341,7 +359,7 @@ def configure_collider(
 
     # Do the leveling if requested
     if "config_lumi_leveling" in config_collider and not config_collider["skip_leveling"]:
-        collider = do_levelling(
+        collider, config_collider = do_levelling(
             config_collider,
             config_bb,
             n_collisions_ip8,
@@ -376,7 +394,7 @@ def configure_collider(
 
     if save_collider:
         # Save the final collider before tracking
-        print('Saving "final_collider.json')
+        print('Saving "collider.json')
         if save_config:
             collider_dict = collider.to_dict()
             collider_dict["config_yaml"] = config_collider
@@ -391,10 +409,10 @@ def configure_collider(
                         return obj.tolist()
                     return super(NpEncoder, self).default(obj)
 
-            with open("final_collider.json", "w") as fid:
+            with open("collider.json", "w") as fid:
                 json.dump(collider_dict, fid, cls=NpEncoder)
         else:
-            collider.to_json("final_collider.json")
+            collider.to_json("collider.json")
 
     if return_collider_before_bb:
         return collider, config_bb, collider_before_bb
@@ -465,7 +483,10 @@ def configure_and_track(config_path="config.yaml"):
 
     # Configure collider (not saved, since it may trigger overload of afs)
     collider, config_bb = configure_collider(
-        config_sim, config_collider, save_collider=True, save_config=True
+        config_sim,
+        config_collider,
+        save_collider=config["dump_collider"],
+        save_config=config["dump_config_in_collider"],
     )
 
     # Prepare particle distribution
