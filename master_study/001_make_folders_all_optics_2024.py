@@ -57,7 +57,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
 # ! updated later
 # d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
-array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.{x}" for x in range(1, 50)]
+array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.{x}" for x in range(23, 50)]
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -122,9 +122,6 @@ d_config_leveling = {
 }
 
 # Luminosity and particles
-
-# skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -233,7 +230,6 @@ d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
 # d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
-d_config_collider["skip_leveling"] = skip_leveling
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
 
@@ -255,6 +251,16 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# ==================================================================================================
+# --- Dump collider and collider configuration
+#
+# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
+# configuration.
+# ==================================================================================================
+dump_collider = True
+dump_config_in_collider = True
+
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
@@ -349,8 +355,13 @@ for idx_optics, optics in enumerate(array_optics):
             if line.strip().startswith(knob):
                 d_config_knobs[knob] = float(line.split(":=")[1].split(";")[0].strip())
                 found = True
-                if knob == "on_sep8h":
-                    d_config_knobs[knob] = -0.01
+
+                # Impose zero separation at IP1 and IP5
+                if knob == "on_sep1" or knob == "on_sep5":
+                    d_config_knobs[knob] = 0.0
+                # Give a good initial condition for luminosity leveling optimization in IP2/8
+                if knob == "on_sep8h" or knob == "on_sep2h":
+                    d_config_knobs[knob] = d_config_knobs[knob] * 0.01
                 break
         if not found:
             raise ValueError(f"Knob {knob} not found in knobs.json")
@@ -368,6 +379,8 @@ for idx_optics, optics in enumerate(array_optics):
             "config_simulation": copy.deepcopy(d_config_simulation),
             "config_collider": copy.deepcopy(d_config_collider),
             "log_file": "tree_maker.log",
+            "dump_collider": dump_collider,
+            "dump_config_in_collider": dump_config_in_collider,
         }
 
 # ==================================================================================================
