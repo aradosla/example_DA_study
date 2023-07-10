@@ -198,7 +198,8 @@ config_simulation:
   beam: 'lhcb1' #lhcb1 or lhcb2
 
 # Save collider or not
-dump_collider: true
+dump_collider: false
+dump_config_in_collider: false
 
 # Log
 log_file: 'tree_maker.log'

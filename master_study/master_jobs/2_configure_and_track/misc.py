@@ -4,6 +4,7 @@ import logging
 from scipy.constants import c as clight
 from scipy.optimize import minimize_scalar
 import xtrack as xt
+import numpy as np
 
 
 # Function to generate dictionnary containing the orbit correction setup
@@ -276,9 +277,9 @@ def luminosity_leveling(
             targets.append(
                 xt.TargetLuminosity(
                     ip_name=ip_name,
-                    luminosity=config_this_ip["luminosity"],
+                    luminosity=np.log(config_this_ip["luminosity"]),
                     crab=False,
-                    tol=0.01 * config_this_ip["luminosity"],
+                    tol=1e30,  # 0.01 * config_this_ip["luminosity"],
                     f_rev=f_rev,
                     num_colliding_bunches=config_this_ip["num_colliding_bunches"],
                     num_particles_per_bunch=config_beambeam["num_particles_per_bunch"],
