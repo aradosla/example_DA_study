@@ -7,7 +7,7 @@ import json
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s",
-    level=logging.WARNING,
+    level=logging.info,
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
@@ -178,7 +178,7 @@ def return_separation_dic(dic_bb_ho_IPs, tw_b1, nemitt_x, nemitt_y, energy):
     return dic_sep_IPs
 
 
-def return_plot_separation(dic_sep_IPs):
+def return_plot_separation(dic_sep_IPs, title="Beam-beam separation at the different IPs"):
     fig = make_subplots(
         rows=2,
         cols=2,
@@ -320,13 +320,15 @@ def configure_beam_beam(collider, config_bb):
 def compute_separation_and_return_both_planes(
     collider, energy, emittance, val_on_sep8h, config_BB, update_BB=True
 ):
+    logging.info("Updating on_sep8h value")
     if collider.vars["on_sep8h"]._value != val_on_sep8h:
         collider.vars["on_sep8h"] = val_on_sep8h
 
         if update_BB:
+            logging.info("Updating beam-beam")
             collider = configure_beam_beam(collider, config_BB)
 
-    logging.warning("Running all steps to compute separation")
+    logging.info("Running all steps to compute separation")
     tw_b1 = collider.lhcb1.twiss()
     df_tw_b1 = tw_b1.to_pandas()
     df_tw_b2 = collider.lhcb2.twiss().reverse().to_pandas()
@@ -335,7 +337,11 @@ def compute_separation_and_return_both_planes(
     logging.info("Computing separation")
     dic_sep_IPs = return_separation_dic(dic_bb_ho_IPs, tw_b1, emittance, emittance, energy)
     logging.info("Computing plot")
-    fig_h = return_plot_separation(dic_sep_IPs["h"])
-    fig_v = return_plot_separation(dic_sep_IPs["v"])
-    logging.warning("Finished")
+    fig_h = return_plot_separation(
+        dic_sep_IPs["h"], title="Horizontal beam-beam separation at the different IPs"
+    )
+    fig_v = return_plot_separation(
+        dic_sep_IPs["v"], title="Vertical beam-beam separation at the different IPs"
+    )
+    logging.info("Finished")
     return fig_h, fig_v
