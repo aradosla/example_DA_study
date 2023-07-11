@@ -253,6 +253,16 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# ==================================================================================================
+# --- Dump collider and collider configuration
+#
+# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
+# configuration.
+# ==================================================================================================
+dump_collider = False
+dump_config_in_collider = False
+
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
