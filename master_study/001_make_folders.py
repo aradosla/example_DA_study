@@ -174,10 +174,10 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
-# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
-# are defined later)
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
+# are defined later)
 check_bunch_number = True
 if check_bunch_number:
     # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
@@ -251,6 +251,16 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# ==================================================================================================
+# --- Dump collider and collider configuration
+#
+# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
+# configuration.
+# ==================================================================================================
+dump_collider = False
+dump_config_in_collider = False
+
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
