@@ -109,12 +109,12 @@ d_config_knobs["on_x8h"] = 0.0
 d_config_knobs["on_x8v"] = 170
 
 # Crab cavities
-d_config_knobs["on_crab1"] = 0  # -190
-d_config_knobs["on_crab5"] = 0  # -190
+d_config_knobs["on_crab1"] = -190
+d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 410  # 60
-d_config_knobs["i_oct_b2"] = 410  # 60
+d_config_knobs["i_oct_b1"] = 60
+d_config_knobs["i_oct_b2"] = 60
 
 ### leveling configuration
 
@@ -123,7 +123,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
 
-skip_leveling = True
+skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -136,7 +136,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 2.3e11
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -179,15 +179,14 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 check_bunch_number = True
 if check_bunch_number:
     # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
-
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
