@@ -49,10 +49,13 @@ d_config_particles["n_split"] = 5
 ### Mad configuration
 
 # Define dictionary for the Mad configuration
-d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}}
+d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 # Optic file path (round or flat)
+d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc15"
 d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
+d_config_mad["ver_hllhc_optics"] = 1.5
+
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
