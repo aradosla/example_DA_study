@@ -16,7 +16,7 @@ import xtrack as xt
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
-from gen_config_orbit_correction import generate_orbit_correction_setup
+from misc import generate_orbit_correction_setup
 
 
 # ==================================================================================================
