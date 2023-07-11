@@ -58,11 +58,6 @@ d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
 d_config_mad["optics_file"] = "acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx"
 d_config_mad["ver_hllhc_optics"] = 1.6
 
-### For v1.5 optics
-# d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc15"
-# d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
-# d_config_mad["ver_hllhc_optics"] = 1.5
-
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
