@@ -58,11 +58,6 @@ d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
 d_config_mad["optics_file"] = "acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx"
 d_config_mad["ver_hllhc_optics"] = 1.6
 
-### For v1.5 optics
-# d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc15"
-# d_config_mad["optics_file"] = "acc-models-lhc/flatcc/opt_flathv_75_180_1500_thin.madx"
-# d_config_mad["ver_hllhc_optics"] = 1.5
-
 
 # Beam energy (for both beams)
 beam_energy_tot = 7000
@@ -114,12 +109,12 @@ d_config_knobs["on_x8h"] = 0.0
 d_config_knobs["on_x8v"] = 170
 
 # Crab cavities
-d_config_knobs["on_crab1"] = 0  # -190
-d_config_knobs["on_crab5"] = 0  # -190
+d_config_knobs["on_crab1"] = -190
+d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 410  # 60
-d_config_knobs["i_oct_b2"] = 410  # 60
+d_config_knobs["i_oct_b1"] = 60
+d_config_knobs["i_oct_b2"] = 60
 
 ### leveling configuration
 
@@ -128,7 +123,7 @@ d_config_leveling = {"ip2": {}, "ip8": {}}
 
 # Luminosity and particles
 
-skip_leveling = True
+skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -141,7 +136,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 2.3e11
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11
 d_config_beambeam["nemitt_x"] = 2.5e-6
 d_config_beambeam["nemitt_y"] = 2.5e-6
 
@@ -184,15 +179,14 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 check_bunch_number = True
 if check_bunch_number:
     # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-    d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
-
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
@@ -259,6 +253,16 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# ==================================================================================================
+# --- Dump collider and collider configuration
+#
+# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
+# configuration.
+# ==================================================================================================
+dump_collider = False
+dump_config_in_collider = False
+
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
 #
@@ -326,6 +330,8 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "config_simulation": copy.deepcopy(d_config_simulation),
         "config_collider": copy.deepcopy(d_config_collider),
         "log_file": "tree_maker.log",
+        "dump_collider": dump_collider,
+        "dump_config_in_collider": dump_config_in_collider,
     }
 
 # ==================================================================================================
