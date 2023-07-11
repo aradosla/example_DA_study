@@ -320,6 +320,8 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "config_simulation": copy.deepcopy(d_config_simulation),
         "config_collider": copy.deepcopy(d_config_collider),
         "log_file": "tree_maker.log",
+        "dump_collider": dump_collider,
+        "dump_config_in_collider": dump_config_in_collider,
     }
 
 # ==================================================================================================
