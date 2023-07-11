@@ -87,8 +87,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -101,8 +101,8 @@ d_config_knobs = {}
 
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 100.0  # 60
-d_config_knobs["i_oct_b2"] = 100.0  # 60
+d_config_knobs["i_oct_b1"] = 300.0  # 60
+d_config_knobs["i_oct_b2"] = 300.0  # 60
 
 ### leveling configuration
 
@@ -121,8 +121,6 @@ d_config_leveling = {
 
 # Luminosity and particles
 
-# skip_leveling should be set to True if the study is done at start of leveling
-skip_leveling = False
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
@@ -230,7 +228,6 @@ d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
 d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
-d_config_collider["skip_leveling"] = skip_leveling
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
 
