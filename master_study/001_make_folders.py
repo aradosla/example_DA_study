@@ -99,10 +99,30 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
+# Exp. configuration in IR1, IR2, IR5 and IR8
+d_config_knobs["on_x1"] = -145.000
+d_config_knobs["on_sep1"] = 0.0
+d_config_knobs["phi_IR1"] = 180.000
+
+d_config_knobs["on_x2h"] = 0.000
+d_config_knobs["on_sep2h"] = 1.0  # 1.000
+d_config_knobs["on_x2v"] = 200.000
+d_config_knobs["on_sep2v"] = 0.000
+d_config_knobs["phi_IR2"] = 90.000
+
+d_config_knobs["on_x5"] = 145.000
+d_config_knobs["on_sep5"] = 0.0
+d_config_knobs["phi_IR5"] = 90.000
+
+d_config_knobs["on_x8h"] = 0.000
+d_config_knobs["on_sep8h"] = -0.01  # -1.000
+d_config_knobs["on_x8v"] = 200.000
+d_config_knobs["on_sep8v"] = 0.000
+d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 300.0  # 60
-d_config_knobs["i_oct_b2"] = 300.0  # 60
+d_config_knobs["i_oct_b1"] = 300.0
+d_config_knobs["i_oct_b2"] = 300.0
 
 ### leveling configuration
 
