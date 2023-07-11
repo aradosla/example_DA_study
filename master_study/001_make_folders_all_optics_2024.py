@@ -362,6 +362,8 @@ for idx_optics, optics in enumerate(array_optics):
                 # Give a good initial condition for luminosity leveling optimization in IP2/8
                 if knob == "on_sep8h" or knob == "on_sep2h":
                     d_config_knobs[knob] = d_config_knobs[knob] * 0.01
+                if knob == "on_x5":
+                    d_config_knobs[knob] = -d_config_knobs[knob]
                 break
         if not found:
             raise ValueError(f"Knob {knob} not found in knobs.json")
@@ -399,7 +401,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "all_optics_2024"
+study_name = "all_optics_2024_reverted"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
