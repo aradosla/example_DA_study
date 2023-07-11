@@ -59,8 +59,8 @@ config_collider:
       lhcb1: 5.0
       lhcb2: 5.0
     dqy:
-      lhcb1: 5.0
-      lhcb2: 5.0
+      lhcb1: 15.0
+      lhcb2: 15.0
     
     # Linear coupling
     delta_cmr: 0.001
