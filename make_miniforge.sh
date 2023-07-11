@@ -5,8 +5,8 @@ python -m pip install -r requirements.txt
 mkdir modules
 cd modules
 git clone https://github.com:lhcopt/hllhc15.git
-git clone https://gitlab.cern.ch/acc-models/acc-models-lhc.git -b hl16 hlhlc16
-git clone -b release/v0.1.0 git@github.com:xsuite/tree_maker.git
+git clone https://gitlab.cern.ch/acc-models/acc-models-lhc.git -b hl16 hllhc16
+git clone -b release/v0.1.0  https://github.com/xsuite/tree_maker.git
 python -m pip install -e tree_maker
 git clone https://github.com/xsuite/xmask.git
 pip install -e xmask
