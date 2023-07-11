@@ -286,8 +286,8 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = [62.31]  # np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = [60.32]  # np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
