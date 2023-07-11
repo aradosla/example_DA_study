@@ -183,7 +183,7 @@ config_collider:
 config_simulation:
 
   # Collider file
-  collider_file :    '../1_build_distr_and_collider/collider/collider.json'
+  collider_file :    '../collider/collider.json'
 
   # Distribution in the normalized xy space
   particle_file:  '../particles/000.parquet'

@@ -12,7 +12,6 @@ import logging
 import numpy as np
 import pandas as pd
 import os
-from scipy.optimize import minimize_scalar
 import xtrack as xt
 import tree_maker
 import xmask as xm
