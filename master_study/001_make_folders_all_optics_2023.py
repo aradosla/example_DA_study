@@ -125,7 +125,7 @@ d_config_leveling = {
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e32
+d_config_leveling["ip8"]["luminosity"] = 2.0e33
 
 ### Beam beam configuration
 
@@ -141,7 +141,7 @@ d_config_beambeam["nemitt_y"] = 2.2e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_1886b_1873_1217_1173_236bpi_12inj_hybrid_2INDIV.json"
+    "master_jobs/filling_scheme/25ns_2358b_2345_1692_1628_236bpi_14inj_hybrid_2INDIV.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
