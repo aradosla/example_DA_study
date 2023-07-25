@@ -13,7 +13,7 @@ import json
 from user_defined_functions import (
     generate_run_sh_htc,
     get_worst_bunch,
-    reformat_filling_scheme_from_lpc,
+    reformat_filling_scheme_from_lpc_alt,
 )
 
 # ==================================================================================================
@@ -57,7 +57,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
 # ! updated later
 # d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
-array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.{x}" for x in [23, 34, 48]]
+array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.{x}" for x in [37, 48]]
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -93,7 +93,7 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.001
+d_config_tune_and_chroma["delta_cmr"] = 0.00
 d_config_tune_and_chroma["delta_cmi"] = 0.0
 
 ### Knobs configuration
@@ -141,7 +141,7 @@ d_config_beambeam["nemitt_y"] = 2.2e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_2358b_2345_1692_1628_236bpi_14inj_hybrid_2INDIV.json"
+    "master_jobs/filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -164,7 +164,7 @@ if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
 # Otherwise, we need to reformat the file
 else:
     # One can potentially use b1_array, b2_array to scan the bunches later
-    b1_array, b2_array = reformat_filling_scheme_from_lpc(filling_scheme_path)
+    b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
     filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
 
 
@@ -174,8 +174,8 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
 check_bunch_number = True
@@ -392,8 +392,7 @@ for idx_optics, optics in enumerate(array_optics):
         for beam in ["lhcb1", "lhcb2"]:
             d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
             d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
-        
- 
+
         # Complete the dictionnary for the tracking
         d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
         d_config_simulation["collider_file"] = f"../collider/collider.json"
