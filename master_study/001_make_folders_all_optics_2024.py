@@ -141,7 +141,7 @@ d_config_beambeam["nemitt_y"] = 2.2e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_2358b_2345_1692_1628_236bpi_14inj_hybrid_2INDIV.json"
+    "master_jobs/filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid_converted.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -174,8 +174,8 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = 847
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = 847
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
 check_bunch_number = True

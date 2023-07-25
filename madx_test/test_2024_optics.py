@@ -1,67 +1,7 @@
-from xmask.lhc import install_errors_placeholders_hllhc
+from cpymad.madx import Madx
 
 
-def build_sequence(
-    mad,
-    mylhcbeam,
-    ignore_cycling=False,
-    **kwargs,
-):
-    # Select beam
-    mad.input(f"mylhcbeam = {mylhcbeam}")
-
-    mad.input(f"""
-      ! Get the toolkit
-      call,file=
-        "acc-models-lhc/toolkit/macro.madx";
-      """)
-
-    mad.input(f"""
-      ! Build sequence
-      option, -echo,-warn,-info;
-      if (mylhcbeam==4){{
-        call,file="acc-models-lhc/lhc_acc-models-lhc_b4.seq";
-      }} else {{
-        call,file="acc-models-lhc/lhc_acc-models-lhc.seq";
-      }};
-      option, -echo, warn,-info;
-      """)
-
-    # Redefine macro for myslice
-    my_slice(mad, slice_factor=3)
-
-    # Slice nominal sequence
-    mad.input("exec, myslice;")
-
-    mad.input(f"""
-    nrj=6800;
-    beam,particle=proton,sequence=lhcb1,energy=nrj,npart=1.15E11,sige=4.5e-4;
-    beam,particle=proton,sequence=lhcb2,energy=nrj,bv = -1,npart=1.15E11,sige=4.5e-4;
-    """)
-
-    if not ignore_cycling:
-        mad.input("""
-        !Cycling w.r.t. to IP3 (mandatory to find closed orbit in collision in the presence of errors)
-        if (mylhcbeam<3){
-        seqedit, sequence=lhcb1; flatten; cycle, start=IP3; flatten; endedit;
-        };
-        seqedit, sequence=lhcb2; flatten; cycle, start=IP3; flatten; endedit;
-        """)
-
-    mad.input("""
-        ! Set twiss formats for MAD-X parts (macro from opt. toolkit)
-        exec, twiss_opt;
-        """)
-
-
-def apply_optics(mad, optics_file):
-    mad.call(optics_file)
-    # A knob redefinition
-    mad.input("on_alice := on_alice_normalized * 7000./nrj;")
-    mad.input("on_lhcb := on_lhcb_normalized * 7000./nrj;")
-
-
-def my_slice(mad, slice_factor=2):
+def my_slice(mad, slice_factor=3):
     mad.input(f"slicefactor = {slice_factor};")
     mad.input("""
         myslice: macro = {
@@ -106,3 +46,27 @@ def my_slice(mad, slice_factor=2):
           is_thin=1;
         };
     """)
+
+
+mad = Madx()
+mad.input("""
+option,-echo,-warn;
+! call,file="/afs/cern.ch/eng/lhc/optics/runIII/toolkit/macro.madx";
+call,file="/afs/cern.ch/eng/lhc/optics/runIII/lhc_acc-models-lhc.seq";
+nrj=6800;  
+beam,particle=proton,sequence=lhcb1,energy=nrj,npart=1.15E11,sige=4.5e-4;
+beam,particle=proton,sequence=lhcb2,energy=nrj,bv = -1,npart=1.15E11,sige=4.5e-4;
+call,file="/afs/cern.ch/eng/lhc/optics/runIII/RunIII_dev/Proton_2024/V0/opticsfile.49";
+""")
+my_slice(mad)
+
+mad.input("exec, myslice;")
+
+mad.input("""
+use,sequence=lhcb1;
+twiss;
+value, table(twiss,IP1,betx),table(twiss,IP2,betx),table(twiss,IP5,betx),table(twiss,IP8,betx);
+use,sequence=lhcb2;
+twiss;
+value, table(twiss,IP1,betx),table(twiss,IP2,betx),table(twiss,IP5,betx),table(twiss,IP8,betx);
+""")
