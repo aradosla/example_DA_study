@@ -1,7 +1,7 @@
 from cpymad.madx import Madx
 
 
-def my_slice(mad, slice_factor=3):
+def my_slice(mad, slice_factor=4):
     mad.input(f"slicefactor = {slice_factor};")
     mad.input("""
         myslice: macro = {

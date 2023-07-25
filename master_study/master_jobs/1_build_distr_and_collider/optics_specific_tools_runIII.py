@@ -28,7 +28,7 @@ def build_sequence(
       """)
 
     # Redefine macro for myslice
-    my_slice(mad, slice_factor=3)
+    my_slice(mad, slice_factor=4)
 
     # Slice nominal sequence
     mad.input("exec, myslice;")

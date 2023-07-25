@@ -13,7 +13,7 @@ import json
 from user_defined_functions import (
     generate_run_sh_htc,
     get_worst_bunch,
-    reformat_filling_scheme_from_lpc,
+    reformat_filling_scheme_from_lpc_alt,
 )
 
 # ==================================================================================================
@@ -160,7 +160,7 @@ d_config_beambeam["nemitt_y"] = 2.2e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_1886b_1873_1217_1173_236bpi_12inj_hybrid_2INDIV.json"
+    "master_jobs/filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -183,7 +183,7 @@ if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
 # Otherwise, we need to reformat the file
 else:
     # One can potentially use b1_array, b2_array to scan the bunches later
-    b1_array, b2_array = reformat_filling_scheme_from_lpc(filling_scheme_path)
+    b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
     filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
 
 
