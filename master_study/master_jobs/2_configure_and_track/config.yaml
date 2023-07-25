@@ -63,7 +63,7 @@ config_collider:
       lhcb2: 15.0
     
     # Linear coupling
-    delta_cmr: 0.001
+    delta_cmr: 0.00
     delta_cmi: 0.0
 
     knob_names:

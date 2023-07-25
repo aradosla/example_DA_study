@@ -93,7 +93,7 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.001
+d_config_tune_and_chroma["delta_cmr"] = 0.00
 d_config_tune_and_chroma["delta_cmi"] = 0.0
 
 ### Knobs configuration
