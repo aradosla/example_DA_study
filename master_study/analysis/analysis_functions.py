@@ -137,7 +137,7 @@ def get_title_from_conf(
     except:
         luminosity_value = None
     if luminosity_value is not None:
-        luminosity = f"$L = $" + latex_float(float(luminosity_value)) + "cm$^{-2}$s$^{-1}$."
+        luminosity = f"$L_{{1/5}} = $" + latex_float(float(luminosity_value)) + "cm$^{-2}$s$^{-1}$."
     else:
         luminosity = ""
 
