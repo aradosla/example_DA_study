@@ -57,7 +57,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
 # ! updated later
 # d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
-array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.{x}" for x in [37, 48]]
+array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.{x}" for x in [43]]
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -422,7 +422,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "tune_scan_2023"
+study_name = "tune_scan_2023_bis"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

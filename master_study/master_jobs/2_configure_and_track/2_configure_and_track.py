@@ -6,7 +6,7 @@ simple scripting for reproducibility, to allow rebuilding the collider from a di
 # --- Imports
 # ==================================================================================================
 import json
-import yaml
+import ruamel.yaml
 import time
 import logging
 import numpy as np
@@ -18,6 +18,9 @@ import xmask as xm
 import xmask.lhc as xlhc
 from misc import generate_orbit_correction_setup
 from misc import luminosity_leveling, luminosity_leveling_ip1_5
+
+# Initialize yaml reader
+ryaml = ruamel.yaml.YAML()
 
 
 # ==================================================================================================
@@ -37,7 +40,7 @@ def tree_maker_tagging(config, tag="started"):
 def read_configuration(config_path="config.yaml"):
     # Read configuration for simulations
     with open(config_path, "r") as fid:
-        config = yaml.safe_load(fid)
+        config = ryaml.load(fid)
     config_sim = config["config_simulation"]
     config_collider = config["config_collider"]
     return config, config_sim, config_collider
@@ -176,7 +179,7 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
         cross_section = 81e-27
 
         # Do the levelling
-        I = luminosity_leveling_ip1_5(
+        I, L = luminosity_leveling_ip1_5(
             collider,
             config_collider,
             config_bb,
@@ -201,20 +204,21 @@ def do_levelling(config_collider, config_bb, n_collisions_ip8, collider, n_colli
     )
 
     # Update configuration
-    config_bb["num_particles_per_bunch_after_optimization"] = I
-    config_bb["num_particles_per_bunch"] = initial_I
-    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2h"] = collider.vars[
-        "on_sep2h"
-    ]._value
-    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2v"] = collider.vars[
-        "on_sep2v"
-    ]._value
-    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8h"] = collider.vars[
-        "on_sep8h"
-    ]._value
-    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8v"] = collider.vars[
-        "on_sep8v"
-    ]._value
+    config_bb["num_particles_per_bunch_after_optimization"] = float(I)
+    config_bb["num_particles_per_bunch"] = float(initial_I)
+    config_bb["luminosity_ip1_5_after_optimization"] = float(L)
+    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2h"] = float(
+        collider.vars["on_sep2h"]._value
+    )
+    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2v"] = float(
+        collider.vars["on_sep2v"]._value
+    )
+    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8h"] = float(
+        collider.vars["on_sep8h"]._value
+    )
+    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8v"] = float(
+        collider.vars["on_sep8v"]._value
+    )
 
     return collider, config_collider
 
@@ -496,6 +500,9 @@ def configure_and_track(config_path="config.yaml"):
 
     # Save output
     pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
+
+    with open(config_path, "w") as fid:
+        ryaml.dump(config, fid)
 
     # Remote the correction folder, and potential C files remaining
     try:

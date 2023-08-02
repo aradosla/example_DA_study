@@ -57,7 +57,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
 # ! updated later
 # d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
-array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2023/opticsfile.{x}" for x in [37, 48]]
+array_optics = [f"acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.{x}" for x in [43]]
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
@@ -269,13 +269,8 @@ dump_config_in_collider = False
 # ==================================================================================================
 
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
-array_qy = np.round(np.arange(60.305, 60.326, 0.001), decimals=4)
-
-# In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
-# working points too close to resonance. Otherwise just delete this variable in the loop at the end
-# of the script
-keep = "upper_triangle"  # 'lower_triangle', 'all'
+array_qx = np.round(np.arange(62.305, 62.325, 0.001), decimals=4)
+array_xing = np.round(np.arange(144, 184, 2), decimals=0)
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -368,8 +363,8 @@ for idx_optics, optics in enumerate(array_optics):
                 # Give a good initial condition for luminosity leveling optimization in IP2/8
                 if knob == "on_sep8h" or knob == "on_sep2h":
                     d_config_knobs[knob] = d_config_knobs[knob] * 0.01
-                # if knob == "on_x5":
-                #    d_config_knobs[knob] = -d_config_knobs[knob]
+                if knob == "on_x5":
+                    d_config_knobs[knob] = -d_config_knobs[knob]
                 break
         if not found:
             raise ValueError(f"Knob {knob} not found in knobs.json")
@@ -377,21 +372,26 @@ for idx_optics, optics in enumerate(array_optics):
     d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
     track_array = np.arange(d_config_particles["n_split"])
-    for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-        # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
-        if keep == "upper_triangle":
-            if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
-                continue
-        elif keep == "lower_triangle":
-            if qy >= (qx + 2 - 0.0039):
-                continue
-        else:
-            pass
-
+    for idx_job, (track, qx, xing) in enumerate(
+        itertools.product(track_array, array_qx, array_xing)
+    ):
         # Mutate the appropriate collider parameters
         for beam in ["lhcb1", "lhcb2"]:
             d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
-            d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
+            d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qx) - 2 + 0.005
+
+        sign_xing_1 = np.sign(
+            d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"]
+        )
+        sign_xing_5 = np.sign(
+            d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"]
+        )
+        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = sign_xing_1 * int(
+            xing
+        )
+        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"] = sign_xing_5 * int(
+            xing
+        )
 
         # Complete the dictionnary for the tracking
         d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -422,7 +422,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "tune_scan_2023"
+study_name = "angle_scan_2024"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
