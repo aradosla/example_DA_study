@@ -71,7 +71,7 @@ def load_config(config_path):
     return config
 
 
-def get_title_from_conf(conf_mad, conf_collider, type_crossing=None, betx=None, bety=None):
+def get_title_from_conf(conf_mad, conf_collider, type_crossing=None, betx=None, bety=None, Nb = True, levelling = ''):
     # LHC version
     try:
         LHC_version = conf_mad["links"]["acc-models-lhc"].split("modules/")[1]
@@ -81,18 +81,15 @@ def get_title_from_conf(conf_mad, conf_collider, type_crossing=None, betx=None, 
         LHC_version = conf_mad["links"]["acc-models-lhc"].split("optics/")[1]
         if LHC_version == "runIII":
             LHC_version = "run III"
-
-    # Round or flat optics
-    if "flatcc" in conf_mad["optics_file"]:
-        optics = "Flat optics"
-    else:
-        optics = "Round optics"
+        if '2023' in conf_mad["optics_file"]:
+            LHC_version = LHC_version + ' (2023)'
+        elif '2024' in conf_mad["optics_file"]:
+            LHC_version = LHC_version + ' (2024)'
 
     # Levelling
-    if conf_collider["skip_leveling"]:
-        levelling = "Start of levelling"
-    else:
-        levelling = "End of levelling"
+    levelling = levelling 
+    if levelling != '':
+        levelling += ' .'
 
     # Crab cavities
     if "on_crab1" in conf_collider["config_knobs_and_tuning"]["knob_settings"]:
@@ -108,11 +105,14 @@ def get_title_from_conf(conf_mad, conf_collider, type_crossing=None, betx=None, 
     bunch_number = f"Bunch {bunch_number_value}"
 
     # Bunch intensity
-    bunch_intensity = (
-        f"$N_b \simeq $"
-        + latex_float(float(conf_collider["config_beambeam"]["num_particles_per_bunch"]))
-        + "ppb"
-    )
+    if Nb:
+        bunch_intensity = (
+            f"$N_b \simeq $"
+            + latex_float(float(conf_collider["config_beambeam"]["num_particles_per_bunch"]))
+            + "ppb, "
+        )
+    else:
+        bunch_intensity = ''
 
     # Beta star # ! Manually encoded for now
     if "flathv" in conf_mad["optics_file"]:
@@ -182,17 +182,13 @@ def get_title_from_conf(conf_mad, conf_collider, type_crossing=None, betx=None, 
     title = (
         LHC_version
         + ". "
-        + optics
-        + ". "
         + levelling
-        + ". "
         + crab_cavities
         + ". "
         + bunch_number
         + "."
         + "\n"
         + bunch_intensity
-        + ", "
         + beta
         + ", "
         + xing_IP15
@@ -224,6 +220,7 @@ def plot_heatmap(
     type_crossing=None,
     betx=None,
     bety=None,
+    Nb = True,
 ):
     # Get numpy array from dataframe
     data_array = df_to_plot.to_numpy()
@@ -291,7 +288,7 @@ def plot_heatmap(
     if conf_mad is not None and conf_collider is not None:
         ax.set_title(
             get_title_from_conf(
-                conf_mad, conf_collider, type_crossing=type_crossing, betx=betx, bety=bety
+                conf_mad, conf_collider, type_crossing=type_crossing, betx=betx, bety=bety, Nb = Nb,
             ),
             fontsize=10,
         )
