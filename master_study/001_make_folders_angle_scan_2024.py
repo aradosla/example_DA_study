@@ -386,11 +386,11 @@ for idx_optics, optics in enumerate(array_optics):
         sign_xing_5 = np.sign(
             d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"]
         )
-        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = sign_xing_1 * int(
-            xing
+        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"] = int(
+            sign_xing_1 * xing
         )
-        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"] = sign_xing_5 * int(
-            xing
+        d_config_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"] = int(
+            sign_xing_5 * xing
         )
 
         # Complete the dictionnary for the tracking
