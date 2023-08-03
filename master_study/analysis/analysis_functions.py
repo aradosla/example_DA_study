@@ -89,7 +89,7 @@ def get_title_from_conf(
     except:
         LHC_version = conf_mad["links"]["acc-models-lhc"].split("optics/")[1]
         if LHC_version == "runIII":
-            LHC_version = "run III"
+            LHC_version = "Run III"
         if "2023" in conf_mad["optics_file"]:
             LHC_version = LHC_version + " (2023)"
         elif "2024" in conf_mad["optics_file"]:
@@ -128,18 +128,34 @@ def get_title_from_conf(
             ]
         except:
             bunch_intensity_value = conf_collider["config_beambeam"]["num_particles_per_bunch"]
-        bunch_intensity = f"$N_b \simeq $" + latex_float(float(bunch_intensity_value)) + "ppb, "
+        bunch_intensity = f"$N_b \simeq $" + latex_float(float(bunch_intensity_value)) + " ppb, "
     else:
         bunch_intensity = ""
 
     try:
-        luminosity_value = conf_collider["config_beambeam"]["luminosity_ip1_5_after_optimization"]
+        luminosity_value_1_5 = conf_collider["config_beambeam"][
+            "luminosity_ip1_5_after_optimization"
+        ]
+        luminosity_value_2 = conf_collider["config_beambeam"]["luminosity_ip2_after_optimization"]
+        luminosity_value_8 = conf_collider["config_beambeam"]["luminosity_ip8_after_optimization"]
     except:
-        luminosity_value = None
-    if luminosity_value is not None:
-        luminosity = f"$L_{{1/5}} = $" + latex_float(float(luminosity_value)) + "cm$^{-2}$s$^{-1}$."
+        luminosity_value_1_5 = None
+        luminosity_value_2 = None
+        luminosity_value_8 = None
+    if luminosity_value_1_5 is not None:
+        luminosity_1_5 = (
+            f"$L_{{1/5}} = $" + latex_float(float(luminosity_value_1_5)) + "cm$^{-2}$s$^{-1}$, "
+        )
+        luminosity_2 = (
+            f"$L_{{2}} = $" + latex_float(float(luminosity_value_2)) + "cm$^{-2}$s$^{-1}$, "
+        )
+        luminosity_8 = (
+            f"$L_{{8}} = $" + latex_float(float(luminosity_value_8)) + "cm$^{-2}$s$^{-1}$"
+        )
     else:
-        luminosity = ""
+        luminosity_1_5 = ""
+        luminosity_2 = ""
+        luminosity_8 = ""
 
     # Beta star # ! Manually encoded for now
     if "flathv" in conf_mad["optics_file"]:
@@ -169,10 +185,10 @@ def get_title_from_conf(
     else:
         raise ValueError("Optics configuration not automatized yet")
     xing_value_IP1 = conf_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"]
-    xing_IP1 = phi_1 + f"$= {{{xing_value_IP1:.0f}}} \mu rad$"
+    xing_IP1 = phi_1 + f"$= {{{xing_value_IP1:.0f}}}$" + f" $\mu rad$"
 
     xing_value_IP5 = conf_collider["config_knobs_and_tuning"]["knob_settings"]["on_x5"]
-    xing_IP5 = phi_5 + f"$= {{{xing_value_IP5:.0f}}} \mu rad$"
+    xing_IP5 = phi_5 + f"$= {{{xing_value_IP5:.0f}}}$" + f" $\mu rad$"
 
     # Bunch length
     bunch_length_value = conf_collider["config_beambeam"]["sigma_z"] * 100
@@ -205,7 +221,7 @@ def get_title_from_conf(
     polarity_value_IP8 = conf_collider["config_knobs_and_tuning"]["knob_settings"][
         "on_lhcb_normalized"
     ]
-    polarity = f"$polarity IP_{{2/8}} = {{{polarity_value_IP2}}}/{{{polarity_value_IP8}}}$"
+    polarity = f"$polarity$ $IP_{{2/8}} = {{{polarity_value_IP2}}}/{{{polarity_value_IP8}}}$"
 
     # Normalized emittance
     emittance_value = round(conf_collider["config_beambeam"]["nemitt_x"] / 1e-6, 2)
@@ -238,19 +254,22 @@ def get_title_from_conf(
         + levelling
         + crab_cavities
         + bunch_intensity
-        + luminosity
+        + "\n"
+        + luminosity_1_5
+        + luminosity_2
+        + luminosity_8
         + "\n"
         + beta
         + ", "
+        + polarity
+        + "\n"
         + xing_IP1
         + ", "
         + xing_IP5
-        + "\n"
+        + ", "
         + xing_IP2
         + ", "
         + xing_IP8
-        + ", "
-        + polarity
         + "\n"
         + bunch_length
         + ", "
