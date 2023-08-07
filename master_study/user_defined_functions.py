@@ -14,12 +14,12 @@ def generate_run_sh(node, generation_number):
     )
 
 
-def generate_run_sh_with_cvmfs(node, generation_number):
+def generate_run_sh_temp_python(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
+    above_str = "../" * generation_number
     return (
         f"#!/bin/bash\n"
-        + f". /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-centos8-gcc11-opt/setup.sh"
-        + f"source {node.root.parameters['setup_env_script']}\n"
+        + f"source {node.get_abs_path()}{above_str}make_miniforge.sh\n"
         + f"cd {node.get_abs_path()}\n"
         + f"python {python_command} > output.txt 2> error.txt\n"
         + f"rm -rf final_* modules optics_repository optics_toolkit tools tracking_tools temp"
