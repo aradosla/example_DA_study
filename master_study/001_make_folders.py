@@ -12,6 +12,7 @@ import copy
 import json
 from user_defined_functions import (
     generate_run_sh,
+    generate_run_sh_temp_python,
     get_worst_bunch,
     reformat_filling_scheme_from_lpc_alt,
 )
@@ -383,7 +384,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 # From python objects we move the nodes to the filesystem.
 start_time = time.time()
-root.make_folders(generate_run_sh)
+root.make_folders(generate_run_sh_temp_python)
 print("The tree folders are ready.")
 print("--- %s seconds ---" % (time.time() - start_time))
 
