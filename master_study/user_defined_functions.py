@@ -18,6 +18,7 @@ def generate_run_sh_with_cvmfs(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
     return (
         f"#!/bin/bash\n"
+        + f". /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-centos8-gcc11-opt/setup.sh"
         + f"source {node.root.parameters['setup_env_script']}\n"
         + f"cd {node.get_abs_path()}\n"
         + f"python {python_command} > output.txt 2> error.txt\n"
