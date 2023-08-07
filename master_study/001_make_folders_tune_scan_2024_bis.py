@@ -11,7 +11,7 @@ import shutil
 import copy
 import json
 from user_defined_functions import (
-    generate_run_sh_htc,
+    generate_run_sh,
     get_worst_bunch,
     reformat_filling_scheme_from_lpc_alt,
 )
@@ -271,7 +271,7 @@ dump_config_in_collider = False
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
 array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
 array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
-array_octupoles = [-600,0,300]
+array_octupoles = [-600, 0, 300]
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
@@ -377,7 +377,9 @@ for idx_optics, optics in enumerate(array_optics):
     d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
     track_array = np.arange(d_config_particles["n_split"])
-    for idx_job, (track, qx, qy, I) in enumerate(itertools.product(track_array, array_qx, array_qy, array_octupoles)):
+    for idx_job, (track, qx, qy, I) in enumerate(
+        itertools.product(track_array, array_qx, array_qy, array_octupoles)
+    ):
         # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
         if keep == "upper_triangle":
             if qy <= (qx - 2 - 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
@@ -441,7 +443,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 # From python objects we move the nodes to the filesystem.
 start_time = time.time()
-root.make_folders(generate_run_sh_htc)
+root.make_folders(generate_run_sh)
 print("The tree folders are ready.")
 print("--- %s seconds ---" % (time.time() - start_time))
 
