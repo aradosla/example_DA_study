@@ -19,7 +19,7 @@ def generate_run_sh_temp_python(node, generation_number):
     above_str = "../" * generation_number
     return (
         f"#!/bin/bash\n"
-        + f"source {node.get_abs_path()}{above_str}make_miniforge.sh\n"
+        + f"source {node.get_abs_path()}{above_str}make_miniforge.sh 'use_cvmfs'\n"
         + f"cd {node.get_abs_path()}\n"
         + f"python {python_command} > output.txt 2> error.txt\n"
         + f"rm -rf final_* modules optics_repository optics_toolkit tools tracking_tools temp"

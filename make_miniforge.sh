@@ -1,7 +1,12 @@
-wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
-bash Miniforge3-Linux-x86_64.sh -b  -p ./miniforge -f
-source miniforge/bin/activate
-python -m pip install -r requirements.txt
+if [ $1 == 'use_cvmfs' ]
+then
+    . /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-centos8-gcc11-opt/setup.sh
+else
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+    bash Miniforge3-Linux-x86_64.sh -b  -p ./miniforge -f
+    source miniforge/bin/activate
+fi
+python -m pip install ipython numpy scipy pandas psutil cpymad xsuite
 mkdir modules
 cd modules
 git clone https://github.com/xsuite/tree_maker.git
