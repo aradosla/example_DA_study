@@ -13,8 +13,9 @@ git clone https://github.com/xsuite/tree_maker.git
 python -m pip install -e tree_maker
 git clone https://github.com/xsuite/xmask.git
 pip install -e xmask
+cd xmask/
 git submodule init
 git submodule update
-cd ..
+cd ../../
 xsuite-prebuild
 
