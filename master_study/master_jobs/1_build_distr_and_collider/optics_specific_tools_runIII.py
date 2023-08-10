@@ -27,10 +27,11 @@ def build_sequence(
       option, -echo, warn,-info;
       """)
 
-    mad.input("""
-      ! Slice nominal sequence
-      exec, myslice;
-      """)
+    # Redefine macro for myslice
+    my_slice(mad, slice_factor=4)
+
+    # Slice nominal sequence
+    mad.input("exec, myslice;")
 
     mad.input(f"""
     nrj=6800;
@@ -58,3 +59,50 @@ def apply_optics(mad, optics_file):
     # A knob redefinition
     mad.input("on_alice := on_alice_normalized * 7000./nrj;")
     mad.input("on_lhcb := on_lhcb_normalized * 7000./nrj;")
+
+
+def my_slice(mad, slice_factor=2):
+    mad.input(f"slicefactor = {slice_factor};")
+    mad.input("""
+        myslice: macro = {
+        if (MBX.4L2->l>0) {
+          select, flag=makethin, clear;
+          select, flag=makethin, class=mb, slice=2;
+          select, flag=makethin, class=mq, slice=2 * slicefactor;
+          select, flag=makethin, class=mqxa,  slice=16 * slicefactor;  !old triplet
+          select, flag=makethin, class=mqxb,  slice=16 * slicefactor;  !old triplet
+          select, flag=makethin, class=mqxc,  slice=16 * slicefactor;  !new mqxa (q1,q3)
+          select, flag=makethin, class=mqxd,  slice=16 * slicefactor;  !new mqxb (q2a,q2b)
+          select, flag=makethin, class=mqxfa, slice=16 * slicefactor;  !new (q1,q3 v1.1)
+          select, flag=makethin, class=mqxfb, slice=16 * slicefactor;  !new (q2a,q2b v1.1)
+          select, flag=makethin, class=mbxa,  slice=4;   !new d1
+          select, flag=makethin, class=mbxf,  slice=4;   !new d1 (v1.1)
+          select, flag=makethin, class=mbrd,  slice=4;   !new d2 (if needed)
+          select, flag=makethin, class=mqyy,  slice=4 * slicefactor;;   !new q4
+          select, flag=makethin, class=mqyl,  slice=4 * slicefactor;;   !new q5
+          select, flag=makethin, class=mbh,   slice=4;   !11T dipoles
+          select, flag=makethin, pattern=mbx\.,    slice=4;
+          select, flag=makethin, pattern=mbrb\.,   slice=4;
+          select, flag=makethin, pattern=mbrc\.,   slice=4;
+          select, flag=makethin, pattern=mbrs\.,   slice=4;
+          select, flag=makethin, pattern=mbh\.,    slice=4;
+          select, flag=makethin, pattern=mqwa\.,   slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqwb\.,   slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqy\.,    slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqm\.,    slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqmc\.,   slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqml\.,   slice=4 * slicefactor;
+          select, flag=makethin, pattern=mqtlh\.,  slice=2 * slicefactor;
+          select, flag=makethin, pattern=mqtli\.,  slice=2 * slicefactor;
+          select, flag=makethin, pattern=mqt\.  ,  slice=2 * slicefactor;
+          !thin lens
+          option rbarc=false; beam;
+          use,sequence=lhcb1; makethin,sequence=lhcb1,makedipedge=true,style=teapot;
+          use,sequence=lhcb2; makethin,sequence=lhcb2,makedipedge=true,style=teapot;
+          option rbarc=true;
+        } else {
+          print, text="Sequence is already thin";
+        };
+          is_thin=1;
+        };
+    """)

@@ -63,7 +63,7 @@ config_collider:
       lhcb2: 15.0
     
     # Linear coupling
-    delta_cmr: 0.001
+    delta_cmr: 0.00
     delta_cmi: 0.0
 
     knob_names:
@@ -90,7 +90,7 @@ config_collider:
       ip2: 20
       ip5: 25
       ip8: 20
-    sigma_z: 0.0761
+    sigma_z: 0.09
     num_particles_per_bunch: 1.15e11
     nemitt_x: 2.2e-6
     nemitt_y: 2.2e-6
