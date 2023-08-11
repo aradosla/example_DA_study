@@ -66,8 +66,6 @@ for node in root.generation(1):
         # Get scanned parameters (complete with the requested scanned parameters)
         df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
         df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
-        df_sim["dqx"] = dic_child_collider["config_knobs_and_tuning"]["dqx"]["lhcb1"]
-        df_sim["dqy"] = dic_child_collider["config_knobs_and_tuning"]["dqy"]["lhcb1"]
         df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
             "i_bunch_b1"
         ]
@@ -97,15 +95,13 @@ if df_lost_particles.empty:
     print("No unstable particles found, the output dataframe will be empty.")
 
 # Group by working point (Update this with the knobs you want to group by !)
-group_by_parameters = ["i_bunch_b1"]
+group_by_parameters = ["qx", "qy"]
 # We always want to keep beam in the final result
 group_by_parameters = ["beam"] + group_by_parameters
 l_parameters_to_keep = [
     "normalized amplitude in xy-plane",
     "qx",
     "qy",
-    "dqx",
-    "dqy",
     "i_bunch_b1",
     "i_bunch_b2",
     "num_particles_per_bunch",
