@@ -58,7 +58,7 @@ d_config_mad["ver_hllhc_optics"] = 1.5
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 6800
+beam_energy_tot = 7000
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -96,30 +96,23 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-# Exp. configuration in IR1, IR2, IR5 and IR8
-d_config_knobs["on_x1"] = -145.000
-d_config_knobs["on_sep1"] = 0.0
-d_config_knobs["phi_IR1"] = 180.000
+# Knobs at IPs
+d_config_knobs["on_x1"] = 250
+d_config_knobs["on_sep1"] = 0
+d_config_knobs["on_x2"] = -170
+d_config_knobs["on_sep2"] = 0.138
+d_config_knobs["on_x5"] = 250
+d_config_knobs["on_sep5"] = 0
+d_config_knobs["on_x8h"] = 0.0
+d_config_knobs["on_x8v"] = 170
 
-d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = 1.0  # 1.000
-d_config_knobs["on_x2v"] = 200.000
-d_config_knobs["on_sep2v"] = 0.000
-d_config_knobs["phi_IR2"] = 90.000
-
-d_config_knobs["on_x5"] = 145.000
-d_config_knobs["on_sep5"] = 0.0
-d_config_knobs["phi_IR5"] = 90.000
-
-d_config_knobs["on_x8h"] = 0.000
-d_config_knobs["on_sep8h"] = -0.01  # -1.000
-d_config_knobs["on_x8v"] = 200.000
-d_config_knobs["on_sep8v"] = 0.000
-d_config_knobs["phi_IR8"] = 180.000
+# Crab cavities
+d_config_knobs["on_crab1"] = -190
+d_config_knobs["on_crab5"] = -190
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 300.0
-d_config_knobs["i_oct_b2"] = 300.0
+d_config_knobs["i_oct_b1"] = 60.0
+d_config_knobs["i_oct_b2"] = 60.0
 
 ### leveling configuration
 
@@ -141,7 +134,7 @@ d_config_leveling = {
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e32
+d_config_leveling["ip8"]["luminosity"] = 2.0e33
 
 ### Beam beam configuration
 
@@ -149,15 +142,15 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e32
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.15e11
-d_config_beambeam["nemitt_x"] = 2.2e-6
-d_config_beambeam["nemitt_y"] = 2.2e-6
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11
+d_config_beambeam["nemitt_x"] = 2.5e-6
+d_config_beambeam["nemitt_y"] = 2.5e-6
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
+    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -190,8 +183,6 @@ d_config_beambeam["mask_with_filling_pattern"][
 ] = filling_scheme_path  # If None, a full fill is assumed
 
 
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
-d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
@@ -268,16 +259,6 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
-
-# ==================================================================================================
-# --- Dump collider and collider configuration
-#
-# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
-# configuration.
-# ==================================================================================================
-dump_collider = False
-dump_config_in_collider = False
-
 
 # ==================================================================================================
 # --- Dump collider and collider configuration
@@ -377,7 +358,7 @@ config["root"]["setup_env_script"] = os.getcwd() + "/../activate_miniforge.sh"
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan"
+study_name = "example_HL_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

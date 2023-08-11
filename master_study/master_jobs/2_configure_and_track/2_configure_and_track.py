@@ -262,8 +262,8 @@ def do_levelling(
 def add_linear_coupling(conf_knobs_and_tuning, collider):
     # Add linear coupling as the target in the tuning of the base collider was 0
     # (not possible to set it the target to 0.001 for now)
-    collider.vars["cmrs.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
-    collider.vars["cmrs.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
+    collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+    collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
     return collider
 
 

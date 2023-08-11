@@ -21,11 +21,11 @@ master_study/scans/*
 !master_study/scans/.gitkeep
 
 # Analysis
-master_study/analysis/*
+#master_study/analysis/*
 !master_study/analysis/.gitkeep
 
 # Other make_folder studies
-master_study/001_make_folders_*
+#master_study/001_make_folders_*
 
 # Submission files
 master_study/submission_files/*
@@ -34,3 +34,5 @@ master_study/submission_files/*
 # Old analysis
 master_study/old/*
 
+# AFS files
+.__afs*
