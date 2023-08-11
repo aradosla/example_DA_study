@@ -11,9 +11,9 @@ import shutil
 import copy
 import json
 from user_defined_functions import (
-    generate_run_sh_htc,
+    generate_run_sh,
     get_worst_bunch,
-    reformat_filling_scheme_from_lpc,
+    reformat_filling_scheme_from_lpc_alt,
 )
 
 # ==================================================================================================
@@ -58,7 +58,7 @@ d_config_mad["ver_hllhc_optics"] = 1.5
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 7000
+beam_energy_tot = 6800
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -84,8 +84,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 5.0
-    d_config_tune_and_chroma["dqy"][beam] = 5.0
+    d_config_tune_and_chroma["dqx"][beam] = 15.0
+    d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001
@@ -96,36 +96,52 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-# Knobs at IPs
-d_config_knobs["on_x1"] = 250
-d_config_knobs["on_sep1"] = 0
-d_config_knobs["on_x2"] = -170
-d_config_knobs["on_sep2"] = 0.138
-d_config_knobs["on_x5"] = 250
-d_config_knobs["on_sep5"] = 0
-d_config_knobs["on_x8h"] = 0.0
-d_config_knobs["on_x8v"] = 170
+# Exp. configuration in IR1, IR2, IR5 and IR8
+d_config_knobs["on_x1"] = -145.000
+d_config_knobs["on_sep1"] = 0.0
+d_config_knobs["phi_IR1"] = 180.000
 
-# Crab cavities
-d_config_knobs["on_crab1"] = -190
-d_config_knobs["on_crab5"] = -190
+d_config_knobs["on_x2h"] = 0.000
+d_config_knobs["on_sep2h"] = 1.0  # 1.000
+d_config_knobs["on_x2v"] = 200.000
+d_config_knobs["on_sep2v"] = 0.000
+d_config_knobs["phi_IR2"] = 90.000
+
+d_config_knobs["on_x5"] = 145.000
+d_config_knobs["on_sep5"] = 0.0
+d_config_knobs["phi_IR5"] = 90.000
+
+d_config_knobs["on_x8h"] = 0.000
+d_config_knobs["on_sep8h"] = -0.01  # -1.000
+d_config_knobs["on_x8v"] = 200.000
+d_config_knobs["on_sep8v"] = 0.000
+d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 300.0
+d_config_knobs["i_oct_b2"] = 300.0
 
 ### leveling configuration
 
+# Leveling in IP 1/5
+d_config_leveling_ip1_5 = {"constraints": {}}
+d_config_leveling_ip1_5["luminosity"] = 2.0e34
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
+
+
 # Define dictionary for the leveling settings
-d_config_leveling = {"ip2": {}, "ip8": {}}
+d_config_leveling = {
+    "ip2": {},
+    "ip8": {},
+}
 
 # Luminosity and particles
-skip_leveling = False
+
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33
-# "num_colliding_bunches" is set in the 1_build_distr_and_collider script, depending on the filling scheme
+d_config_leveling["ip8"]["luminosity"] = 2.0e32
 
 ### Beam beam configuration
 
@@ -133,15 +149,15 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
-d_config_beambeam["nemitt_x"] = 2.5e-6
-d_config_beambeam["nemitt_y"] = 2.5e-6
+d_config_beambeam["num_particles_per_bunch"] = 1.15e11
+d_config_beambeam["nemitt_x"] = 2.2e-6
+d_config_beambeam["nemitt_y"] = 2.2e-6
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    "master_jobs/filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -164,7 +180,7 @@ if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
 # Otherwise, we need to reformat the file
 else:
     # One can potentially use b1_array, b2_array to scan the bunches later
-    b1_array, b2_array = reformat_filling_scheme_from_lpc(filling_scheme_path)
+    b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
     filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
 
 
@@ -176,6 +192,8 @@ d_config_beambeam["mask_with_filling_pattern"][
 
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
+d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
 # Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
 # are defined later)
 check_bunch_number = True
@@ -184,7 +202,6 @@ if check_bunch_number:
     # elements), must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
-
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
@@ -230,7 +247,7 @@ d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
 d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
-d_config_collider["skip_leveling"] = skip_leveling
+d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration
@@ -251,6 +268,16 @@ d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# ==================================================================================================
+# --- Dump collider and collider configuration
+#
+# Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
+# configuration.
+# ==================================================================================================
+dump_collider = False
+dump_config_in_collider = False
+
 
 # ==================================================================================================
 # --- Dump collider and collider configuration
@@ -330,6 +357,8 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "log_file": "tree_maker.log",
         "dump_collider": dump_collider,
         "dump_config_in_collider": dump_config_in_collider,
+        "dump_collider": dump_collider,
+        "dump_config_in_collider": dump_config_in_collider,
     }
 
 # ==================================================================================================
@@ -342,13 +371,13 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = os.getcwd() + "/../miniforge/bin/activate"
+config["root"]["setup_env_script"] = os.getcwd() + "/../activate_miniforge.sh"
 
 # ==================================================================================================
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
@@ -365,7 +394,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 
 # From python objects we move the nodes to the filesystem.
 start_time = time.time()
-root.make_folders(generate_run_sh_htc)
+root.make_folders(generate_run_sh)
 print("The tree folders are ready.")
 print("--- %s seconds ---" % (time.time() - start_time))
 

@@ -17,7 +17,7 @@ import pandas as pd
 import tree_maker
 
 # Import user-defined optics-specific tools
-import optics_specific_tools_hlhc15 as ost
+import optics_specific_tools_runIII as ost
 
 
 # ==================================================================================================
@@ -95,11 +95,16 @@ def build_collider_from_mad(config_mad):
     # Get version LHC
     ver_lhc = config_mad["ver_hllhc_optics"]
 
+    # Get version LHC
+    ver_lhc = config_mad["ver_hllhc_optics"]
+
     # Start mad
     mad_b1b2 = Madx(command_log="mad_collider.log")
     mad_b4 = Madx(command_log="mad_b4.log")
 
     # Build sequences
+    ost.build_sequence(mad_b1b2, mylhcbeam=1, optics_version=ver_lhc)
+    ost.build_sequence(mad_b4, mylhcbeam=4, optics_version=ver_lhc)
     ost.build_sequence(mad_b1b2, mylhcbeam=1, optics_version=ver_lhc)
     ost.build_sequence(mad_b4, mylhcbeam=4, optics_version=ver_lhc)
 
