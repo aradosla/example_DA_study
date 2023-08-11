@@ -365,7 +365,6 @@ def configure_collider(
     skip_beam_beam=False,
     save_collider=False,
     save_config=False,
-    save_config=False,
     return_collider_before_bb=False,
 ):
     # Generate configuration files for orbit correction
