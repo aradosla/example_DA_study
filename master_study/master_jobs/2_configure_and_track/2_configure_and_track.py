@@ -190,13 +190,18 @@ def do_levelling(
         cross_section = 81e-27
 
         # Do the levelling
-        I, L_1_5 = luminosity_leveling_ip1_5(
-            collider,
-            config_collider,
-            config_bb,
-            cross_section,
-            crab=False,
-        )
+        try:
+            I, L_1_5 = luminosity_leveling_ip1_5(
+                collider,
+                config_collider,
+                config_bb,
+                cross_section,
+                crab=False,
+            )
+        except ValueError:
+            print("There was a problem during the luminosity leveling in IP1/5... Ignoring it.")
+            I = config_bb["num_particles_per_bunch"]
+            L_1_5 = 0
         initial_I = config_bb["num_particles_per_bunch"]
         config_bb["num_particles_per_bunch"] = I
 
@@ -219,20 +224,25 @@ def do_levelling(
     # Get the final luminoisty in IP 2/8
     twiss_b1 = collider["lhcb1"].twiss()
     twiss_b2 = collider["lhcb2"].twiss()
-    (L_2, L_8) = [
-        xt.lumi.luminosity_from_twiss(
-            n_colliding_bunches=n_collisions,
-            num_particles_per_bunch=I,
-            ip_name=ip,
-            nemitt_x=config_bb["nemitt_x"],
-            nemitt_y=config_bb["nemitt_y"],
-            sigma_z=config_bb["sigma_z"],
-            twiss_b1=twiss_b1,
-            twiss_b2=twiss_b2,
-            crab=crab,
-        )
-        for n_collisions, ip in zip([n_collisions_ip2, n_collisions_ip8], ["ip2", "ip8"])
-    ]
+    try:
+        (L_2, L_8) = [
+            xt.lumi.luminosity_from_twiss(
+                n_colliding_bunches=n_collisions,
+                num_particles_per_bunch=I,
+                ip_name=ip,
+                nemitt_x=config_bb["nemitt_x"],
+                nemitt_y=config_bb["nemitt_y"],
+                sigma_z=config_bb["sigma_z"],
+                twiss_b1=twiss_b1,
+                twiss_b2=twiss_b2,
+                crab=crab,
+            )
+            for n_collisions, ip in zip([n_collisions_ip2, n_collisions_ip8], ["ip2", "ip8"])
+        ]
+    except ValueError:
+        print("There was a problem during the luminosity leveling in IP2/8... Ignoring it.")
+        L_2 = 0
+        L_8 = 0
 
     # Update configuration
     config_bb["num_particles_per_bunch_after_optimization"] = float(I)
