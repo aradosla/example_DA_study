@@ -85,7 +85,7 @@ def build_sequence(
         """)
 
     # Force ignore CC for 1.6 for now
-    if not ignore_CC and optics_version == 1.5:
+    if not ignore_CC:
         mad.input("""
         ! Install crab cavities (they are off)
         call, file='acc-models-lhc/toolkit/enable_crabcavities.madx';
