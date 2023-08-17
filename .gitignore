@@ -61,3 +61,7 @@ master_study/master_jobs/1_build_distr_and_collider/temp/MB_corr_setting.mad
 master_study/master_jobs/1_build_distr_and_collider/temp/MB.errors
 master_study/master_jobs/1_build_distr_and_collider/temp/optics0_inser.mad
 master_study/master_jobs/1_build_distr_and_collider/temp/optics0_MB.mad
+master_study/master_jobs/2_configure_and_track/tree_maker.log
+master_study/master_jobs/2_configure_and_track/correction/corr_co_lhcb1.json
+master_study/master_jobs/2_configure_and_track/correction/corr_co_lhcb2.json
+master_study/master_jobs/2_configure_and_track/output_particles.parquet
