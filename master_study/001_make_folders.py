@@ -21,7 +21,7 @@ from user_defined_functions import (
 #
 # Below, the user defines the parameters for the initial particles distribution.
 # Path for the particle distribution configuration:
-# mmaster_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_particles]
+# master_study/master_jobs/1_build_distr_and_collider/config.yaml [field config_particles]
 # ==================================================================================================
 
 # Define dictionary for the initial particle distribution
