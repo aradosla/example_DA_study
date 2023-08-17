@@ -8,10 +8,10 @@ config_particles:
 config_mad:
   # Links to be made for tools and scripts
   links:
-    acc-models-lhc: ../../../../modules/hllhc16
+    acc-models-lhc: ../../../modules/hllhc16
 
   # Optics file
-  optics_file: acc-models-lhc/strengths/flat/opt_flathv_500_2000.madx
+  optics_file: acc-models-lhc/strengths/flat/opt_flathv_500_2000_thin.madx
 
   # Beam parameters
   beam_config:
@@ -54,3 +54,6 @@ config_mad:
     par_write_errortable: 1
 
 log_file: "tree_maker.log"
+
+# to make some specifics checks
+sanity_checks: true
