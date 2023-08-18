@@ -154,7 +154,12 @@ def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
             print(f"    {knob} = {val}")
     print("---")
 
-    collider.build_trackers()
+    # Rebuild tracker if needed
+    try:
+        collider.build_trackers()
+    except:
+        print("Skipping rebuilding tracker")
+
     for knob, val in dic_rf.items():
         collider.vars[knob] = val
 
