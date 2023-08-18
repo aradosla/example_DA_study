@@ -36,7 +36,7 @@ def build_sequence(
     mylhcbeam,
     apply_fix=True,
     ignore_cycling=False,
-    ignore_CC=False,
+    ignore_CC=True,
 ):
     # Select beam
     mad.input(f"mylhcbeam = {mylhcbeam}")
