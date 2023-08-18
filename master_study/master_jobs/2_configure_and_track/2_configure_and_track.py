@@ -196,7 +196,7 @@ def do_levelling(
                 config_collider,
                 config_bb,
                 cross_section,
-                crab=False,
+                crab=crab,
             )
         except ValueError:
             print("There was a problem during the luminosity leveling in IP1/5... Ignoring it.")
