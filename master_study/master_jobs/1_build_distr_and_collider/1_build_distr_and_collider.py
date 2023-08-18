@@ -17,7 +17,7 @@ import pandas as pd
 import tree_maker
 
 # Import user-defined optics-specific tools
-import optics_specific_tools_hlhc16 as ost
+import optics_specific_tools as ost
 
 
 # ==================================================================================================
@@ -92,17 +92,14 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     # Make mad environment
     xm.make_mad_environment(links=config_mad["links"])
 
-    # Get version LHC
-    ver_lhc = config_mad["ver_hllhc_optics"]
-
     # Start mad
     mad_b1b2 = Madx(command_log="mad_collider.log")
 
     mad_b4 = Madx(command_log="mad_b4.log")
 
     # Build sequences
-    ost.build_sequence(mad_b1b2, mylhcbeam=1, optics_version=ver_lhc, ignore_CC=True)
-    ost.build_sequence(mad_b4, mylhcbeam=4, optics_version=ver_lhc, ignore_CC=True)
+    ost.build_sequence(mad_b1b2, mylhcbeam=1)
+    ost.build_sequence(mad_b4, mylhcbeam=4)
 
     # Apply optics (only for b1b2, b4 will be generated from b1b2)
     ost.apply_optics(mad_b1b2, optics_file=config_mad["optics_file"])
@@ -144,14 +141,20 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     return collider
 
 
-def activate_RF_and_twiss(collider, sanity_checks=True):
+def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
     # Define a RF system (values are not so immportant as they're defined later)
     print("--- Now Computing Twiss assuming:")
-    dic_rf = {"vrf400": 16.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.5}
-    for knob, val in dic_rf.items():
-        print(f"    {knob} = {val}")
+    if config_mad["ver_hllhc_optics"] == 1.6:
+        dic_rf = {"vrf400": 16.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.5}
+        for knob, val in dic_rf.items():
+            print(f"    {knob} = {val}")
+    elif config_mad["ver_lhc_run"] == 3.0:
+        dic_rf = {"vrf400": 12.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
+        for knob, val in dic_rf.items():
+            print(f"    {knob} = {val}")
     print("---")
 
+    collider.build_trackers()
     for knob, val in dic_rf.items():
         collider.vars[knob] = val
 
@@ -194,7 +197,7 @@ def build_distr_and_collider(config_file="config.yaml"):
     collider = build_collider_from_mad(config_mad, sanity_checks)
 
     # Twiss to ensure eveyrthing is ok
-    collider = activate_RF_and_twiss(collider, sanity_checks)
+    collider = activate_RF_and_twiss(collider, config_mad, sanity_checks)
 
     # Clean temporary files
     clean()
