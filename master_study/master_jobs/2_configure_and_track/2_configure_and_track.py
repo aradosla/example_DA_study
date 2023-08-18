@@ -47,10 +47,11 @@ def read_configuration(config_path="config.yaml"):
     # Also read configuration from previous generation
     try:
         with open("../" + config_path, "r") as fid:
-            config_mad = ryaml.load(fid)
+            config_gen_1 = ryaml.load(fid)
     except:
         with open("../1_build_distr_and_collider/" + config_path, "r") as fid:
-            config_mad = ryaml.load(fid)
+            config_gen_1 = ryaml.load(fid)
+    config_mad = config_gen_1["config_mad"]
     return config, config_sim, config_collider, config_mad
 
 
@@ -269,11 +270,22 @@ def do_levelling(
 # ==================================================================================================
 # --- Function to add linear coupling
 # ==================================================================================================
-def add_linear_coupling(conf_knobs_and_tuning, collider):
+def add_linear_coupling(conf_knobs_and_tuning, collider, config_mad):
+    # Get the version of the optics
+    version_hllhc = config_mad["ver_hllhc_optics"]
+    version_run = config_mad["ver_lhc_run"]
+
     # Add linear coupling as the target in the tuning of the base collider was 0
     # (not possible to set it the target to 0.001 for now)
-    collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
-    collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+    if version_run == 3.0:
+        collider.vars["cmrs.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
+        collider.vars["cmrs.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
+    elif version_hllhc == 1.6 or version_hllhc == 1.5:
+        collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
+        collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
+    else:
+        raise ValueError(f"Unknown version of the optics/run: {version_hllhc}, {version_run}.")
+
     return collider
 
 
@@ -421,7 +433,7 @@ def configure_collider(
         )
 
     # Add linear coupling
-    collider = add_linear_coupling(conf_knobs_and_tuning, collider)
+    collider = add_linear_coupling(conf_knobs_and_tuning, collider, config_mad)
 
     # Rematch tune and chromaticity
     collider = match_tune_and_chroma(
