@@ -1,66 +1,54 @@
 from xmask.lhc import install_errors_placeholders_hllhc
 import numpy as np
 
+
 def check_madx_lattices(mad):
-    assert mad.globals['qxb1']== mad.globals['qxb2']
-    assert mad.globals['qyb1']== mad.globals['qyb2']
-    assert mad.globals['qpxb1']== mad.globals['qpxb2']
-    assert mad.globals['qpyb1']== mad.globals['qpyb2']
+    assert mad.globals["qxb1"] == mad.globals["qxb2"]
+    assert mad.globals["qyb1"] == mad.globals["qyb2"]
+    assert mad.globals["qpxb1"] == mad.globals["qpxb2"]
+    assert mad.globals["qpyb1"] == mad.globals["qpyb2"]
 
-    assert np.isclose(mad.table.summ.q1, mad.globals['qxb1'], atol=1e-05)
-    assert np.isclose(mad.table.summ.q2, mad.globals['qyb1'], atol=1e-05)
-    assert np.isclose(mad.table.summ.dq1, mad.globals['qpxb1'], atol=1e-03)
-    assert np.isclose(mad.table.summ.dq2, mad.globals['qpyb1'], atol=1e-03)
+    assert np.isclose(mad.table.summ.q1, mad.globals["qxb1"], atol=1e-05)
+    assert np.isclose(mad.table.summ.q2, mad.globals["qyb1"], atol=1e-05)
+    assert np.isclose(mad.table.summ.dq1, mad.globals["qpxb1"], atol=1e-03)
+    assert np.isclose(mad.table.summ.dq2, mad.globals["qpyb1"], atol=1e-03)
 
-    df =  mad.table.twiss.dframe()
-    for my_ip in [1,2,5,8]:
-      assert np.isclose(df.loc[f'ip{my_ip}'].betx, mad.globals[f'betx_IP{my_ip}'], rtol=1e-03)
-      assert np.isclose(df.loc[f'ip{my_ip}'].bety, mad.globals[f'bety_IP{my_ip}'], rtol=1e-03)
-    
-    assert df['x'].std() < 1e-8
-    assert df['y'].std() < 1e-8
+    df = mad.table.twiss.dframe()
+    for my_ip in [1, 2, 5, 8]:
+        assert np.isclose(df.loc[f"ip{my_ip}"].betx, mad.globals[f"betx_IP{my_ip}"], rtol=1e-03)
+        assert np.isclose(df.loc[f"ip{my_ip}"].bety, mad.globals[f"bety_IP{my_ip}"], rtol=1e-03)
+
+    assert df["x"].std() < 1e-8
+    assert df["y"].std() < 1e-8
+
 
 def check_xsuite_lattices(my_line):
-  tw = my_line.twiss(method='6d', matrix_stability_tol=100)
-  print(f"--- Now displaying Twiss result at all IPS for line {my_line}---")
-  print(tw[:, "ip.*"])
-  # print qx and qy
-  print(f"--- Now displaying Qx and Qy for line {my_line}---")
-  print(tw.qx, tw.qy)
+    tw = my_line.twiss(method="6d", matrix_stability_tol=100)
+    print(f"--- Now displaying Twiss result at all IPS for line {my_line}---")
+    print(tw[:, "ip.*"])
+    # print qx and qy
+    print(f"--- Now displaying Qx and Qy for line {my_line}---")
+    print(tw.qx, tw.qy)
+
 
 def build_sequence(
     mad,
     mylhcbeam,
-    optics_version=1.6,
-    apply_fix_1p6=True,
+    apply_fix=True,
     ignore_cycling=False,
     ignore_CC=False,
-    **kwargs,
 ):
     # Select beam
     mad.input(f"mylhcbeam = {mylhcbeam}")
 
-    # Adapt path optics
-    if optics_version == 1.5:
-        path = "/lhc/"
-    elif optics_version == 1.6:
-        path = "/"
-    else:
-        raise ValueError("Optics version not supported")
-
-    # mad.input(f"""
-    #   ! Get the toolkit
-    #   call,file=
-    #     "acc-models-lhc/toolkit/macro.madx";
-    #   """)
-
+    # Build sequence
     mad.input(f"""
       ! Build sequence
       option, -echo,-warn,-info;
       if (mylhcbeam==4){{
-        call,file="acc-models-lhc{path}lhcb4.seq";
+        call,file="acc-models-lhc/lhcb4.seq";
       }} else {{
-        call,file="acc-models-lhc{path}lhc.seq";
+        call,file="acc-models-lhc/lhc.seq";
       }};
       !Install HL-LHC
       call, file=
@@ -71,7 +59,7 @@ def build_sequence(
       option, -echo, warn,-info;
       """)
 
-    if apply_fix_1p6:
+    if apply_fix:
         mad.input("""
         l.mbh = 0.001000;
         ACSCA, HARMON := HRF400;
@@ -94,19 +82,17 @@ def build_sequence(
         ACSCA.D5R4.B2, VOLT := VRF400/8, LAG := LAGRF400.B2, HARMON := HRF400;
         """)
 
-    mad.input(
-      """
+    mad.input("""
       ! Slice nominal sequence
       exec, myslice;
-      """
-    )
-    if mylhcbeam<3:
-      mad.input(f"""
+      """)
+
+    if mylhcbeam < 3:
+        mad.input(f"""
       nrj=7000;
       beam,particle=proton,sequence=lhcb1,energy=nrj,npart=1.15E11,sige=4.5e-4;
       beam,particle=proton,sequence=lhcb2,energy=nrj,bv = -1,npart=1.15E11,sige=4.5e-4;
       """)
-      
 
     install_errors_placeholders_hllhc(mad)
 
