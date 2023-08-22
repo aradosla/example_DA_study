@@ -55,7 +55,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 ### For v1.6 optics
 d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
-d_config_mad["optics_file"] = "acc-models-lhc/strengths/flat/opt_flathv_500_2000_thin.madx"
+d_config_mad["optics_file"] = "acc-models-lhc/strengths/ramp/opt_ramp_500_1500_thin.madx"
 d_config_mad["ver_hllhc_optics"] = 1.6
 
 
@@ -109,8 +109,8 @@ d_config_knobs["on_x8h"] = 0.0
 d_config_knobs["on_x8v"] = 170
 
 # Crab cavities
-d_config_knobs["on_crab1"] = -190
-d_config_knobs["on_crab5"] = -190
+d_config_knobs["on_crab1"] = 0
+d_config_knobs["on_crab5"] = 0
 
 # Octupoles
 d_config_knobs["i_oct_b1"] = 60.0
