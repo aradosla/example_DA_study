@@ -75,6 +75,12 @@ for node in root.generation(1):
         df_sim["num_particles_per_bunch"] = dic_child_collider["config_beambeam"][
             "num_particles_per_bunch"
         ]
+        df_sim["i_oct_b1"] = dic_child_collider["config_knobs_and_tuning"]["knob_settings"][
+            "i_oct_b1"
+        ]
+        df_sim["i_oct_b2"] = dic_child_collider["config_knobs_and_tuning"]["knob_settings"][
+            "i_oct_b2"
+        ]
 
         # Merge with particle data
         df_sim_with_particle = pd.merge(df_sim, particle, on=["particle_id"])
@@ -105,6 +111,8 @@ l_parameters_to_keep = [
     "i_bunch_b1",
     "i_bunch_b2",
     "num_particles_per_bunch",
+    "i_oct_b1",
+    "i_oct_b2",
 ]
 
 # Min is computed in the groupby function, but values should be identical
