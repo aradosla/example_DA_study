@@ -237,13 +237,37 @@ class ClusterSubmission:
             print("No job being submitted.")
 
         # Submit
+        dic_id_to_job = {}
+        dic_job_to_id = {}
         for filename in l_filenames:
             if self.run_on in self.dic_submission:
-                os.system(self.dic_submission[self.run_on]["submit_command"](filename))
+                output = subprocess.run(
+                    self.dic_submission[self.run_on]["submit_command"](filename).split(" "),
+                    capture_output=True,
+                ).stdout.decode("utf-8")
+                for line in output.split("\n"):
+                    if "cluster" in line:
+                        cluster_id = line.split("cluster ")[1][:-1]
             else:
                 raise (f"Error: Submission mode {self.run_on} is not yet implemented")
         print("Jobs status after submission:")
         running_jobs, queuing_jobs = self._get_state_jobs(verbose=True)
+
+    @staticmethod
+    def _get_local_jobs():
+        l_jobs = []
+        # Warning, does not work at the moment in lxplus...
+        for ps in psutil.pids():
+            aux = psutil.Process(ps).cmdline()
+            if len(aux) > 1:
+                if "run.sh" in aux[-1]:
+                    job = str(Path(aux[-1]).parent)
+
+                    # Only get path after master_study
+                    job = job.split("master_study")[1]
+
+                    l_jobs.append(job)
+        return l_jobs
 
     @staticmethod
     def _get_condor_jobs(status):
@@ -308,17 +332,7 @@ class ClusterSubmission:
     def running_jobs(self):
         l_jobs = []
         if self.run_on == "local_pc":
-            # Warning, does not work at the moment in lxplus...
-            for ps in psutil.pids():
-                aux = psutil.Process(ps).cmdline()
-                if len(aux) > 1:
-                    if "run.sh" in aux[-1]:
-                        job = str(Path(aux[-1]).parent)
-
-                        # Only get path after master_study
-                        job = job.split("master_study")[1]
-
-                        l_jobs.append(job)
+            l_jobs = self._get_local_jobs()
         elif self.run_on == "htc" or self.run_on == "htc_docker":
             l_jobs = self._get_condor_jobs("running")
         elif self.run_on == "slurm" or self.run_on == "slurm_docker":
