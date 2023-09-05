@@ -125,7 +125,7 @@ class ClusterSubmission:
         # Wait 0.5s to make sure the file is written on disk
         time.sleep(0.5)
 
-    def update_dic_id_to_job(self, running_jobs, queuing_jobs):
+    def _update_dic_id_to_job(self, running_jobs, queuing_jobs):
         # Look for jobs in the dictionnary that are not running or queuing anymore
         dic_id_to_job = self.dic_id_to_job
         set_current_jobs = set(running_jobs + queuing_jobs)
@@ -142,7 +142,7 @@ class ClusterSubmission:
             dic_id_to_job = self.dic_id_to_job
         running_jobs = self.querying_jobs(dic_id_to_job=dic_id_to_job, status="running")
         queuing_jobs = self.querying_jobs(dic_id_to_job=dic_id_to_job, status="queuing")
-        self.update_dic_id_to_job(running_jobs, queuing_jobs)
+        self._update_dic_id_to_job(running_jobs, queuing_jobs)
         if verbose:
             print(f"Running: \n" + "\n".join(running_jobs))
             print(f"queuing: \n" + "\n".join(queuing_jobs))
@@ -311,11 +311,13 @@ class ClusterSubmission:
                 if self.run_on == "local_pc":
                     os.system(self.dic_submission[self.run_on]["submit_command"](filename))
                 else:
-                    output = subprocess.run(
+                    process = subprocess.run(
                         self.dic_submission[self.run_on]["submit_command"](filename).split(" "),
                         capture_output=True,
-                    ).stdout.decode("utf-8")
-                    if "ERROR" in output:
+                    )
+                    output = process.stdout.decode("utf-8")
+                    output_error = process.stderr.decode("utf-8")
+                    if "ERROR" in output_error:
                         raise RuntimeError(f"Error in submission: {output}")
                     idx_submission = 0
                     for line in output.split("\n"):

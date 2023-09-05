@@ -63,6 +63,10 @@ def generate_run_sh_htc(node, generation_number):
                 # Copy back output
                 f'cp -f *.txt *.parquet {abs_path}\n'
         )
+        
+    if generation_number>=3:
+        print(f"Generation {generation_number} local htc submission is not supported yet... Submitting as for generation 1")
+        return generate_run_sh(node, generation_number)
 
 
 def _compute_LR_per_bunch(
