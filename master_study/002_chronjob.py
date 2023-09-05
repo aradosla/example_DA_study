@@ -306,6 +306,7 @@ class ClusterSubmission:
 
         # Submit
         dic_id_to_job_temp = {}
+        idx_submission = 0
         for filename in l_filenames:
             if self.run_on in self.dic_submission:
                 if self.run_on == "local_pc":
@@ -319,7 +320,6 @@ class ClusterSubmission:
                     output_error = process.stderr.decode("utf-8")
                     if "ERROR" in output_error:
                         raise RuntimeError(f"Error in submission: {output}")
-                    idx_submission = 0
                     for line in output.split("\n"):
                         if "htc" in self.run_on:
                             if "cluster" in line:
@@ -327,7 +327,10 @@ class ClusterSubmission:
                                 dic_id_to_job_temp[cluster_id] = l_jobs[idx_submission]
                                 idx_submission += 1
                         elif "slurm" in self.run_on:
-                            print("Submission mode with job recording not supported yet")
+                            if "Submitted" in line:
+                                job_id = int(line.split(" ")[3])
+                                dic_id_to_job_temp[job_id] = l_jobs[idx_submission]
+                                idx_submission += 1
             else:
                 raise (f"Error: Submission mode {self.run_on} is not yet implemented")
 
@@ -467,8 +470,6 @@ class ClusterSubmission:
             l_jobs = self._get_condor_jobs(status, dic_id_to_job)
 
         elif self.run_on == "slurm" or self.run_on == "slurm_docker":
-            if dic_id_to_job is None:
-                print("Warning, couldn't find the id-job file. Querying all jobs individually...")
             l_jobs = self._get_slurm_jobs(status, dic_id_to_job)
 
         else:
