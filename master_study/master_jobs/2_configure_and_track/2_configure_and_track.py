@@ -17,18 +17,13 @@ import numpy as np
 import pandas as pd
 import ruamel.yaml
 import tree_maker
-
 # Import user-defined modules
 import xmask as xm
 import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
-from misc import (
-    compute_PU,
-    generate_orbit_correction_setup,
-    luminosity_leveling,
-    luminosity_leveling_ip1_5,
-)
+from misc import (compute_PU, generate_orbit_correction_setup,
+                  luminosity_leveling, luminosity_leveling_ip1_5)
 
 # Initialize yaml reader
 ryaml = ruamel.yaml.YAML()
@@ -556,9 +551,9 @@ def prepare_particle_distribution(collider, context, config_sim, config_bb):
         scale_with_transverse_norm_emitt=(config_bb["nemitt_x"], config_bb["nemitt_y"]),
         _context=context,
     )
-    particles.particle_id = particle_df.particle_id.values
 
-    return particles
+    particle_id = particle_df.particle_id.values
+    return particles, particle_id
 
 
 # ==================================================================================================
@@ -611,13 +606,17 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     # Prepare particle distribution
-    particles = prepare_particle_distribution(collider, context, config_sim, config_bb)
+    particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
 
     # Track
     particles = track(collider, particles, config_sim)
 
+    # Get particles dictionnary
+    particles_dict = particles.to_dict()
+    particles_dict["particle_id"] = particle_id
+
     # Save output
-    pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
+    pd.DataFrame(particles_dict).to_parquet("output_particles.parquet")
 
     # Remote the correction folder, and potential C files remaining
     try:
