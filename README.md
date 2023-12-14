@@ -232,6 +232,7 @@ Once, this is done, jobs can be executed on HTCondor by setting ```run_on: 'htc'
 For reproducibility purposes and/or limiting the load on AFS or EOS drive, one can use Docker images to run the simulations. A registry of Docker images is available at "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/", and some ready-to-use for DA simulations Docker images are available at ""/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker" (for now, this is the default directory for images in the ```002_chronjob.py``` file). To learn more about building Docker images and hosting them on the CERN registry, please consult the [corresponding tutorial](https://abpcomputing.web.cern.ch/guides/docker_on_htcondor/) abd the [corresponding repository](https://gitlab.cern.ch/unpacked/sync).
 
 #### HTCondor
+
 When running simulations on HTCondor, Docker images are be pulled directly from CVMFS through the submit file. No additional configuration is required, except for setting ```run_on: 'htc_docker'``` in ```master_study/config.yaml```.
 
 #### Slurm
