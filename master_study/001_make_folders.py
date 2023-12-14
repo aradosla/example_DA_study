@@ -355,6 +355,16 @@ config["root"]["children"] = children
 # Set miniconda environment path in the config
 config["root"]["setup_env_script"] = os.getcwd() + "/../activate_miniforge.sh"
 
+
+# Recursively define the context for the simulations
+def set_context(children, idx_gen, config):
+    for child in children.values():
+        child["context"] = config["root"]["generations"][idx_gen]["context"]
+        if "children" in child.keys():
+            set_context(child["children"], idx_gen + 1, config)
+
+
+set_context(children, 1, config)
 # ==================================================================================================
 # --- Build tree and write it to the filesystem
 # ==================================================================================================

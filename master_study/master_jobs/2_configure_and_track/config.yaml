@@ -192,5 +192,8 @@ config_simulation:
 dump_collider: false
 dump_config_in_collider: false
 
+# Context for the simulation
+context: "cpu" # 'cupy' # opencl
+
 # Log
 log_file: tree_maker.log
