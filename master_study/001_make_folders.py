@@ -1,15 +1,16 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-from tree_maker import initialize
-import time
-import os
+import copy
 import itertools
+import json
+import os
+import shutil
+import time
+
 import numpy as np
 import yaml
-import shutil
-import copy
-import json
+from tree_maker import initialize
 from user_defined_functions import (
     generate_run_sh,
     generate_run_sh_htc,
