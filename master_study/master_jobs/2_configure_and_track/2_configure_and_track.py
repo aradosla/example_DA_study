@@ -17,13 +17,18 @@ import numpy as np
 import pandas as pd
 import ruamel.yaml
 import tree_maker
+
 # Import user-defined modules
 import xmask as xm
 import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
-from misc import (compute_PU, generate_orbit_correction_setup,
-                  luminosity_leveling, luminosity_leveling_ip1_5)
+from misc import (
+    compute_PU,
+    generate_orbit_correction_setup,
+    luminosity_leveling,
+    luminosity_leveling_ip1_5,
+)
 
 # Initialize yaml reader
 ryaml = ruamel.yaml.YAML()
@@ -417,7 +422,6 @@ def configure_collider(
     config,
     config_mad,
     context,
-    skip_beam_beam=False,
     save_collider=False,
     save_config=False,
     return_collider_before_bb=False,
@@ -495,7 +499,7 @@ def configure_collider(
         print("Saving collider before beam-beam configuration")
         collider_before_bb = xt.Multiline.from_dict(collider.to_dict())
 
-    if not skip_beam_beam:
+    if not config_bb["skip_beambeam"]:
         # Configure beam-beam
         collider = configure_beam_beam(collider, config_bb)
 
