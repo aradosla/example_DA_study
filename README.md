@@ -139,19 +139,25 @@ This is described in the file ```master_study/config.yaml```:
       job_folder: '../../master_jobs/1_build_distr_and_collider'
       job_executable: 1_build_distr_and_collider.py 
       files_to_clone: 
-        - gen_config_orbit_correction.py
-        - optics_specific_tools_hlhc15.py
+        - optics_specific_tools.py
       run_on: 'local_pc'
-       htc_job_flavor: 'tomorrow' 
-      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:latest"
       context: 'cpu'
+      # Following parameter is ignored when run_on is not htc or htc_docker
+      htc_job_flavor: 'tomorrow'
+      # Following parameter is ignored when run_on is not htc_docker or slurm_docker
+      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:7844a437"
+      
     2: # Launch the pymask and prepare the colliders
       job_folder: '../../master_jobs/2_configure_and_track'
-      job_executable: 2_configure_and_track.py 
+      job_executable: 2_configure_and_track.py
+      files_to_clone:
+        - misc.py  
       run_on: 'htc'  
-      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:latest"
       context: 'cpu'  
+      # Following parameter is ignored when run_on is not htc or htc_docker
       htc_job_flavor: 'tomorrow' 
+      # Following parameter is ignored when run_on is not htc_docker or slurm_docker
+      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:7844a437"
   # Children will be added below in the script 001_make_folders.py
   children:
 ```
