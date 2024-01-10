@@ -267,4 +267,4 @@ When simulating massive number of particles, using GPUs can prove to be very use
 - HTCondor uses CUDA, and therefore requires ```context: 'cupy'```.
 - Bologna uses OpenCL, and therefore requires ```context: 'opencl'```.
 
-It is strongly advised to use a Docker image to run simulations on clusters (i.e. ```run_on: htc_docker```or ```run_on: slurm_docker```, as this will ensure reproducibility and avoid any issue with the installation of the packages. In addition, the Docker image will automatically mount the GPUs on the node, and the simulations will be run on the GPU without any additional configuration.
+It is strongly advised to use a Docker image to run simulations on clusters (i.e. ```run_on: htc_docker```or ```run_on: slurm_docker```), as this will ensure reproducibility and avoid any issue with the installation of the packages. In addition, the Docker image will automatically mount the GPUs on the node, and the simulations will be run on the GPU without any additional configuration.
