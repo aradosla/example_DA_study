@@ -263,7 +263,7 @@ In practice, the ```002_chronjob.py``` script will take care of mouting the imag
 
 ## Using GPUs
 
-When simulating massive number of particles, using GPUs can prove to be very useful for speeding up the simulations. The use of GPUs should be as transparent as possible to the user, through the parameter ```context``` in ```master_study/config.yaml```. As explained above, (default) CPU computations are performed with ```context: 'cpu'```, while GPU computations are performed with ```context: 'cupy'``` or ```context: 'opencl'. The last two cases require the installation of the corresponding packages (```cupy``` or ```pyopencl```). When using GPUs on clusters, keep in mind that:
+When simulating massive number of particles, using GPUs can prove to be very useful for speeding up the simulations. The use of GPUs should be as transparent as possible to the user, through the parameter ```context``` in ```master_study/config.yaml```. As explained above, (default) CPU computations are performed with ```context: 'cpu'```, while GPU computations are performed with ```context: 'cupy'``` or ```context: 'opencl'```. The last two cases require the installation of the corresponding packages (```cupy``` or ```pyopencl```). When using GPUs on clusters, keep in mind that:
 - HTCondor uses CUDA, and therefore requires ```context: 'cupy'```.
 - Bologna uses OpenCL, and therefore requires ```context: 'opencl'```.
 
