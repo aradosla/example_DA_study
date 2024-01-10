@@ -1,14 +1,15 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-import tree_maker
-import os
-import psutil
-from pathlib import Path
-import subprocess
 import copy
-import yaml
+import os
+import subprocess
 import time
+from pathlib import Path
+
+import psutil
+import tree_maker
+import yaml
 
 
 # ==================================================================================================
@@ -22,6 +23,12 @@ class ClusterSubmission:
             self.run_on = self.config["run_on"]
         else:
             raise ("Error: Submission mode specified is not yet implemented")
+
+        # GPU configuration (for HTC)
+        if config["context"] == "cupy" and self.run_on in ["htc", "htc_docker"]:
+            self.request_GPUs = 1
+        else:
+            self.request_GPUs = 0
 
         # Path to store the association between job path and job id after submission
         self.path_root = path_root
@@ -78,7 +85,9 @@ class ClusterSubmission:
                 ),
                 "body": (
                     lambda path_node: f"initialdir = {path_node}\n"
-                    + f"executable = {path_node}/run.sh\nqueue\n"
+                    + f"executable = {path_node}/run.sh\n"
+                    + f"request_GPUs = {self.request_GPUs}\n"
+                    + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
                 "submit_command": lambda filename: f"condor_submit {filename}",
@@ -95,7 +104,9 @@ class ClusterSubmission:
                 ),
                 "body": (
                     lambda path_node: f"initialdir = {path_node}\n"
-                    + f"executable = {path_node}/run.sh\nqueue\n"
+                    + f"executable = {path_node}/run.sh\n"
+                    + f"request_GPUs = {self.request_GPUs}\n"
+                    + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
                 "submit_command": lambda filename: f"condor_submit {filename}",
