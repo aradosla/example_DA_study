@@ -25,7 +25,12 @@ class ClusterSubmission:
             raise ("Error: Submission mode specified is not yet implemented")
 
         # GPU configuration (for HTC)
-        if config["context"] == "cupy" and self.run_on in ["htc", "htc_docker"]:
+        if config["context"] in ["cupy", "opencl"] and self.run_on in [
+            "htc",
+            "htc_docker",
+            "slurm",
+            "slurm_docker",
+        ]:
             self.request_GPUs = 1
         else:
             self.request_GPUs = 0
@@ -56,6 +61,7 @@ class ClusterSubmission:
                 "head": "# Running on SLURM \n",
                 "body": lambda path_node: (
                     "sbatch --ntasks=2 --partition=slurm_hpc_acc --output=output.txt"
+                    f" --error=error.txt --gres=gpu:{self.request_GPUs}"
                     f" {path_node}/run.sh\n"
                 ),
                 "tail": f"#{self.run_on}\n",
@@ -69,6 +75,7 @@ class ClusterSubmission:
                     + f"#SBATCH --output={path_node}/output.txt\n"
                     + f"#SBATCH --error={path_node}/error.txt\n"
                     + "#SBATCH --ntasks=2\n"
+                    + f"#SBATCH --gres=gpu:{self.request_GPUs}\n"
                 ),
                 "body": lambda path_node: (
                     f"singularity exec {self.path_image} {path_node}/run.sh\n"
