@@ -248,7 +248,7 @@ When running simulations on HTCondor, Docker images are be pulled directly from 
 Things are a bit tricker with Slurm, as the Docker image must first be manually pulled from CVMFS, and then loaded on the node after Singularity-ize it. The pulling of the image is only needed the first time, and can be done with e.g. (for the image ```cdroin/da-study-docker```):
   
   ```bash
-  singularity pull docker://gitlab-registry.cern.ch/cdroin/da-study-docker
+  singularity pull docker://gitlab-registry.cern.ch/cdroin/da-study-docker:1afb04d3
   ```
 
 However, due to unknown reason, only some nodes of INFN-CNAF will correctly execute this command. For instance, it didn't work on the default CPU CERN node (```hpc-201-11-01-a```), but it did on an alternative one (```hpc-201-11-02-a```). We recommand using either ```hpc-201-11-02-a``` or a GPU node (e.g. ```hpc-201-11-35```) to pull the image. Once the image is pulled, it will be accessible from any node. 
@@ -256,7 +256,7 @@ However, due to unknown reason, only some nodes of INFN-CNAF will correctly exec
 For testing purposes, one can then run the image with Singularity directly on the node (not required):
   
   ```bash
-  singularity run da-study-docker_latest.sif
+  singularity run da-study-docker_1afb04d3.sif
   ```
 
 In practice, the ```002_chronjob.py``` script will take care of mouting the image and running it on the node with the correct miniforge distribution. All you have to do is change the ```run_on``` parameter in ```master_study/config.yaml``` to ```run_on: 'slurm_docker'```.
