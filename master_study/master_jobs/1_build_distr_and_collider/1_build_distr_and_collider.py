@@ -1,23 +1,29 @@
 """This script is used to build the base collider with Xmask, configuring only the optics. Functions
 in this script are called sequentially."""
+
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-from cpymad.madx import Madx
-import os
-import xmask as xm
-import xmask.lhc as xlhc
-import shutil
-import json
-import yaml
-import logging
-import numpy as np
+
+# Import standard library modules
 import itertools
+import json
+import logging
+import os
+import shutil
+
+# Import third-party modules
+import numpy as np
+
+# Import user-defined modules
+import optics_specific_tools as ost
 import pandas as pd
 import tree_maker
-
-# Import user-defined optics-specific tools
-import optics_specific_tools as ost
+import xmask as xm
+import xmask.lhc as xlhc
+import xobjects as xo
+import yaml
+from cpymad.madx import Madx
 
 
 # ==================================================================================================
@@ -29,6 +35,22 @@ def tree_maker_tagging(config, tag="started"):
         tree_maker.tag_json.tag_it(config["log_file"], tag)
     else:
         logging.warning("tree_maker loging not available")
+
+
+# ==================================================================================================
+# --- Function to get context
+# ==================================================================================================
+def get_context(configuration):
+    if configuration["context"] == "cupy":
+        context = xo.ContextCupy()
+    elif configuration["context"] == "opencl":
+        context = xo.ContextPyopencl()
+    elif configuration["context"] == "cpu":
+        context = xo.ContextCpu()
+    else:
+        logging.warning("context not recognized, using cpu")
+        context = xo.ContextCpu()
+    return context
 
 
 # ==================================================================================================
@@ -91,7 +113,7 @@ def write_particle_distribution(particle_list):
 # ==================================================================================================
 # --- Function to build collider from mad model
 # ==================================================================================================
-def build_collider_from_mad(config_mad, sanity_checks=True):
+def build_collider_from_mad(config_mad, context, sanity_checks=True):
     # Make mad environment
     xm.make_mad_environment(links=config_mad["links"])
 
@@ -135,7 +157,7 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
         ver_lhc_run=config_mad["ver_lhc_run"],
         ver_hllhc_optics=config_mad["ver_hllhc_optics"],
     )
-    collider.build_trackers()
+    collider.build_trackers(_context=context)
 
     if sanity_checks:
         collider["lhcb1"].twiss(method="4d")
@@ -144,7 +166,7 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     return collider
 
 
-def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
+def activate_RF_and_twiss(collider, config_mad, context, sanity_checks=True):
     # Define a RF system (values are not so immportant as they're defined later)
     print("--- Now Computing Twiss assuming:")
     if config_mad["ver_hllhc_optics"] == 1.6:
@@ -159,7 +181,7 @@ def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
 
     # Rebuild tracker if needed
     try:
-        collider.build_trackers()
+        collider.build_trackers(_context=context)
     except:
         print("Skipping rebuilding tracker")
 
@@ -189,6 +211,9 @@ def build_distr_and_collider(config_file="config.yaml"):
     # Get configuration
     configuration, config_particles, config_mad = load_configuration(config_file)
 
+    # Get context
+    context = get_context(configuration)
+
     # Get sanity checks flag
     sanity_checks = configuration["sanity_checks"]
 
@@ -202,10 +227,10 @@ def build_distr_and_collider(config_file="config.yaml"):
     write_particle_distribution(particle_list)
 
     # Build collider from mad model
-    collider = build_collider_from_mad(config_mad, sanity_checks)
+    collider = build_collider_from_mad(config_mad, context, sanity_checks)
 
     # Twiss to ensure eveyrthing is ok
-    collider = activate_RF_and_twiss(collider, config_mad, sanity_checks)
+    collider = activate_RF_and_twiss(collider, config_mad, context, sanity_checks)
 
     # Clean temporary files
     clean()

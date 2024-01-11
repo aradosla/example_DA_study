@@ -82,6 +82,7 @@ config_collider:
         c_minus_knob_2: c_minus_im_b2
 
   config_beambeam:
+    skip_beambeam: false
     bunch_spacing_buckets: 10
     num_slices_head_on: 11
     num_long_range_encounters_per_side:
@@ -191,6 +192,9 @@ config_simulation:
 # Save collider or not
 dump_collider: false
 dump_config_in_collider: false
+
+# Context for the simulation
+context: "cpu" # 'cupy' # opencl
 
 # Log
 log_file: tree_maker.log

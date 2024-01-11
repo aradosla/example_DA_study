@@ -1,14 +1,15 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-import tree_maker
-import os
-import psutil
-from pathlib import Path
-import subprocess
 import copy
-import yaml
+import os
+import subprocess
 import time
+from pathlib import Path
+
+import psutil
+import tree_maker
+import yaml
 
 
 # ==================================================================================================
@@ -22,6 +23,19 @@ class ClusterSubmission:
             self.run_on = self.config["run_on"]
         else:
             raise ("Error: Submission mode specified is not yet implemented")
+
+        # GPU configuration (for HTC)
+        if config["context"] in ["cupy", "opencl"] and self.run_on in [
+            "htc",
+            "htc_docker",
+            "slurm",
+            "slurm_docker",
+        ]:
+            self.request_GPUs = 1
+            self.slurm_queue_statement = ""
+        else:
+            self.request_GPUs = 0
+            self.slurm_queue_statement = "#SBATCH --partition=slurm_hpc_acc"
 
         # Path to store the association between job path and job id after submission
         self.path_root = path_root
@@ -48,7 +62,10 @@ class ClusterSubmission:
             "slurm": {
                 "head": "# Running on SLURM \n",
                 "body": lambda path_node: (
-                    "sbatch --ntasks=2 --partition=slurm_hpc_acc --output=output.txt"
+                    f"sbatch --ntasks=2 "
+                    f"{self.slurm_queue_statement.split(' ')[1] if len(self.slurm_queue_statement)>0 else self.slurm_queue_statement}"
+                    f" --output=output.txt"
+                    f" --error=error.txt --gres=gpu:{self.request_GPUs}"
                     f" {path_node}/run.sh\n"
                 ),
                 "tail": f"#{self.run_on}\n",
@@ -58,10 +75,12 @@ class ClusterSubmission:
                 "head": lambda path_node: (
                     "#!/bin/bash\n"
                     + "# This is a SLURM submission file using Docker\n"
-                    + "#SBATCH --partition=slurm_hpc_acc\n"
+                    + self.slurm_queue_statement
+                    + "\n"
                     + f"#SBATCH --output={path_node}/output.txt\n"
                     + f"#SBATCH --error={path_node}/error.txt\n"
                     + "#SBATCH --ntasks=2\n"
+                    + f"#SBATCH --gres=gpu:{self.request_GPUs}\n"
                 ),
                 "body": lambda path_node: (
                     f"singularity exec {self.path_image} {path_node}/run.sh\n"
@@ -78,7 +97,9 @@ class ClusterSubmission:
                 ),
                 "body": (
                     lambda path_node: f"initialdir = {path_node}\n"
-                    + f"executable = {path_node}/run.sh\nqueue\n"
+                    + f"executable = {path_node}/run.sh\n"
+                    + f"request_GPUs = {self.request_GPUs}\n"
+                    + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
                 "submit_command": lambda filename: f"condor_submit {filename}",
@@ -95,7 +116,9 @@ class ClusterSubmission:
                 ),
                 "body": (
                     lambda path_node: f"initialdir = {path_node}\n"
-                    + f"executable = {path_node}/run.sh\nqueue\n"
+                    + f"executable = {path_node}/run.sh\n"
+                    + f"request_GPUs = {self.request_GPUs}\n"
+                    + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
                 "submit_command": lambda filename: f"condor_submit {filename}",
@@ -582,7 +605,7 @@ def submit_jobs(study_name, print_uncompleted_jobs=False):
 # Load the tree from a yaml and submit the jobs that haven't been completed yet
 if __name__ == "__main__":
     # Define study
-    study_name = "example_HL_tunescan"
+    study_name = "example_tunescan"
 
     # Submit jobs
     submit_jobs(study_name)

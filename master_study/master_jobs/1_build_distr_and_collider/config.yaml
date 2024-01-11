@@ -53,7 +53,11 @@ config_mad:
     par_on_errors_NLC: 0
     par_write_errortable: 1
 
+# Context for the simulation
+context: "cpu" # 'cupy' # opencl
+
+# Log
 log_file: "tree_maker.log"
 
-# to make some specifics checks
+# To make some specifics checks
 sanity_checks: true

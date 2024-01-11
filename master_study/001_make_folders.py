@@ -1,15 +1,16 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-from tree_maker import initialize
-import time
-import os
+import copy
 import itertools
+import json
+import os
+import shutil
+import time
+
 import numpy as np
 import yaml
-import shutil
-import copy
-import json
+from tree_maker import initialize
 from user_defined_functions import (
     generate_run_sh,
     generate_run_sh_htc,
@@ -185,14 +186,16 @@ d_config_beambeam["mask_with_filling_pattern"][
     "pattern_fname"
 ] = filling_scheme_path  # If None, a full fill is assumed
 
-# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
-# are defined later)
+# Initialize bunch number to None (will be set later)
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+
+# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
+# are defined later)
 check_bunch_number = True
 if check_bunch_number:
-    # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
-    # elements), must be specified otherwise)
+    # Bunch number is ignored if pattern_fname is None (in which case the simulation considers all
+    # bunch elements). It must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
@@ -221,8 +224,7 @@ if check_bunch_number:
         # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
         print(
             "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
-            " taken. It is the bunch number "
-            + str(worst_bunch_b2)
+            " taken. It is the bunch number " + str(worst_bunch_b2)
         )
 
         d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
@@ -316,7 +318,7 @@ track_array = np.arange(d_config_particles["n_split"])
 for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
     # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
     if keep == "upper_triangle":
-        if qy < (qx - 2 - 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
+        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
             continue
     elif keep == "lower_triangle":
         if qy >= (qx - 2 - 0.0039):
@@ -354,11 +356,21 @@ config["root"]["children"] = children
 # Set miniconda environment path in the config
 config["root"]["setup_env_script"] = os.getcwd() + "/../activate_miniforge.sh"
 
+
+# Recursively define the context for the simulations
+def set_context(children, idx_gen, config):
+    for child in children.values():
+        child["context"] = config["root"]["generations"][idx_gen]["context"]
+        if "children" in child.keys():
+            set_context(child["children"], idx_gen + 1, config)
+
+
+set_context(children, 1, config)
 # ==================================================================================================
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):

@@ -2,22 +2,33 @@
 are called sequentially, in the order in which they are defined. Modularity has been favored over 
 simple scripting for reproducibility, to allow rebuilding the collider from a different program 
 (e.g. dahsboard)."""
+
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# Import standard library modules
 import json
-import ruamel.yaml
-import time
 import logging
+import os
+import time
+
+# Import third-party modules
 import numpy as np
 import pandas as pd
-import os
-import xtrack as xt
+import ruamel.yaml
 import tree_maker
+
+# Import user-defined modules
 import xmask as xm
 import xmask.lhc as xlhc
-from misc import generate_orbit_correction_setup
-from misc import luminosity_leveling, luminosity_leveling_ip1_5, compute_PU
+import xobjects as xo
+import xtrack as xt
+from misc import (
+    compute_PU,
+    generate_orbit_correction_setup,
+    luminosity_leveling,
+    luminosity_leveling_ip1_5,
+)
 
 # Initialize yaml reader
 ryaml = ruamel.yaml.YAML()
@@ -32,6 +43,22 @@ def tree_maker_tagging(config, tag="started"):
         tree_maker.tag_json.tag_it(config["log_file"], tag)
     else:
         logging.warning("tree_maker loging not available")
+
+
+# ==================================================================================================
+# --- Function to get context
+# ==================================================================================================
+def get_context(configuration):
+    if configuration["context"] == "cupy":
+        context = xo.ContextCupy()
+    elif configuration["context"] == "opencl":
+        context = xo.ContextPyopencl()
+    elif configuration["context"] == "cpu":
+        context = xo.ContextCpu()
+    else:
+        logging.warning("context not recognized, using cpu")
+        context = xo.ContextCpu()
+    return context
 
 
 # ==================================================================================================
@@ -394,7 +421,7 @@ def record_final_luminosity(collider, config_bb, l_n_collisions, crab):
 def configure_collider(
     config,
     config_mad,
-    skip_beam_beam=False,
+    context,
     save_collider=False,
     save_config=False,
     return_collider_before_bb=False,
@@ -414,7 +441,9 @@ def configure_collider(
     collider, config_bb = install_beam_beam(collider, config_collider)
 
     # Build trackers
-    collider.build_trackers()
+    # For now, start with CPU tracker due to a bug with Xsuite
+    # Refer to issue https://github.com/xsuite/xsuite/issues/450
+    collider.build_trackers()  # (_context=context)
 
     # Set knobs
     collider, conf_knobs_and_tuning = set_knobs(config_collider, collider)
@@ -472,7 +501,7 @@ def configure_collider(
         print("Saving collider before beam-beam configuration")
         collider_before_bb = xt.Multiline.from_dict(collider.to_dict())
 
-    if not skip_beam_beam:
+    if not config_bb["skip_beambeam"]:
         # Configure beam-beam
         collider = configure_beam_beam(collider, config_bb)
 
@@ -510,7 +539,7 @@ def configure_collider(
 # ==================================================================================================
 # --- Function to prepare particles distribution for tracking
 # ==================================================================================================
-def prepare_particle_distribution(config_sim, collider, config_bb):
+def prepare_particle_distribution(collider, context, config_sim, config_bb):
     beam = config_sim["beam"]
 
     particle_df = pd.read_parquet(config_sim["particle_file"])
@@ -526,10 +555,11 @@ def prepare_particle_distribution(config_sim, collider, config_bb):
         y_norm=A2_in_sigma,
         delta=config_sim["delta_max"],
         scale_with_transverse_norm_emitt=(config_bb["nemitt_x"], config_bb["nemitt_y"]),
+        _context=context,
     )
-    particles.particle_id = particle_df.particle_id.values
 
-    return particles
+    particle_id = particle_df.particle_id.values
+    return particles, particle_id
 
 
 # ==================================================================================================
@@ -565,6 +595,9 @@ def configure_and_track(config_path="config.yaml"):
     # Get configuration
     config, config_mad = read_configuration(config_path)
 
+    # Get context
+    context = get_context(config)
+
     # Tag start of the job
     tree_maker_tagging(config, tag="started")
 
@@ -572,19 +605,29 @@ def configure_and_track(config_path="config.yaml"):
     collider, config_sim, config_bb = configure_collider(
         config,
         config_mad,
+        context,
         save_collider=config["dump_collider"],
         save_config=config["dump_config_in_collider"],
         config_path=config_path,
     )
 
+    # Reset the tracker to go to GPU if needed
+    if config["context"] in ["cupy", "opencl"]:
+        collider.discard_trackers()
+        collider.build_trackers(_context=context)
+
     # Prepare particle distribution
-    particles = prepare_particle_distribution(config_sim, collider, config_bb)
+    particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
 
     # Track
     particles = track(collider, particles, config_sim)
 
+    # Get particles dictionnary
+    particles_dict = particles.to_dict()
+    particles_dict["particle_id"] = particle_id
+
     # Save output
-    pd.DataFrame(particles.to_dict()).to_parquet("output_particles.parquet")
+    pd.DataFrame(particles_dict).to_parquet("output_particles.parquet")
 
     # Remote the correction folder, and potential C files remaining
     try:
