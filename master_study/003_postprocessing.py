@@ -1,11 +1,12 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+import logging
+import time
+
+import pandas as pd
 import tree_maker
 import yaml
-import pandas as pd
-import time
-import logging
 
 # ==================================================================================================
 # --- Load tree of jobs
@@ -16,7 +17,7 @@ print("Analysis of output simulation files started")
 start = time.time()
 
 # Load Data
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 fix = "/scans/" + study_name
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
 # Add suffix to the root node path to handle scans that are not in the root directory
@@ -141,4 +142,5 @@ my_final = pd.DataFrame(
 my_final.to_parquet(f"scans/{study_name}/da.parquet")
 print("Final dataframe for current set of simulations: ", my_final)
 end = time.time()
+print("Elapsed time: ", end - start)
 print("Elapsed time: ", end - start)

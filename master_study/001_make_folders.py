@@ -222,8 +222,7 @@ if check_bunch_number:
         # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
         print(
             "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
-            " taken. It is the bunch number "
-            + str(worst_bunch_b2)
+            " taken. It is the bunch number " + str(worst_bunch_b2)
         )
 
         d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
@@ -369,7 +368,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
 if not os.path.exists("scans/" + study_name):
