@@ -186,14 +186,16 @@ d_config_beambeam["mask_with_filling_pattern"][
     "pattern_fname"
 ] = filling_scheme_path  # If None, a full fill is assumed
 
-# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
-# are defined later)
+# Initialize bunch number to None (will be set later)
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
+
+# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
+# are defined later)
 check_bunch_number = True
 if check_bunch_number:
-    # Bunch number (ignored if pattern_fname is None (in which case the simulation considers all bunch
-    # elements), must be specified otherwise)
+    # Bunch number is ignored if pattern_fname is None (in which case the simulation considers all
+    # bunch elements). It must be specified otherwise)
     # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
     # long-range interactions will be used
     if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
