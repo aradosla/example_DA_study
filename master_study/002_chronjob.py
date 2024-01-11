@@ -32,8 +32,10 @@ class ClusterSubmission:
             "slurm_docker",
         ]:
             self.request_GPUs = 1
+            self.slurm_queue_statement = ""
         else:
             self.request_GPUs = 0
+            self.slurm_queue_statement = "#SBATCH --partition=slurm_hpc_acc"
 
         # Path to store the association between job path and job id after submission
         self.path_root = path_root
@@ -60,7 +62,9 @@ class ClusterSubmission:
             "slurm": {
                 "head": "# Running on SLURM \n",
                 "body": lambda path_node: (
-                    "sbatch --ntasks=2 --partition=slurm_hpc_acc --output=output.txt"
+                    f"sbatch --ntasks=2 "
+                    f"{self.slurm_queue_statement.split(' ')[1] if len(self.slurm_queue_statement)>0 else self.slurm_queue_statement}"
+                    f" --output=output.txt"
                     f" --error=error.txt --gres=gpu:{self.request_GPUs}"
                     f" {path_node}/run.sh\n"
                 ),
@@ -71,7 +75,8 @@ class ClusterSubmission:
                 "head": lambda path_node: (
                     "#!/bin/bash\n"
                     + "# This is a SLURM submission file using Docker\n"
-                    + "#SBATCH --partition=slurm_hpc_acc\n"
+                    + self.slurm_queue_statement
+                    + "\n"
                     + f"#SBATCH --output={path_node}/output.txt\n"
                     + f"#SBATCH --error={path_node}/error.txt\n"
                     + "#SBATCH --ntasks=2\n"

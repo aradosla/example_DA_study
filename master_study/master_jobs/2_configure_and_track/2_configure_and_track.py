@@ -441,7 +441,9 @@ def configure_collider(
     collider, config_bb = install_beam_beam(collider, config_collider)
 
     # Build trackers
-    collider.build_trackers(_context=context)
+    # For now, start with CPU tracker due to a bug with Xsuite
+    # Refer to issue https://github.com/xsuite/xsuite/issues/450
+    collider.build_trackers()  # (_context=context)
 
     # Set knobs
     collider, conf_knobs_and_tuning = set_knobs(config_collider, collider)
@@ -608,6 +610,11 @@ def configure_and_track(config_path="config.yaml"):
         save_config=config["dump_config_in_collider"],
         config_path=config_path,
     )
+
+    # Reset the tracker to go to GPU if needed
+    if config["context"] in ["cupy", "opencl"]:
+        collider.discard_trackers()
+        collider.build_trackers(_context=context)
 
     # Prepare particle distribution
     particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
