@@ -343,11 +343,13 @@ def luminosity_leveling(
         vary.append(xt.VaryList(config_this_ip["corrector_knob_names"], step=1e-7))
 
         # Match
+        tw0 = collider.twiss(lines=["lhcb1", "lhcb2"])
         collider.match(
             lines=["lhcb1", "lhcb2"],
-            ele_start=[bump_range["lhcb1"][0], bump_range["lhcb2"][0]],
-            ele_stop=[bump_range["lhcb1"][-1], bump_range["lhcb2"][-1]],
-            twiss_init="preserve",
+            start=[bump_range["lhcb1"][0], bump_range["lhcb2"][0]],
+            end=[bump_range["lhcb1"][-1], bump_range["lhcb2"][-1]],
+            init=tw0,
+            init_at=xt.START,
             targets=targets,
             vary=vary,
         )
