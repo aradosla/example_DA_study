@@ -20,7 +20,6 @@ import tree_maker
 
 # Import user-defined modules
 import xmask as xm
-import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
 from misc import (
@@ -236,7 +235,13 @@ def do_levelling(
     if "constraints" in config_lumi_leveling["ip8"]:
         for constraint in config_lumi_leveling["ip8"]["constraints"]:
             obs, beam, sign, val, at = constraint.split("_")
-            target = xt.TargetInequality(obs, sign, float(val), at=at, line=beam, tol=1e-6)
+            if sign == "<":
+                ineq = xt.LessThan(float(val))
+            elif sign == ">":
+                ineq = xt.GreaterThan(float(val))
+            else:
+                raise ValueError(f"Unsupported sign for luminosity optimization constraint: {sign}")
+            target = xt.Target(obs, ineq, at=at, line=beam, tol=1e-6)
             additional_targets_lumi.append(target)
 
     # Then level luminosity in IP 2/8 changing the separation
@@ -569,8 +574,8 @@ def track(collider, particles, config_sim, save_input_particles=False):
     # Get beam being tracked
     beam = config_sim["beam"]
 
-    # Optimize line for tracking
-    collider[beam].optimize_for_tracking()
+    # Optimize line for tracking (not working for now)
+    # collider[beam].optimize_for_tracking()
 
     # Save initial coordinates if requested
     if save_input_particles:
