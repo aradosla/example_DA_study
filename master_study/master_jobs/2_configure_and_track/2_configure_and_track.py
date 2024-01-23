@@ -464,7 +464,7 @@ def configure_collider(
     crab = False
     if "on_crab1" in config_collider["config_knobs_and_tuning"]["knob_settings"]:
         crab_val = float(config_collider["config_knobs_and_tuning"]["knob_settings"]["on_crab1"])
-        if crab_val > 0:
+        if abs(crab_val) > 0:
             crab = True
 
     # Do the leveling if requested
