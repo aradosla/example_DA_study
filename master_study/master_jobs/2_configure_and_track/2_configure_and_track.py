@@ -574,8 +574,8 @@ def track(collider, particles, config_sim, save_input_particles=False):
     # Get beam being tracked
     beam = config_sim["beam"]
 
-    # Optimize line for tracking (not working for now)
-    # collider[beam].optimize_for_tracking()
+    # Optimize line for tracking
+    collider[beam].optimize_for_tracking()
 
     # Save initial coordinates if requested
     if save_input_particles:
