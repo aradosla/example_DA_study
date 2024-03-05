@@ -1,6 +1,6 @@
 """This script is used to configure the collider and track the particles. Functions in this script
-are called sequentially, in the order in which they are defined. Modularity has been favored over 
-simple scripting for reproducibility, to allow rebuilding the collider from a different program 
+are called sequentially, in the order in which they are defined. Modularity has been favored over
+simple scripting for reproducibility, to allow rebuilding the collider from a different program
 (e.g. dahsboard)."""
 
 # ==================================================================================================
@@ -629,10 +629,19 @@ def configure_and_track(config_path="config.yaml"):
 
     # Get particles dictionnary
     particles_dict = particles.to_dict()
-    particles_dict["particle_id"] = particle_id
+
+    # Convert to dataframe
+    particles_df = pd.DataFrame(particles_dict)
+
+    # ! Very important, otherwise the particles will be mixed in each subset
+    # Sort by parent_particle_id
+    particles_df = particles_df.sort_values("parent_particle_id")
+
+    # Assign the old id to the sorted dataframe
+    particles_df["particle_id"] = particle_id
 
     # Save output
-    pd.DataFrame(particles_dict).to_parquet("output_particles.parquet")
+    particles_df.to_parquet("output_particles.parquet")
 
     # Remote the correction folder, and potential C files remaining
     try:
