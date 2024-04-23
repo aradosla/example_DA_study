@@ -15,7 +15,7 @@ from user_defined_functions import (
     generate_run_sh,
     generate_run_sh_htc,
     get_worst_bunch,
-    reformat_filling_scheme_from_lpc_alt,
+    load_and_check_filling_scheme,
 )
 
 # ==================================================================================================
@@ -154,7 +154,7 @@ d_config_beambeam["nemitt_y"] = 2.5e-6
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
+    "master_jobs/filling_scheme/25ns_1983b_1970_1657_1684_144bpi_19inj_3INDIVs.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -166,25 +166,13 @@ filling_scheme_path = os.path.abspath(
 # still be converted in the lines below (see with matteo.rufolo@cern.ch for questions, or if it
 # doesn't work).
 
-# Load filling scheme
-if filling_scheme_path.endswith(".json"):
-    with open(filling_scheme_path, "r") as fid:
-        d_filling_scheme = json.load(fid)
-
-# If the filling scheme is already in the correct format, do nothing
-if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
-    pass
-# Otherwise, we need to reformat the file
-else:
-    # One can potentially use b1_array, b2_array to scan the bunches later
-    b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
-    filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
-
+# Load and check filling scheme
+filling_scheme_path = load_and_check_filling_scheme(filling_scheme_path)
 
 # Add to config file
-d_config_beambeam["mask_with_filling_pattern"][
-    "pattern_fname"
-] = filling_scheme_path  # If None, a full fill is assumed
+d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = (
+    filling_scheme_path  # If None, a full fill is assumed
+)
 
 # Initialize bunch number to None (will be set later)
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None

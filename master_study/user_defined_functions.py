@@ -1,7 +1,8 @@
-import numpy as np
 import json
-import yaml
 import os
+
+import numpy as np
+import yaml
 
 
 def generate_run_sh(node, generation_number):
@@ -426,6 +427,37 @@ def reformat_filling_scheme_from_lpc_alt(filling_scheme_path):
     with open(filling_scheme_path.split(".json")[0] + "_converted.json", "w") as file_bool:
         json.dump(data_json, file_bool)
     return B1, B2
+
+
+def load_and_check_filling_scheme(filling_scheme_path):
+    if not filling_scheme_path.endswith(".json"):
+        raise ValueError("Filling scheme must be in json format")
+
+    with open(filling_scheme_path, "r") as fid:
+        d_filling_scheme = json.load(fid)
+
+    if "beam1" in d_filling_scheme.keys() and "beam2" in d_filling_scheme.keys():
+        # If the filling scheme not already in the correct format, convert
+        if "schemebeam1" in d_filling_scheme.keys() or "schemebeam2" in d_filling_scheme.keys():
+            d_filling_scheme["beam1"] = d_filling_scheme["schemebeam1"]
+            d_filling_scheme["beam2"] = d_filling_scheme["schemebeam2"]
+            # Delete all the other keys
+            d_filling_scheme = {
+                k: v for k, v in d_filling_scheme.items() if k in ["beam1", "beam2"]
+            }
+            # Dump the dictionary back to the file
+            filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
+            with open(filling_scheme_path, "w") as fid:
+                json.dump(d_filling_scheme, fid)
+
+            # Else, do nothing
+
+    else:
+        # One can potentially use b1_array, b2_array to scan the bunches later
+        b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
+        filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
+
+    return filling_scheme_path
 
 
 if __name__ == "__main__":
