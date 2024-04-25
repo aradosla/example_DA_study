@@ -29,5 +29,8 @@ studies/scans/**/tree_maker.log
 !studies/scans/**/da.parquet
 !studies/scans/.gitkeep
 
+# filling_schemes
+!studies/filling_scheme
+
 # misc
 da-study-docker_latest.sif
