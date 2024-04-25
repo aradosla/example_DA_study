@@ -55,14 +55,15 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 # Optic file path (version, and round or flat)
 
-### For v1.6 optics
-d_config_mad["links"]["acc-models-lhc"] = "../../../../external_dependencies/acc-models-lhc"
-d_config_mad["optics_file"] = "acc-models-lhc/strengths/ramp/opt_ramp_500_1500_thin.madx"
-d_config_mad["ver_hllhc_optics"] = 1.6
+### For run III
+d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
+d_config_mad["ver_hllhc_optics"] = None
+d_config_mad["ver_lhc_run"] = 3.0
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 7000
+beam_energy_tot = 6800
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -100,31 +101,38 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-# Knobs at IPs
-d_config_knobs["on_x1"] = 250
-d_config_knobs["on_sep1"] = 0
-d_config_knobs["on_x2"] = -170
-d_config_knobs["on_sep2"] = 0.138
-d_config_knobs["on_x5"] = 250
-d_config_knobs["on_sep5"] = 0
-d_config_knobs["on_x8h"] = 0.0
-d_config_knobs["on_x8v"] = 170
+# Exp. configuration in IR1, IR2, IR5 and IR8
+d_config_knobs["on_x1"] = -145.000
+d_config_knobs["on_sep1"] = 0.0
+d_config_knobs["phi_IR1"] = 180.000
 
-# Crab cavities
-d_config_knobs["on_crab1"] = 0
-d_config_knobs["on_crab5"] = 0
+d_config_knobs["on_x2h"] = 0.000
+d_config_knobs["on_sep2h"] = 1.0  # 1.000
+d_config_knobs["on_x2v"] = 200.000
+d_config_knobs["on_sep2v"] = 0.000
+d_config_knobs["phi_IR2"] = 90.000
+
+d_config_knobs["on_x5"] = 145.000
+d_config_knobs["on_sep5"] = 0.0
+d_config_knobs["phi_IR5"] = 90.000
+
+d_config_knobs["on_x8h"] = 0.000
+d_config_knobs["on_sep8h"] = -0.01  # -1.000
+d_config_knobs["on_x8v"] = 200.000
+d_config_knobs["on_sep8v"] = 0.000
+d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 60.0
-d_config_knobs["i_oct_b2"] = 60.0
+d_config_knobs["i_oct_b1"] = 300.0
+d_config_knobs["i_oct_b2"] = 300.0
 
 ### leveling configuration
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
 d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 2.3e11
-d_config_leveling_ip1_5["constraints"]["max_PU"] = 160
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
 
 # Define dictionary for the leveling settings
@@ -146,13 +154,17 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11  # type: ignore
-d_config_beambeam["nemitt_x"] = 2.5e-6  # type: ignore
-d_config_beambeam["nemitt_y"] = 2.5e-6  # type: ignore
+d_config_beambeam["num_particles_per_bunch"] = 1.15e11  # type: ignore
+d_config_beambeam["nemitt_x"] = 2.2e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
+filling_scheme_path = os.path.abspath(
+    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
+)
+
 # Alternatively, one can get a fill directly from LPC from, e.g.:
 # https://lpc.web.cern.ch/cgi-bin/fillTable.py?year=2023
 # In this page, get the fill number of your fill of interest, and use it to replace the XXXX in the
