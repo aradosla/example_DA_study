@@ -10,20 +10,70 @@ Jobs can be efficiently stored and parallelized using the
 
 ## Installation instructions
 
-The simplest way to start is to clone the repository and install the dependencies using conda:
+### Cloning the repository and corresponding submodules
+
+Run the following command to clone the repository and all the relevant submodules needed for this study (xmask with lhc-errors, xtrack with crab cavities luminosity computation):
 
 ```bash
-git clone git@github.com:xsuite/example_DA_study.git
+git clone --recurse-submodules https://github.com/ColasDroin/DA_IPAC_2024.git
 ```
 
-Then:
+If not already done, install Poetry following the tutorial [here](https://python-poetry.org/docs/). Note that Poetry must have access to Python 3.10 or above for the rest of the tutorial to work. More importantly, the executable of Python must be accessible from a cluster node (e.g. located on AFS when submitting jobs to HTCondor) for a submission to work.
+
+You can check the base executable of Python that Poetry is using by running the following command:
 
 ```bash
-cd example_DA_study
-source make_miniforge.sh
+poetry env info
 ```
 
-This should install conda along with the required python modules. If something goes wrong, you can execute the commands in the ```make_miniforge.sh``` script manually, one line after the other. Git may trigger an error after ```git submodule init```, in which case you can mark the directory as safe using the command suggested by git, and enter ```git submodule init``` and ```git submodule update``` again. If this still doesn't work, you can try to manually get into ```modules/xmask/xmask/lhc``` , manually remove ```lhcerrors``` with ```rm -rf lhcerrors``` (which is potentially empty), and finally git clone ```https://github.com/lhcopt/lhcerrors.git```.
+If needed, you can change the exectutable with e.g:
+
+```bash
+poetry env use /path/to/python
+```
+
+For easier submission later, also impose the virtual environment to be created in the repository folder by running the following command:
+
+```bash
+poetry config virtualenvs.in-project true
+```
+
+Finally, install the dependencies by running the following command:
+
+```bash
+poetry install
+```
+
+At this point, ensure that a `.venv` folder has been created in the repository folder. If not, follow the fix described in the next section.
+
+Finally, you can make xsuite faster by precompiling the kernel, with:
+
+```bash
+poetry run xsuite-prebuild
+```
+
+To run any subsequent Python command, either activate the virtual environment (activate a shell within Poetry) with:
+
+```bash
+poetry shell
+```
+
+or run the command with Poetry:
+
+```bash
+poetry run python my_script.py
+```
+
+### Fix the virtual environment path
+
+If, for some reason, your virtual environment is not in a `.venv`folder inside of your repository, you will have to
+update the submitting script to point to the correct virtual environment. To that end, run the following command:
+
+```bash
+poetry env list --full-path
+```
+
+Identify the virtual environment that is being used and copy the corresponding path. Now, open the file `source_python.sh` and replace the line `source $SCRIPT_DIR/.venv/bin/activate`with the path to the virtual environment you just found (e.g. `source /path/to/your/virtual/environment/bin/activate`).
 
 ## Running a simple parameter scan simulation
 
@@ -31,7 +81,7 @@ This section introduces the basic steps to run a simple parameter scan simulatio
 
 ### Setting up the study
 
-You can select the range of parameters you want to scan by editing the ```master_study/001_make_folders.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 6 tunes are selected, in order not to create too many jobs):
+You can select the range of parameters you want to scan by editing the ```studies/scripts/1_create_study.py``` script, under the section ```Machine parameters being scanned```. For example, you can edit the following lines to do a tune scan of your liking (here, only the first 6 tunes are selected, in order not to create too many jobs):
 
 ```python
 array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:6]
@@ -49,12 +99,12 @@ n_turns = 200
 you can give the study you're doing the name of your choice by editing the following line:
 
 ```python
-study_name = "example_HL_tunescan"
+study_name = "example_tunescan"
 ```
 
 ### Building the tree
 
-You are now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```master_study/config.yaml```. As you can see, there are only 2 generations here :
+You are now ready to create the folder structure (the _tree_) of your study. The tree structure can be checked in ```studies/scripts/config.yaml```. As you can see, there are only 2 generations here :
 
 - the first generation generates the particles distribution and build a collider with just the optics (which we call "base collider" from now on).
 - the second generation sets all the other collider parameters, including the ones that are being scanned, and tracks the particles for a given number of turns.
@@ -69,17 +119,17 @@ context: 'cpu'
 If not already done, activate the conda environment:
 
 ```bash
-source miniforge/bin/activate
+poetry shell
 ```
 
 Now, move to the master_study folder, and run to script to build the tree and write it on disk:
 
 ```bash
-cd master_study
-python 001_make_folders.py
+cd studies/scripts/
+python 1_create_study.py
 ```
 
-This should create a folder named after ```study_name``` in ```master_study/scans```. This folder contains the tree structure of your study: the parent generation is in the subfolder ```base_collider```, while the subsequent children are in the ```xtrack_iiii```. The tree_maker ```.json``` and ```.log``` files are used by tree_maker to keep track of the jobs that have been run and the ones that are still to be run.
+This should create a folder named after ```study_name``` in ```studies/scans```. This folder contains the tree structure of your study: the parent generation is in the subfolder ```base_collider```, while the subsequent children are in the ```xtrack_iiii```. The tree_maker ```.json``` and ```.log``` files are used by tree_maker to keep track of the jobs that have been run and the ones that are still to be run.
 
 Each node of each generation contains a ```config.yaml``` file that contains the parameters used to run the corresponding job (e.g. the particle distributions parameters or the collider crossing-angle for the first generation, and, e.g. the tunes and number of turns simulated for the second generation).
 
@@ -89,25 +139,25 @@ You should be able to run each job individually by executing the following comma
 source run.sh
 ```
 
-Note that, to run without errors, children nodes will most likley need the files output by the parent nodes. Therefore, you should run the parent nodes first, and then the children nodes. However, this is all done automatically by the ```master_study/002_chronjob.py``` script (cf. upcoming section), such that running manually the ```run.sh``` should be done only for debugging purposes.
+Note that, to run without errors, children nodes will most likley need the files output by the parent nodes. Therefore, you should run the parent nodes first, and then the children nodes. However, this is all done automatically by the ```studies/scripts/2_run_jobs.py``` script (cf. upcoming section), such that running manually the ```run.sh``` should be done only for debugging purposes.
 
 ### Running the jobs
 
-First, update the study name in ```master_study/002_chronjob.py```. You can now execute the script:
+First, update the study name in ```studies/scripts/2_run_jobs.py```. You can now execute the script:
 
 ```bash
-python 002_chronjob.py
+python 2_run_jobs.py
 ```
 
 Here, this will run the first generation (```base_collider```), which consists of only one job (building the particles distribution and the base collider).
 
 In a general way, once the script is finished running, executing it again will check that the jobs have been run successfully, and re-run the ones that failed. If no jobs have failed, it will run the jobs from the next generation. Therefore, executing it again should launch all the tracking jobs (several for each tune, as the particle distribution is split in several files).
 
-⚠️ **If the generation of the simulation you're launching comprises many jobs, ensure that you're not running them on your local machine (i.e. you don't use ```run_on: 'local_pc'``` in ```master_study/config.yaml```). Otherwise, as the jobs are run in parallel, you will most likely saturate the cores and/or the RAM of your machine.**
+⚠️ **If the generation of the simulation you're launching comprises many jobs, ensure that you're not running them on your local machine (i.e. you don't use ```run_on: 'local_pc'``` in ```studies/scripts/config.yaml```). Otherwise, as the jobs are run in parallel, you will most likely saturate the cores and/or the RAM of your machine.**
 
 ### Analyzing the results
 
-Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```master_study/003_postprocessing.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have been scanned (here, the tunes) by editing the following line:
+Once all jobs of all generations have been computed, the results from the simulations can be gathered in a single dataframe by running the ```studies/scripts/3_postprocess.py``` script. First, make sure to update the study name in the script. Then, ensure that the jobs will be grouped by the variable that have been scanned (here, the tunes) by editing the following line:
 
 ```python
 groupby = ["qx", "qy"]
@@ -116,10 +166,10 @@ groupby = ["qx", "qy"]
 Finally, run the script:
 
 ```bash
-python 003_postprocessing.py
+python 3_postprocess.py
 ```
 
-This should output a parquet dataframe in ```master_study/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.
+This should output a parquet dataframe in ```studies/scans/study_name/```. This dataframe contains the results of the simulations (e.g. dynamics aperture for each tune), and can be used for further analysis. Note that, in the toy example above, since we simulate for a very small number of turns, the resulting dataframe will be empty as no particles will be lost during the simulation.
 
 ## What happens under the hood
 
@@ -129,7 +179,7 @@ The aim of this set of scripts is to run sets of simulations in a fast and autom
 
 Since simulations all make use of the same base collider, the base collider only needs to be built once, as the optics is never "scanned". However, each simulation corresponds to a different set of parameters, meaning that the base collider needs to be tailored ("tuned") to each simulation. Therefore, the base collider will correspond to generation 1, and the subsequent tracking simulations with different parameters will correspond to generation 2.
 
-This is described in the file ```master_study/config.yaml```:
+This is described in the file ```studies/scripts/config.yaml```:
 
 ```yaml
 'root':
@@ -270,3 +320,7 @@ When simulating massive number of particles, using GPUs can prove to be very use
 - Bologna uses OpenCL, and therefore requires ```context: 'opencl'```.
 
 It is strongly advised to use a Docker image to run simulations on clusters (i.e. ```run_on: htc_docker```or ```run_on: slurm_docker```), as this will ensure reproducibility and avoid any issue with the installation of the packages. In addition, the Docker image will automatically mount the GPUs on the node, and the simulations will be run on the GPU without any additional configuration.
+
+## License
+
+This repository is licensed under the MIT license. Please refer to the [LICENSE](LICENSE) file for more information.
