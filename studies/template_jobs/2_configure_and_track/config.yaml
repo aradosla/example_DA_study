@@ -194,6 +194,11 @@ config_collider:
       impose_separation_orthogonal_to_crossing: false
       knobs:
         - on_sep8v
+      constraints:
+        - x_lhcb1_<_0_ip8
+      # - x_lhcb2_>_0_ip8
+      # - y_lhcb1_>_0_ip8
+      # - y_lhcb2_<_0_ip8
       bump_range:
         lhcb1:
           - e.ds.l8.b1
