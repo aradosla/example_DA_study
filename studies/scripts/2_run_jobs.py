@@ -22,7 +22,7 @@ class ClusterSubmission:
         if config["run_on"] in ["local_pc", "htc", "slurm", "htc_docker", "slurm_docker"]:
             self.run_on = self.config["run_on"]
         else:
-            raise ("Error: Submission mode specified is not yet implemented")
+            raise ValueError("Error: Submission mode specified is not yet implemented")
 
         # GPU configuration (for HTC)
         if config["context"] in ["cupy", "opencl"] and self.run_on in [
@@ -44,12 +44,11 @@ class ClusterSubmission:
         # Path to singularity image
         if "singularity_image" in self.config:
             self.path_image = self.config["singularity_image"]
+        elif self.run_on in ["slurm_docker", "htc_docker"]:
+            raise ValueError("Error: Singularity image must be specified for docker submission")
         else:
-            if self.run_on in ["slurm_docker", "htc_docker"]:
-                raise ("Error: Singularity image must be specified for docker submission")
-            else:
-                # Needs to be defined, but irrelevant for local_pc, slurm and htc
-                self.path_image = ""
+            # Needs to be defined, but irrelevant for local_pc, slurm and htc
+            self.path_image = ""
 
         # Dictionnary of instructions for submission files
         self.dic_submission = {
@@ -167,8 +166,8 @@ class ClusterSubmission:
         queuing_jobs = self.querying_jobs(dic_id_to_job=dic_id_to_job, status="queuing")
         self._update_dic_id_to_job(running_jobs, queuing_jobs)
         if verbose:
-            print(f"Running: \n" + "\n".join(running_jobs))
-            print(f"queuing: \n" + "\n".join(queuing_jobs))
+            print("Running: \n" + "\n".join(running_jobs))
+            print("queuing: \n" + "\n".join(queuing_jobs))
         return running_jobs, queuing_jobs
 
     @staticmethod
@@ -179,8 +178,8 @@ class ClusterSubmission:
         if not path_node.endswith("/"):
             path_job += "/"
 
-        # Only get path after master_study
-        path_job = path_job.split("master_study")[1]
+        # Only get path after studies
+        path_job = path_job.split("studies")[1]
 
         return path_job
 
@@ -212,7 +211,7 @@ class ClusterSubmission:
                 filename_node = f"{filename.split('.sub')[0]}_{idx_node}.sub"
 
                 # Write the submission files
-                print('Writing submission file for node "' + path_node + '"')
+                print(f'Writing submission file for node "{path_node}"')
                 with open(filename_node, "w") as fid:
                     # Careful, I implemented a fix for path due to the temporary home recovery folder
                     to_replace = "/storage-hpc/gpfs_data/HPC/home_recovery"
@@ -265,7 +264,7 @@ class ClusterSubmission:
 
                 # Test if node is running, queuing or completed
                 if self._test_node(node, path_job, running_jobs, queuing_jobs):
-                    print('Writing submission command for node "' + path_node + '"')
+                    print(f'Writing submission command for node "{path_node}"')
                     # Write instruction for submission
                     fid.write(str_body(path_node))
 
@@ -300,14 +299,13 @@ class ClusterSubmission:
         if self.run_on == "slurm_docker":
             return self._write_sub_files_slurm(filename, running_jobs, queuing_jobs, list_of_nodes)
 
-        # htcondor, local_pc, etc.
         else:
             return self._write_sub_file(
                 filename,
                 running_jobs,
                 queuing_jobs,
                 list_of_nodes,
-                write_htc_job_flavour=True if self.run_on in ["htc", "htc_docker"] else False,
+                write_htc_job_flavour=self.run_on in ["htc", "htc_docker"],
             )
 
     def write_sub_files(self, list_of_nodes, filename="file.sub"):
@@ -323,7 +321,7 @@ class ClusterSubmission:
             raise (
                 "Error: Multiple submission files should not be implemented for this submission"
                 " mode"
-            )
+            )  # type: ignore
         if len(l_filenames) == 0:
             print("No job being submitted.")
 
@@ -342,7 +340,7 @@ class ClusterSubmission:
                     output = process.stdout.decode("utf-8")
                     output_error = process.stderr.decode("utf-8")
                     if "ERROR" in output_error:
-                        raise RuntimeError(f"Error in submission: {output}")
+                        raise RuntimeError(f"Error in submission: {output_error}")
                     for line in output.split("\n"):
                         if "htc" in self.run_on:
                             if "cluster" in line:
@@ -355,10 +353,10 @@ class ClusterSubmission:
                                 dic_id_to_job_temp[job_id] = l_jobs[idx_submission]
                                 idx_submission += 1
             else:
-                raise (f"Error: Submission mode {self.run_on} is not yet implemented")
+                raise ValueError(f"Error: Submission mode {self.run_on} is not yet implemented")
 
         # Update and write the id-job file
-        if len(dic_id_to_job_temp) > 0:
+        if dic_id_to_job_temp:
             assert len(dic_id_to_job_temp) == len(l_jobs)
 
         # Merge with the previous id-job file
@@ -368,10 +366,9 @@ class ClusterSubmission:
         if dic_id_to_job is not None:
             dic_id_to_job.update(dic_id_to_job_temp)
             self.dic_id_to_job = dic_id_to_job
-        else:
-            if len(dic_id_to_job_temp) > 0:
-                dic_id_to_job = dic_id_to_job_temp
-                self.dic_id_to_job = dic_id_to_job
+        elif dic_id_to_job_temp:
+            dic_id_to_job = dic_id_to_job_temp
+            self.dic_id_to_job = dic_id_to_job
 
         print("Jobs status after submission:")
         running_jobs, queuing_jobs = self._get_state_jobs(dic_id_to_job=dic_id_to_job, verbose=True)
@@ -383,16 +380,15 @@ class ClusterSubmission:
         for ps in psutil.pids():
             try:
                 aux = psutil.Process(ps).cmdline()
-            except:
+            except Exception:
                 aux = []
-            if len(aux) > 1:
-                if "run.sh" in aux[-1]:
-                    job = str(Path(aux[-1]).parent)
+            if len(aux) > 1 and "run.sh" in aux[-1]:
+                job = str(Path(aux[-1]).parent)
 
-                    # Only get path after master_study
-                    job = job.split("master_study")[1]
+                # Only get path after studies
+                job = job.split("studies")[1]
 
-                    l_jobs.append(job + "/")
+                l_jobs.append(f"{job}/")
         return l_jobs
 
     @staticmethod
@@ -415,17 +411,14 @@ class ClusterSubmission:
                 # Get path from dic_id_to_job if available
                 if dic_id_to_job is not None:
                     if jobid in dic_id_to_job:
-                        job = dic_id_to_job[jobid]
-                        l_jobs.append(job)
-                    else:
-                        if first_missing_job:
-                            print(
-                                "Warning, some jobs are queuing/running and are not in the id-job"
-                                " file. They may come from another study. Ignoring them."
-                            )
-                            first_missing_job = False
+                        l_jobs.append(dic_id_to_job[jobid])
+                    elif first_missing_job:
+                        print(
+                            "Warning, some jobs are queuing/running and are not in the id-job"
+                            " file. They may come from another study. Ignoring them."
+                        )
+                        first_missing_job = False
 
-                # Query job individually if needed
                 elif force_query_individually:
                     if first_line:
                         print(
@@ -438,18 +431,16 @@ class ClusterSubmission:
                     ).stdout.decode("utf-8")
                     job = job_details.split('Cmd = "')[1].split("run.sh")[0]
 
-                    # Only get path after master_study
-                    job = job.split("master_study")[1]
+                    # Only get path after studies
+                    job = job.split("studies")[1]
                     l_jobs.append(job)
 
-                # Just ignore jobs
-                else:
-                    if first_line:
-                        print(
-                            "Warning, some jobs are queuing/running and the id-job file is"
-                            " missing... Ignoring them."
-                        )
-                        first_line = False
+                elif first_line:
+                    print(
+                        "Warning, some jobs are queuing/running and the id-job file is"
+                        " missing... Ignoring them."
+                    )
+                    first_line = False
 
         return l_jobs
 
@@ -477,17 +468,14 @@ class ClusterSubmission:
             # Get path from dic_id_to_job if available
             if dic_id_to_job is not None:
                 if jobid in dic_id_to_job:
-                    job = dic_id_to_job[jobid]
-                    l_jobs.append(job)
-                else:
-                    if first_missing_job:
-                        print(
-                            "Warning, some jobs are queuing/running and are not in the id-job"
-                            " file. They may come from another study. Ignoring them."
-                        )
-                        first_missing_job = False
+                    l_jobs.append(dic_id_to_job[jobid])
+                elif first_missing_job:
+                    print(
+                        "Warning, some jobs are queuing/running and are not in the id-job"
+                        " file. They may come from another study. Ignoring them."
+                    )
+                    first_missing_job = False
 
-            # Else, query job individually
             elif force_query_individually:
                 if first_line:
                     print(
@@ -498,23 +486,21 @@ class ClusterSubmission:
                 job_details = subprocess.run(
                     ["scontrol", "show", "jobid", "-dd", f"{jobid}"], capture_output=True
                 ).stdout.decode("utf-8")
-                if "run.sh" in job_details:
-                    job = job_details.split("Command=")[1].split("run.sh")[0]
-                else:
-                    job = job_details.split("StdOut=")[1].split("output.txt")[0]
-
-                # Only get path after master_study
-                job = job.split("master_study")[1]
+                job = (
+                    job_details.split("Command=")[1].split("run.sh")[0]
+                    if "run.sh" in job_details
+                    else job_details.split("StdOut=")[1].split("output.txt")[0]
+                )
+                # Only get path after studies
+                job = job.split("studies")[1]
                 l_jobs.append(job)
 
-            # Just ignore jobs
-            else:
-                if first_line:
-                    print(
-                        "Warning, some jobs are queuing/running and the id-job file is"
-                        " missing... Ignoring them."
-                    )
-                    first_line = False
+            elif first_line:
+                print(
+                    "Warning, some jobs are queuing/running and the id-job file is"
+                    " missing... Ignoring them."
+                )
+                first_line = False
 
         return l_jobs
 
@@ -524,14 +510,10 @@ class ClusterSubmission:
         if self.run_on == "local_pc":
             if status == "running":
                 l_jobs = self._get_local_jobs()
-            else:
-                # Always empty return as there is no queuing in local pc
-                pass
-
-        elif self.run_on == "htc" or self.run_on == "htc_docker":
+        elif self.run_on in ["htc", "htc_docker"]:
             l_jobs = self._get_condor_jobs(status, dic_id_to_job)
 
-        elif self.run_on == "slurm" or self.run_on == "slurm_docker":
+        elif self.run_on in ["slurm", "slurm_docker"]:
             l_jobs = self._get_slurm_jobs(status, dic_id_to_job)
 
         else:
@@ -546,12 +528,12 @@ def submit_jobs_generation(root, generation=1):
     # Define a dictionnary that associates a name to each generation number
     dic_int_to_str = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth"}
     if generation not in dic_int_to_str:
-        raise (f"Error: Generation {generation} is not implemented")
+        raise ValueError(f"Error: Generation {generation} is not implemented")
 
     # Submit all the pending jobs of a given generation
     config_generation = root.parameters["generations"][f"{generation}"]
     cluster_submission = ClusterSubmission(config_generation, root.get_abs_path())
-    path_file = f"submission_files/{dic_int_to_str[generation]}_generation.sub"
+    path_file = f"../submission_files/{dic_int_to_str[generation]}_generation.sub"
     l_filenames, l_path_jobs = cluster_submission.write_sub_files(
         root.generation(generation), path_file
     )
@@ -560,8 +542,8 @@ def submit_jobs_generation(root, generation=1):
 
 def submit_jobs(study_name, print_uncompleted_jobs=False):
     # Add suffix to the root node path to handle scans that are not in the root directory
-    fix = "/scans/" + study_name
-    root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
+    fix = f"/../scans/{study_name}"
+    root = tree_maker.tree_from_json(f"{fix[1:]}/tree_maker.json")
     root.add_suffix(suffix=fix)
 
     # Check that the study is not done yet
@@ -606,6 +588,5 @@ def submit_jobs(study_name, print_uncompleted_jobs=False):
 if __name__ == "__main__":
     # Define study
     study_name = "example_tunescan"
-
     # Submit jobs
     submit_jobs(study_name)
