@@ -254,63 +254,41 @@ def do_levelling(
     n_collisions_ip8,
     collider,
     n_collisions_ip1_and_5,
-    crab,
+    crab=False,
 ):
     # Read knobs and tuning settings from config file (already updated with the number of collisions)
     config_lumi_leveling = config_collider["config_lumi_leveling"]
 
     # Update the number of bunches in the configuration file
+    config_lumi_leveling["ip1"]["num_colliding_bunches"] = int(n_collisions_ip1_and_5)
+    config_lumi_leveling["ip5"]["num_colliding_bunches"] = int(n_collisions_ip1_and_5)
     config_lumi_leveling["ip2"]["num_colliding_bunches"] = int(n_collisions_ip2)
     config_lumi_leveling["ip8"]["num_colliding_bunches"] = int(n_collisions_ip8)
 
-    # Initial intensity
-    initial_I = config_bb["num_particles_per_bunch"]
-
-    # First level luminosity in IP 1/5 changing the intensity
-    if (
-        "config_lumi_leveling_ip1_5" in config_collider
-        and not config_collider["config_lumi_leveling_ip1_5"]["skip_leveling"]
-    ):
-        print("Leveling luminosity in IP 1/5 varying the intensity")
-        # Update the number of bunches in the configuration file
-        config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"] = int(
-            n_collisions_ip1_and_5
+    # Level by separation
+    try:
+        xlhc.luminosity_leveling(
+            collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
         )
-
-        # Do the levelling
-        try:
-            bunch_intensity = luminosity_leveling_ip1_5(
-                collider,
-                config_collider,
-                config_bb,
-                crab=crab,
-            )
-        except ValueError:
-            print("There was a problem during the luminosity leveling in IP1/5... Ignoring it.")
-            bunch_intensity = config_bb["num_particles_per_bunch"]
-
-        config_bb["num_particles_per_bunch"] = float(bunch_intensity)
-
-    # Do levelling in IP2 and IP8
-    xlhc.luminosity_leveling(
-        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
-    )
+    except:
+        print("Leveling failed..continuing")
 
     # Update configuration
-    config_bb["num_particles_per_bunch_before_optimization"] = float(initial_I)
-    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2h"] = float(
-        collider.vars["on_sep2h"]._value
+    config_bb["num_particles_per_bunch_before_optimization"] = float(
+        config_bb["num_particles_per_bunch"]
     )
-    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2v"] = float(
-        collider.vars["on_sep2v"]._value
+    config_collider["config_lumi_leveling"]["ip1"]["final_on_sep1"] = float(
+        collider.vars["on_sep1"]._value
     )
-    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8h"] = float(
-        collider.vars["on_sep8h"]._value
+    config_collider["config_lumi_leveling"]["ip2"]["final_on_sep2"] = float(
+        collider.vars["on_sep2"]._value
     )
-    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8v"] = float(
-        collider.vars["on_sep8v"]._value
+    config_collider["config_lumi_leveling"]["ip5"]["final_on_sep5"] = float(
+        collider.vars["on_sep5"]._value
     )
-
+    config_collider["config_lumi_leveling"]["ip8"]["final_on_sep8"] = float(
+        collider.vars["on_sep8"]._value
+    )
     return collider, config_collider
 
 

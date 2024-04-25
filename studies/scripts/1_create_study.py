@@ -30,9 +30,9 @@ from tree_maker import initialize
 d_config_particles = {}
 
 # Radius of the initial particle distribution
-d_config_particles["r_min"] = 2
-d_config_particles["r_max"] = 10
-d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
+d_config_particles["r_min"] = 4
+d_config_particles["r_max"] = 20
+d_config_particles["n_r"] = 8 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
 d_config_particles["n_angles"] = 5
@@ -55,15 +55,15 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 # Optic file path (version, and round or flat)
 
-### For run III
-d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.40"
+### For run III ions
+d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics"
+d_config_mad["optics_file"] = "acc-models-lhc/runIII/RunIII_dev/ION_2024/opticsfile.21"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 6800
+beam_energy_tot = 6800 * 82
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -89,8 +89,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 15.0
-    d_config_tune_and_chroma["dqy"][beam] = 15.0
+    d_config_tune_and_chroma["dqx"][beam] = 10.0
+    d_config_tune_and_chroma["dqy"][beam] = 10.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
@@ -101,52 +101,43 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-# Exp. configuration in IR1, IR2, IR5 and IR8
-d_config_knobs["on_x1"] = -145.000
-d_config_knobs["on_sep1"] = 0.0
-d_config_knobs["phi_IR1"] = 180.000
+# Knobs at IPs
+d_config_knobs["on_x1"] = 170
+d_config_knobs["on_sep1"] = 1e-3
+d_config_knobs["on_x2v"] = -170
+d_config_knobs["on_sep2h"] = 1e-3
+d_config_knobs["on_sep2v"] = 0
+d_config_knobs["on_x5"] = 170
+d_config_knobs["on_sep5"] = 1e-3
+d_config_knobs["on_x8h"] = -170
+d_config_knobs["on_sep8v"] = 1e-10
+d_config_knobs["on_sep8h"] = 0
+d_config_knobs["on_disp"] = 1
 
-d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = 1.0  # 1.000
-d_config_knobs["on_x2v"] = 200.000
-d_config_knobs["on_sep2v"] = 0.000
-d_config_knobs["phi_IR2"] = 90.000
-
-d_config_knobs["on_x5"] = 145.000
-d_config_knobs["on_sep5"] = 0.0
-d_config_knobs["phi_IR5"] = 90.000
-
-d_config_knobs["on_x8h"] = 0.000
-d_config_knobs["on_sep8h"] = -0.01  # -1.000
-d_config_knobs["on_x8v"] = 200.000
-d_config_knobs["on_sep8v"] = 0.000
-d_config_knobs["phi_IR8"] = 180.000
+d_config_knobs["on_alice_normalized"] = 1
+d_config_knobs["on_lhcb_normalized"] = -1
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 300.0
-d_config_knobs["i_oct_b2"] = 300.0
+d_config_knobs["i_oct_b1"] = 100.0
+d_config_knobs["i_oct_b2"] = 100.0
 
 ### leveling configuration
 
-# Leveling in IP 1/5
-d_config_leveling_ip1_5 = {"constraints": {}}
-d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
-d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
-
-
 # Define dictionary for the leveling settings
 d_config_leveling = {
+    "ip1": {},
     "ip2": {},
+    "ip5": {},
     "ip8": {},
 }
 
 # Luminosity and particles
 
-
 # Leveling parameters (ignored if skip_leveling is True)
-d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33
+d_config_leveling["ip1"]["luminosity"] = 6.4e27
+d_config_leveling["ip2"]["luminosity"] = 6.4e27
+d_config_leveling["ip5"]["luminosity"] = 6.4e27
+d_config_leveling["ip8"]["luminosity"] = 1.4e27
 
 ### Beam beam configuration
 
@@ -154,16 +145,14 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.15e11  # type: ignore
+d_config_beambeam["num_particles_per_bunch"] = 1.8e8  # type: ignore
 d_config_beambeam["nemitt_x"] = 2.2e-6  # type: ignore
 d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
-filling_scheme_path = os.path.abspath(
-    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
-)
+filling_scheme_path = os.path.abspath("../filling_scheme/50ns_1240b_1088_1088_398_56bpi_PbPb.json")
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
 # https://lpc.web.cern.ch/cgi-bin/fillTable.py?year=2023
@@ -193,8 +182,7 @@ d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
 d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
-d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
-d_config_collider["config_lumi_leveling"] = d_config_leveling
+-d_config_collider["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
@@ -210,7 +198,7 @@ d_config_simulation = {}
 d_config_simulation["n_turns"] = 50000
 
 # Initial off-momentum
-d_config_simulation["delta_max"] = 27.0e-5
+d_config_simulation["delta_max"] = 24.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
