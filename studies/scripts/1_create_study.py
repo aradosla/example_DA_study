@@ -11,7 +11,7 @@ import time
 import numpy as np
 import yaml
 from tree_maker import initialize
-from user_defined_functions import (
+from hl16_original.studies.scripts.create_study_functions.user_defined_functions import (
     generate_run_sh,
     generate_run_sh_htc,
     get_worst_bunch,
