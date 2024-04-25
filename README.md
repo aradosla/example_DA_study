@@ -1,6 +1,6 @@
-# Dynamics aperture study boilerplate
+# Dynamics aperture study template
 
-This repository contains a boilerplate that allows users to compute the dynamics aperture of a collider
+This repository contains a template that allows users to compute the dynamics aperture of a collider
 under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
