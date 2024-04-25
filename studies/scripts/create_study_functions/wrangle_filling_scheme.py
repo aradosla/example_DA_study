@@ -1,3 +1,8 @@
+import json
+
+import numpy as np
+
+
 def reformat_filling_scheme_from_lpc(filling_scheme_path):
     """
     Alternative to the function above, as sometimes the injection information is not present in the
@@ -12,7 +17,6 @@ def reformat_filling_scheme_from_lpc(filling_scheme_path):
     fill_number = list(data["fills"].keys())[0]
 
     # Do the conversion (Matteo's code)
-    string = ""
     B1 = np.zeros(3564)
     B2 = np.zeros(3564)
     l_lines = data["fills"][f"{fill_number}"]["csv"].split("\n")
@@ -73,7 +77,7 @@ def load_and_check_filling_scheme(filling_scheme_path):
 
     else:
         # One can potentially use b1_array, b2_array to scan the bunches later
-        b1_array, b2_array = reformat_filling_scheme_from_lpc_alt(filling_scheme_path)
+        b1_array, b2_array = reformat_filling_scheme_from_lpc(filling_scheme_path)
         filling_scheme_path = filling_scheme_path.replace(".json", "_converted.json")
 
     return filling_scheme_path

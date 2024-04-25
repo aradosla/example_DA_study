@@ -5,18 +5,21 @@ import copy
 import itertools
 import json
 import os
-import shutil
 import time
 
 import numpy as np
 import yaml
-from tree_maker import initialize
-from hl16_original.studies.scripts.create_study_functions.user_defined_functions import (
+from create_study_functions.compute_bunch_schedule import (
+    get_worst_bunch,
+)
+from create_study_functions.generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
-    get_worst_bunch,
+)
+from create_study_functions.wrangle_filling_scheme import (
     load_and_check_filling_scheme,
 )
+from tree_maker import initialize
 
 # ==================================================================================================
 # --- Initial particle distribution parameters (generation 1)
@@ -38,7 +41,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 4
+d_config_particles["n_split"] = 5
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -56,7 +59,7 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 # Optic file path (version, and round or flat)
 
 ### For v1.6 optics
-d_config_mad["links"]["acc-models-lhc"] = "../../../../modules/hllhc16"
+d_config_mad["links"]["acc-models-lhc"] = "../../../../../external_dependencies/acc-models-lhc"
 d_config_mad["optics_file"] = "acc-models-lhc/strengths/ramp/opt_ramp_500_1500_thin.madx"
 d_config_mad["ver_hllhc_optics"] = 1.6
 
@@ -92,8 +95,8 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 15.0
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.001
-d_config_tune_and_chroma["delta_cmi"] = 0.0
+d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
+d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 
 ### Knobs configuration
 
@@ -122,7 +125,7 @@ d_config_knobs["i_oct_b2"] = 60.0
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
-d_config_leveling_ip1_5["luminosity"] = 2.0e34
+d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
 d_config_leveling_ip1_5["constraints"]["max_intensity"] = 2.3e11
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 160
 
@@ -146,15 +149,15 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.4e11
-d_config_beambeam["nemitt_x"] = 2.5e-6
-d_config_beambeam["nemitt_y"] = 2.5e-6
+d_config_beambeam["num_particles_per_bunch"] = 1.4e11  # type: ignore
+d_config_beambeam["nemitt_x"] = 2.5e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 2.5e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
 filling_scheme_path = os.path.abspath(
-    "master_jobs/filling_scheme/25ns_1983b_1970_1657_1684_144bpi_19inj_3INDIVs.json"
+    "../filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 )
 
 # Alternatively, one can get a fill directly from LPC from, e.g.:
@@ -321,7 +324,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
-    d_config_simulation["collider_file"] = f"../collider/collider.json"
+    d_config_simulation["collider_file"] = "../collider/collider.json"
 
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
@@ -342,7 +345,7 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = os.getcwd() + "/../activate_miniforge.sh"
+config["root"]["setup_env_script"] = os.getcwd() + "../../source_python.sh"
 
 
 # Recursively define the context for the simulations
@@ -361,11 +364,11 @@ set_context(children, 1, config)
 study_name = "example_tunescan"
 
 # Creade folder that will contain the tree
-if not os.path.exists("scans/" + study_name):
-    os.makedirs("scans/" + study_name)
+if not os.path.exists(f"../scans/{study_name}"):
+    os.makedirs(f"../scans/{study_name}")
 
 # Move to the folder that will contain the tree
-os.chdir("scans/" + study_name)
+os.chdir(f"../scans/{study_name}")
 
 # Clean the id_job file
 id_job_file_path = "id_job.yaml"
@@ -376,7 +379,7 @@ if os.path.isfile(id_job_file_path):
 start_time = time.time()
 root = initialize(config)
 print("Done with the tree creation.")
-print("--- %s seconds ---" % (time.time() - start_time))
+print(f"--- {time.time() - start_time} seconds ---")
 
 # Check if htcondor is the configuration
 if "htc" in config["root"]["generations"][2]["run_on"]:
@@ -388,4 +391,4 @@ else:
 start_time = time.time()
 root.make_folders(generate_run)
 print("The tree folders are ready.")
-print("--- %s seconds ---" % (time.time() - start_time))
+print(f"--- {time.time() - start_time} seconds ---")
