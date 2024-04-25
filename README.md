@@ -6,7 +6,7 @@ under different parametric scenarios.
 Jobs can be efficiently stored and parallelized using the
 [Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [XSuite](https://github.com/xsuite/xsuite).
 
-ℹ️ If you do not need to do parametric scans, this repository is probably not what you're looking for.
+ℹ️ If you do not need to do large parametric scans, this repository is probably not what you're looking for.
 
 ## Installation instructions
 
