@@ -58,7 +58,7 @@ To run any subsequent Python command, either activate the virtual environment (a
 poetry shell
 ```
 
-or run the command with Poetry:
+or run the command directly with Poetry:
 
 ```bash
 poetry run python my_script.py
