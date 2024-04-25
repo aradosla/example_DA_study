@@ -7,7 +7,6 @@ in this script are called sequentially."""
 
 # Import standard library modules
 import itertools
-import json
 import logging
 import os
 import shutil
@@ -21,7 +20,6 @@ import pandas as pd
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
-import xobjects as xo
 import yaml
 from cpymad.madx import Madx
 
@@ -161,12 +159,14 @@ def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
         dic_rf = {"vrf400": 12.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
         for knob, val in dic_rf.items():
             print(f"    {knob} = {val}")
+    else:
+        raise ValueError("No RF settings for this optics")
     print("---")
 
     # Rebuild tracker if needed
     try:
         collider.build_trackers()
-    except:
+    except Exception:
         print("Skipping rebuilding tracker")
 
     for knob, val in dic_rf.items():
