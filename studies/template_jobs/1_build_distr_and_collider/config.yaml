@@ -8,17 +8,17 @@ config_particles:
 config_mad:
   # Links to be made for tools and scripts
   links:
-    acc-models-lhc: ../../../../../external_dependencies/acc-models-lhc
+    acc-models-lhc: /afs/cern.ch/eng/lhc/optics/runIII
 
   # Optics file
-  optics_file: acc-models-lhc/strengths/flat/opt_flathv_500_2000_thin.madx
+  optics_file: acc-models-lhc/RunIII_dev/Proton_2024/V0/opticsfile.37
 
   # Beam parameters
   beam_config:
     lhcb1:
-      beam_energy_tot: 7000 # [GeV]
+      beam_energy_tot: 6800 # [GeV]
     lhcb2:
-      beam_energy_tot: 7000 # [GeV]
+      beam_energy_tot: 6800 # [GeV]
 
   # Enable machine imperfections
   enable_imperfections: false
@@ -32,8 +32,8 @@ config_mad:
 
   # Optics version, for choice of correction algorithms
   # (ver_lhc_run or ver_hllhc_optics)
-  ver_hllhc_optics: 1.6
-  ver_lhc_run: null
+  ver_hllhc_optics: null
+  ver_lhc_run: 3.0
 
   # Parameters for machine imperfections
   pars_for_imperfections:
