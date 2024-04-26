@@ -12,7 +12,7 @@ Jobs can be efficiently stored and parallelized using the
 
 ### Cloning the repository and corresponding submodules
 
-Run the following command to clone the repository and all the relevant submodules needed for this study (xmask with lhc-errors, xtrack with crab cavities luminosity computation):
+Run the following command to clone the repository and all the relevant submodules:
 
 ```bash
 git clone --recurse-submodules https://github.com/ColasDroin/DA_IPAC_2024.git
