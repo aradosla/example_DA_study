@@ -3,23 +3,17 @@
 # ==================================================================================================
 import copy
 import itertools
-import json
 import os
 import time
 
 import numpy as np
 import yaml
-from create_study_functions.compute_bunch_schedule import (
-    get_worst_bunch,
-)
-from create_study_functions.generate_run_file import (
+from tree_maker import initialize
+
+from studies.scripts.generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
 )
-from create_study_functions.wrangle_filling_scheme import (
-    load_and_check_filling_scheme,
-)
-from tree_maker import initialize
 
 # ==================================================================================================
 # --- Initial particle distribution parameters (generation 1)
@@ -156,70 +150,21 @@ d_config_beambeam["nemitt_y"] = 2.5e-6  # type: ignore
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
 # representing each bucket of the LHC.
-filling_scheme_path = os.path.abspath(
-    "../filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
-)
-
 # Alternatively, one can get a fill directly from LPC from, e.g.:
 # https://lpc.web.cern.ch/cgi-bin/fillTable.py?year=2023
 # In this page, get the fill number of your fill of interest, and use it to replace the XXXX in the
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
-# Unfortunately, the format is not the same as the one used by defaults in xmask, but it should
-# still be converted in the lines below (see with matteo.rufolo@cern.ch for questions, or if it
-# doesn't work).
-
-# Load and check filling scheme
-filling_scheme_path = load_and_check_filling_scheme(filling_scheme_path)
-
-# Add to config file
-d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = (
-    filling_scheme_path  # If None, a full fill is assumed
+filling_scheme_path = os.path.abspath(
+    "../filling_scheme/8b4e_1972b_1960_1178_1886_224bpi_12inj_800ns_bs200ns.json"
 )
+# Add to config file
+d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
-# Initialize bunch number to None (will be set later)
+# Initialize bunch number
+# If set to None, it will be set automatically to the worst bunch when running 2nd generation
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = None
 d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = None
-
-# Set this variable to False if you intend to scan the bunch number (but ensure both bunches indices
-# are defined later)
-check_bunch_number = True
-if check_bunch_number:
-    # Bunch number is ignored if pattern_fname is None (in which case the simulation considers all
-    # bunch elements). It must be specified otherwise)
-    # If the bunch number is None and pattern_name is defined, the bunch with the largest number of
-    # long-range interactions will be used
-    if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
-        # Case the bunch number has not been provided
-        worst_bunch_b1 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_1"
-        )
-        while d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] is None:
-            bool_inp = input(
-                "The bunch number for beam 1 has not been provided. Do you want to use the bunch"
-                " with the largest number of long-range interactions? It is the bunch number "
-                + str(worst_bunch_b1)
-                + " (y/n): "
-            )
-            if bool_inp == "y":
-                d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
-            elif bool_inp == "n":
-                d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b1"] = int(
-                    input("Please enter the bunch number for beam 1: ")
-                )
-
-    if d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] is None:
-        worst_bunch_b2 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
-        )
-        # For beam 2, just select the worst bunch by default, as the tracking of b2 is not available yet anyway
-        print(
-            "The bunch number for beam 2 has not been provided. By default, the worst bunch is"
-            " taken. It is the bunch number " + str(worst_bunch_b2)
-        )
-
-        d_config_beambeam["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
-
 
 # ==================================================================================================
 # --- Generate dictionnary to encapsulate all base collider parameters (generation 2)
