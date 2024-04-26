@@ -46,14 +46,14 @@ def build_sequence(
     mad.input(f"mylhcbeam = {mylhcbeam}")
 
     # Build sequence
-    mad.input(f"""
+    mad.input("""
       ! Build sequence
       option, -echo,-warn,-info;
-      if (mylhcbeam==4){{
+      if (mylhcbeam==4){
         call,file="acc-models-lhc/lhcb4.seq";
-      }} else {{
+      } else {
         call,file="acc-models-lhc/lhc.seq";
-      }};
+      };
       !Install HL-LHC
       call, file=
         "acc-models-lhc/hllhc_sequence.madx";
@@ -92,7 +92,7 @@ def build_sequence(
       """)
 
     if mylhcbeam < 3:
-        mad.input(f"""
+        mad.input("""
       nrj=7000;
       beam,particle=proton,sequence=lhcb1,energy=nrj,npart=1.15E11,sige=4.5e-4;
       beam,particle=proton,sequence=lhcb2,energy=nrj,bv = -1,npart=1.15E11,sige=4.5e-4;

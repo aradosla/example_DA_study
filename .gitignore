@@ -3,52 +3,37 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Miniforge and miniconda
-Miniforge3-Linux-x86_64.sh
-miniforge/*
-!miniforge/.gitkeep
-
-# Modules
-modules/*
-!modules/.gitkeep
-
-# Filling scheme
-master_study/master_jobs/filling_scheme/custom_schemes/*
-!master_study/master_jobs/filling_scheme/.gitkeep
-
-# Scans
-master_study/scans/*
-!master_study/scans/.gitkeep
-
-# Analysis
-master_study/analysis/*
-!master_study/analysis/.gitkeep
-
-# Other make_folder studies
-master_study/001_make_folders_*
 
 # Submission files
-master_study/submission_files/*
-!master_study/submission_files/.gitkeep
+studies/submission_files/*
+!studies/submission_files/.gitkeep
 
-# Old analysis
-master_study/old/*
+# Heavy file
+*.json
+*.parquet
 
 # AFS files
 .__afs*
 
-# Tests done in the master jobs folder
-master_study/master_jobs/1_build_distr_and_collider/collider/
-master_study/master_jobs/1_build_distr_and_collider/particles/
-master_study/master_jobs/1_build_distr_and_collider/temp/
-master_study/master_jobs/2_configure_and_track/*.log
-master_study/master_jobs/2_configure_and_track/correction/
-master_study/master_jobs/2_configure_and_track/*.parquet
+# Python virtual environment
+.venv/
 
 #vscode config
 .vscode/
 
+# Scans
+studies/scans/**/base_collider
+studies/scans/**/id_job.yaml
+studies/scans/**/tree_maker.json
+studies/scans/**/tree_maker.log
+!studies/scans/**/da.parquet
+!studies/scans/.gitkeep
+
+# filling_schemes
+!studies/filling_scheme/*
+
 # misc
 da-study-docker_latest.sif
-master_study/error.txt
-master_study/output.txt
+
+# Poetry lock file
+poetry.lock

@@ -3,6 +3,8 @@ are called sequentially, in the order in which they are defined. Modularity has 
 simple scripting for reproducibility, to allow rebuilding the collider from a different program
 (e.g. dahsboard)."""
 
+import contextlib
+
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
@@ -25,6 +27,8 @@ import xtrack as xt
 from misc import (
     compute_PU,
     generate_orbit_correction_setup,
+    get_worst_bunch,
+    load_and_check_filling_scheme,
     luminosity_leveling,
     luminosity_leveling_ip1_5,
 )
@@ -49,15 +53,14 @@ def tree_maker_tagging(config, tag="started"):
 # ==================================================================================================
 def get_context(configuration):
     if configuration["context"] == "cupy":
-        context = xo.ContextCupy()
+        return xo.ContextCupy()
     elif configuration["context"] == "opencl":
-        context = xo.ContextPyopencl()
+        return xo.ContextPyopencl()
     elif configuration["context"] == "cpu":
-        context = xo.ContextCpu()
+        return xo.ContextCpu()
     else:
         logging.warning("context not recognized, using cpu")
-        context = xo.ContextCpu()
-    return context
+        return xo.ContextCpu()
 
 
 # ==================================================================================================
@@ -72,7 +75,7 @@ def read_configuration(config_path="config.yaml"):
     try:
         with open("../" + config_path, "r") as fid:
             config_gen_1 = ryaml.load(fid)
-    except:
+    except Exception:
         with open("../1_build_distr_and_collider/" + config_path, "r") as fid:
             config_gen_1 = ryaml.load(fid)
 
@@ -155,6 +158,55 @@ def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling
 
 
 # ==================================================================================================
+# --- Function to convert the filling scheme for xtrack, and set the bunch numbers
+# ==================================================================================================
+def set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False):
+    # Get the filling scheme path
+    filling_scheme_path = config_bb["mask_with_filling_pattern"]["pattern_fname"]
+
+    # Load and check filling scheme, potentially convert it
+    filling_scheme_path = load_and_check_filling_scheme(filling_scheme_path)
+
+    # Correct filling scheme in config, as it might have been converted
+    config_bb["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
+
+    # Get number of LR to consider
+    n_LR = config_bb["num_long_range_encounters_per_side"]["ip1"]
+
+    # If the bunch number is None, the bunch with the largest number of long-range interactions is used
+    if config_bb["mask_with_filling_pattern"]["i_bunch_b1"] is None:
+        # Case the bunch number has not been provided
+        worst_bunch_b1 = get_worst_bunch(
+            filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_1"
+        )
+        if ask_worst_bunch:
+            while config_bb["mask_with_filling_pattern"]["i_bunch_b1"] is None:
+                bool_inp = input(
+                    "The bunch number for beam 1 has not been provided. Do you want to use the bunch"
+                    " with the largest number of long-range interactions? It is the bunch number "
+                    + str(worst_bunch_b1)
+                    + " (y/n): "
+                )
+                if bool_inp == "y":
+                    config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
+                elif bool_inp == "n":
+                    config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = int(
+                        input("Please enter the bunch number for beam 1: ")
+                    )
+        else:
+            config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
+
+    if config_bb["mask_with_filling_pattern"]["i_bunch_b2"] is None:
+        worst_bunch_b2 = get_worst_bunch(
+            filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_2"
+        )
+        # For beam 2, just select the worst bunch by default
+        config_bb["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
+
+    return config_bb
+
+
+# ==================================================================================================
 # --- Function to compute the number of collisions in the IPs (used for luminosity leveling)
 # ==================================================================================================
 def compute_collision_from_scheme(config_bb):
@@ -162,15 +214,15 @@ def compute_collision_from_scheme(config_bb):
     filling_scheme_path = config_bb["mask_with_filling_pattern"]["pattern_fname"]
 
     # Load the filling scheme
-    if filling_scheme_path.endswith(".json"):
-        with open(filling_scheme_path, "r") as fid:
-            filling_scheme = json.load(fid)
-    else:
+    if not filling_scheme_path.endswith(".json"):
         raise ValueError(
             f"Unknown filling scheme file format: {filling_scheme_path}. It you provided a csv"
             " file, it should have been automatically convert when running the script"
             " 001_make_folders.py. Something went wrong."
         )
+
+    with open(filling_scheme_path, "r") as fid:
+        filling_scheme = json.load(fid)
 
     # Extract booleans beam arrays
     array_b1 = np.array(filling_scheme["beam1"])
@@ -208,27 +260,29 @@ def do_levelling(
     initial_I = config_bb["num_particles_per_bunch"]
 
     # First level luminosity in IP 1/5 changing the intensity
-    if "config_lumi_leveling_ip1_5" in config_collider:
-        if not config_collider["config_lumi_leveling_ip1_5"]["skip_leveling"]:
-            print("Leveling luminosity in IP 1/5 varying the intensity")
-            # Update the number of bunches in the configuration file
-            config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"] = int(
-                n_collisions_ip1_and_5
+    if (
+        "config_lumi_leveling_ip1_5" in config_collider
+        and not config_collider["config_lumi_leveling_ip1_5"]["skip_leveling"]
+    ):
+        print("Leveling luminosity in IP 1/5 varying the intensity")
+        # Update the number of bunches in the configuration file
+        config_collider["config_lumi_leveling_ip1_5"]["num_colliding_bunches"] = int(
+            n_collisions_ip1_and_5
+        )
+
+        # Do the levelling
+        try:
+            bunch_intensity = luminosity_leveling_ip1_5(
+                collider,
+                config_collider,
+                config_bb,
+                crab=crab,
             )
+        except ValueError:
+            print("There was a problem during the luminosity leveling in IP1/5... Ignoring it.")
+            bunch_intensity = config_bb["num_particles_per_bunch"]
 
-            # Do the levelling
-            try:
-                I = luminosity_leveling_ip1_5(
-                    collider,
-                    config_collider,
-                    config_bb,
-                    crab=crab,
-                )
-            except ValueError:
-                print("There was a problem during the luminosity leveling in IP1/5... Ignoring it.")
-                I = config_bb["num_particles_per_bunch"]
-
-            config_bb["num_particles_per_bunch"] = float(I)
+        config_bb["num_particles_per_bunch"] = float(bunch_intensity)
 
     # Set up the constraints for lumi optimization in IP8
     additional_targets_lumi = []
@@ -284,7 +338,7 @@ def add_linear_coupling(conf_knobs_and_tuning, collider, config_mad):
     if version_run == 3.0:
         collider.vars["cmrs.b1_sq"] += conf_knobs_and_tuning["delta_cmr"]
         collider.vars["cmrs.b2_sq"] += conf_knobs_and_tuning["delta_cmr"]
-    elif version_hllhc == 1.6 or version_hllhc == 1.5:
+    elif version_hllhc in [1.6, 1.5]:
         collider.vars["c_minus_re_b1"] += conf_knobs_and_tuning["delta_cmr"]
         collider.vars["c_minus_re_b2"] += conf_knobs_and_tuning["delta_cmr"]
     else:
@@ -346,38 +400,34 @@ def configure_beam_beam(collider, config_bb):
     )
 
     # Configure filling scheme mask and bunch numbers
-    if "mask_with_filling_pattern" in config_bb:
-        # Initialize filling pattern with empty values
-        filling_pattern_cw = None
-        filling_pattern_acw = None
+    if "mask_with_filling_pattern" in config_bb and (
+        "pattern_fname" in config_bb["mask_with_filling_pattern"]
+        and config_bb["mask_with_filling_pattern"]["pattern_fname"] is not None
+    ):
+        fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
+        with open(fname, "r") as fid:
+            filling = json.load(fid)
+        filling_pattern_cw = filling["beam1"]
+        filling_pattern_acw = filling["beam2"]
 
         # Initialize bunch numbers with empty values
         i_bunch_cw = None
         i_bunch_acw = None
 
-        if "pattern_fname" in config_bb["mask_with_filling_pattern"]:
-            # Fill values if possible
-            if config_bb["mask_with_filling_pattern"]["pattern_fname"] is not None:
-                fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
-                with open(fname, "r") as fid:
-                    filling = json.load(fid)
-                filling_pattern_cw = filling["beam1"]
-                filling_pattern_acw = filling["beam2"]
+        # Only track bunch number if a filling pattern has been provided
+        if "i_bunch_b1" in config_bb["mask_with_filling_pattern"]:
+            i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]
+        if "i_bunch_b2" in config_bb["mask_with_filling_pattern"]:
+            i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
 
-                # Only track bunch number if a filling pattern has been provided
-                if "i_bunch_b1" in config_bb["mask_with_filling_pattern"]:
-                    i_bunch_cw = config_bb["mask_with_filling_pattern"]["i_bunch_b1"]
-                if "i_bunch_b2" in config_bb["mask_with_filling_pattern"]:
-                    i_bunch_acw = config_bb["mask_with_filling_pattern"]["i_bunch_b2"]
-
-                # Note that a bunch number must be provided if a filling pattern is provided
-                # Apply filling pattern
-                collider.apply_filling_pattern(
-                    filling_pattern_cw=filling_pattern_cw,
-                    filling_pattern_acw=filling_pattern_acw,
-                    i_bunch_cw=i_bunch_cw,
-                    i_bunch_acw=i_bunch_acw,
-                )
+        # Note that a bunch number must be provided if a filling pattern is provided
+        # Apply filling pattern
+        collider.apply_filling_pattern(
+            filling_pattern_cw=filling_pattern_cw,
+            filling_pattern_acw=filling_pattern_acw,
+            i_bunch_cw=i_bunch_cw,
+            i_bunch_acw=i_bunch_acw,
+        )
     return collider
 
 
@@ -393,7 +443,7 @@ def record_final_luminosity(collider, config_bb, l_n_collisions, crab):
     l_ip = ["ip1", "ip2", "ip5", "ip8"]
     for n_col, ip in zip(l_n_collisions, l_ip):
         try:
-            L = xt.lumi.luminosity_from_twiss(
+            L = xt.lumi.luminosity_from_twiss(  # type: ignore
                 n_colliding_bunches=n_col,
                 num_particles_per_bunch=config_bb["num_particles_per_bunch"],
                 ip_name=ip,
@@ -405,7 +455,7 @@ def record_final_luminosity(collider, config_bb, l_n_collisions, crab):
                 crab=crab,
             )
             PU = compute_PU(L, n_col, twiss_b1["T_rev0"])
-        except:
+        except Exception:
             print(f"There was a problem during the luminosity computation in {ip}... Ignoring it.")
             L = 0
             PU = 0
@@ -458,6 +508,8 @@ def configure_collider(
         collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True
     )
 
+    config_bb = set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False)
+
     # Compute the number of collisions in the different IPs
     (
         n_collisions_ip1_and_5,
@@ -502,6 +554,7 @@ def configure_collider(
     assert_tune_chroma_coupling(collider, conf_knobs_and_tuning)
 
     # Return twiss and survey before beam-beam if requested
+    collider_before_bb = None
     if return_collider_before_bb:
         print("Saving collider before beam-beam configuration")
         collider_before_bb = xt.Multiline.from_dict(collider.to_dict())
@@ -535,10 +588,7 @@ def configure_collider(
         # Dump collider
         collider.to_json("collider.json")
 
-    if return_collider_before_bb:
-        return collider, config_sim, config_bb, collider_before_bb
-    else:
-        return collider, config_sim, config_bb
+    return collider, config_sim, config_bb, collider_before_bb
 
 
 # ==================================================================================================
@@ -550,7 +600,7 @@ def prepare_particle_distribution(collider, context, config_sim, config_bb):
     particle_df = pd.read_parquet(config_sim["particle_file"])
 
     r_vect = particle_df["normalized amplitude in xy-plane"].values
-    theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # [rad]
+    theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # type: ignore # [rad]
 
     A1_in_sigma = r_vect * np.cos(theta_vect)
     A2_in_sigma = r_vect * np.sin(theta_vect)
@@ -607,13 +657,14 @@ def configure_and_track(config_path="config.yaml"):
     tree_maker_tagging(config, tag="started")
 
     # Configure collider (not saved, since it may trigger overload of afs)
-    collider, config_sim, config_bb = configure_collider(
+    collider, config_sim, config_bb, _ = configure_collider(
         config,
         config_mad,
         context,
         save_collider=config["dump_collider"],
         save_config=config["dump_config_in_collider"],
         config_path=config_path,
+        return_collider_before_bb=False,
     )
 
     # Reset the tracker to go to GPU if needed
@@ -644,12 +695,9 @@ def configure_and_track(config_path="config.yaml"):
     particles_df.to_parquet("output_particles.parquet")
 
     # Remote the correction folder, and potential C files remaining
-    try:
+    with contextlib.suppress(Exception):
         os.system("rm -rf correction")
         os.system("rm -f *.cc")
-    except:
-        pass
-
     # Tag end of the job
     tree_maker_tagging(config, tag="completed")
 

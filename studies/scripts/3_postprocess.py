@@ -1,7 +1,6 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-import logging
 import time
 
 import pandas as pd
@@ -18,7 +17,7 @@ start = time.time()
 
 # Load Data
 study_name = "example_tunescan"
-fix = "/scans/" + study_name
+fix = f"/../scans/{study_name}"
 root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
 # Add suffix to the root node path to handle scans that are not in the root directory
 root.add_suffix(suffix=fix)
@@ -43,8 +42,7 @@ for node in root.generation(1):
                     f"{node_child.get_abs_path()}/{config_child['config_simulation']['particle_file']}"
                 )
 
-            # If it doesn't work, try to read it as absolute
-            except:
+            except Exception:
                 particle = pd.read_parquet(f"{config_child['config_simulation']['particle_file']}")
 
             df_sim = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
@@ -65,7 +63,7 @@ for node in root.generation(1):
         dic_child_simulation = node_child.parameters["config_simulation"]
         try:
             dic_parent_collider = node.parameters["config_mad"]
-        except:
+        except Exception:
             print("No parent collider could be loaded")
         dic_parent_particles = node.parameters["config_particles"]
 
@@ -116,6 +114,7 @@ if df_lost_particles.empty:
 
 # Group by working point (Update this with the knobs you want to group by !)
 group_by_parameters = ["name base collider", "qx", "qy"]
+
 # We always want to keep beam in the final result
 group_by_parameters = ["beam"] + group_by_parameters
 l_parameters_to_keep = [
@@ -126,6 +125,8 @@ l_parameters_to_keep = [
     "dqy",
     "i_bunch_b1",
     "i_bunch_b2",
+    "i_oct_b1",
+    "i_oct_b2",
     "num_particles_per_bunch",
     "crossing_angle",
 ]
@@ -139,7 +140,7 @@ my_final = pd.DataFrame(
 ).transpose()
 
 # Save data and print time
-my_final.to_parquet(f"scans/{study_name}/da.parquet")
+my_final.to_parquet(f"../scans/{study_name}/da.parquet")
 print("Final dataframe for current set of simulations: ", my_final)
 end = time.time()
 print("Elapsed time: ", end - start)
