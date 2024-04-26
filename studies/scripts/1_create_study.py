@@ -180,7 +180,7 @@ d_config_collider["config_knobs_and_tuning"] = d_config_tune_and_chroma
 d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 
 # Add luminosity configuration
--d_config_collider["config_lumi_leveling"] = d_config_leveling
+d_config_collider["config_lumi_leveling"] = d_config_leveling
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
