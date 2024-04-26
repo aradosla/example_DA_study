@@ -10,7 +10,7 @@ Jobs can be efficiently stored and parallelized using the
 
 ## Installation instructions
 
-### Cloning the repository and corresponding submodules
+### Cloning the repository and its submodules
 
 Run the following command to clone the repository and all the relevant submodules:
 
