@@ -170,11 +170,14 @@ def set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False):
     # Correct filling scheme in config, as it might have been converted
     config_bb["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
+    # Get number of LR to consider
+    n_LR = config_bb["num_long_range_encounters_per_side"]["ip1"]
+
     # If the bunch number is None, the bunch with the largest number of long-range interactions is used
     if config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_1"
+            filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_1"
         )
         if ask_worst_bunch:
             while config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] is None:
@@ -197,7 +200,7 @@ def set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False):
 
     if config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b2"] is None:
         worst_bunch_b2 = get_worst_bunch(
-            filling_scheme_path, numberOfLRToConsider=26, beam="beam_2"
+            filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_2"
         )
         # For beam 2, just select the worst bunch by default
         config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b2"] = worst_bunch_b2
