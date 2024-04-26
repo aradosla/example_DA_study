@@ -174,13 +174,13 @@ def set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False):
     n_LR = config_bb["num_long_range_encounters_per_side"]["ip1"]
 
     # If the bunch number is None, the bunch with the largest number of long-range interactions is used
-    if config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] is None:
+    if config_bb["mask_with_filling_pattern"]["i_bunch_b1"] is None:
         # Case the bunch number has not been provided
         worst_bunch_b1 = get_worst_bunch(
             filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_1"
         )
         if ask_worst_bunch:
-            while config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] is None:
+            while config_bb["mask_with_filling_pattern"]["i_bunch_b1"] is None:
                 bool_inp = input(
                     "The bunch number for beam 1 has not been provided. Do you want to use the bunch"
                     " with the largest number of long-range interactions? It is the bunch number "
@@ -188,22 +188,20 @@ def set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False):
                     + " (y/n): "
                 )
                 if bool_inp == "y":
-                    config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] = (
-                        worst_bunch_b1
-                    )
+                    config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
                 elif bool_inp == "n":
-                    config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] = int(
+                    config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = int(
                         input("Please enter the bunch number for beam 1: ")
                     )
         else:
-            config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b1"] = worst_bunch_b1
+            config_bb["mask_with_filling_pattern"]["i_bunch_b1"] = worst_bunch_b1
 
-    if config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b2"] is None:
+    if config_bb["mask_with_filling_pattern"]["i_bunch_b2"] is None:
         worst_bunch_b2 = get_worst_bunch(
             filling_scheme_path, numberOfLRToConsider=n_LR, beam="beam_2"
         )
         # For beam 2, just select the worst bunch by default
-        config_bb["mask_with_filling_pattern"]["pattern_fname"]["i_bunch_b2"] = worst_bunch_b2
+        config_bb["mask_with_filling_pattern"]["i_bunch_b2"] = worst_bunch_b2
 
     return config_bb
 
