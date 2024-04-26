@@ -8,12 +8,11 @@ import time
 
 import numpy as np
 import yaml
-from tree_maker import initialize
-
-from studies.scripts.generate_run_file import (
+from generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
 )
+from tree_maker import initialize
 
 # ==================================================================================================
 # --- Initial particle distribution parameters (generation 1)
