@@ -310,6 +310,14 @@ study_name = "example_tunescan"
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
     os.makedirs(f"../scans/{study_name}")
+else:
+    answer = input(
+        "The folder already exists. You might delete an existing study. "
+        "Do you want to overwrite it? [y/n]"
+    )
+    if answer != "y":
+        print("Aborting...")
+        exit()
 
 # Move to the folder that will contain the tree
 os.chdir(f"../scans/{study_name}")
