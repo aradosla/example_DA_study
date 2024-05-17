@@ -98,7 +98,6 @@ def apply_optics(mad, optics_file):
     mad.input("on_alice := on_alice_normalized * 7000. / nrj;")
     mad.input("on_lhcb := on_lhcb_normalized * 7000. / nrj;")
 
-
 def apply_BFPP(mad):
     mad.input("""acbch8.r2b1        :=   6.336517325e-05 * ON_BFPP.R2 / 7.8;
                 acbch10.r2b1       :=   2.102863759e-05 * ON_BFPP.R2 / 7.8;
