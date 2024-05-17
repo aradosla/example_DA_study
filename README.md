@@ -18,6 +18,12 @@ Run the following command to clone the repository and all the relevant submodule
 git clone --recurse-submodules https://github.com/xsuite/example_DA_study.git
 ```
 
+If you missed this step and clone the repository without the submodules, you can do _a posteriori_:
+
+```bash
+git submodule update --init --recursive
+```
+
 If not already done, install Poetry following the tutorial [here](https://python-poetry.org/docs/). Note that Poetry must have access to Python 3.10 or above for the rest of the tutorial to work. More importantly, the executable of Python must be accessible from a cluster node (e.g. located on AFS when submitting jobs to HTCondor) for a submission to work.
 
 You can check the base executable of Python that Poetry is using by running the following command:
