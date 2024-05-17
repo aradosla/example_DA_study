@@ -112,6 +112,9 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     # Apply optics (only for b1b2, b4 will be generated from b1b2)
     ost.apply_optics(mad_b1b2, optics_file=config_mad["optics_file"])
 
+    if "BFPP" in config_mad and config_mad["BFPP"]:
+        ost.apply_BFPP(mad_b1b2)
+
     if sanity_checks:
         mad_b1b2.use(sequence="lhcb1")
         mad_b1b2.twiss()
