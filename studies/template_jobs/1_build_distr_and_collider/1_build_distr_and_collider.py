@@ -7,6 +7,7 @@ in this script are called sequentially."""
 
 # Import standard library modules
 import itertools
+import json
 import logging
 import os
 import shutil
@@ -21,6 +22,7 @@ import pandas as pd
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
+import xobjects as xo
 import yaml
 from cpymad.madx import Madx
 
@@ -118,9 +120,11 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     if sanity_checks:
         mad_b1b2.use(sequence="lhcb1")
         mad_b1b2.twiss()
+        print("Now checking sequence lhcb1 of mad_b1b2")
         ost.check_madx_lattices(mad_b1b2)
         mad_b1b2.use(sequence="lhcb2")
         mad_b1b2.twiss()
+        print("Now checking sequence lhcb2 of mad_b1b2")
         ost.check_madx_lattices(mad_b1b2)
 
     # Apply optics (only for b4, just for check)
@@ -128,7 +132,8 @@ def build_collider_from_mad(config_mad, sanity_checks=True):
     if sanity_checks:
         mad_b4.use(sequence="lhcb2")
         mad_b4.twiss()
-        ost.check_madx_lattices(mad_b1b2)
+        print("Now checking sequence lhcb2 of mad_b4")
+        ost.check_madx_lattices(mad_b4)
 
     # Build xsuite collider
     collider = xlhc.build_xsuite_collider(
@@ -160,7 +165,7 @@ def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
         for knob, val in dic_rf.items():
             print(f"    {knob} = {val}")
     elif config_mad["ver_lhc_run"] == 3.0:
-        dic_rf = {"vrf400": 12.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
+        dic_rf = {"vrf400": 1148, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
         for knob, val in dic_rf.items():
             print(f"    {knob} = {val}")
     else:
