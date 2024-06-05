@@ -32,7 +32,7 @@ d_config_particles = {}
 # Radius of the initial particle distribution
 d_config_particles["r_min"] = 4
 d_config_particles["r_max"] = 20
-d_config_particles["n_r"] = 8 * (d_config_particles["r_max"] - d_config_particles["r_min"])
+d_config_particles["n_r"] = 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
 d_config_particles["n_angles"] = 5
