@@ -196,5 +196,8 @@ dump_config_in_collider: false
 # Context for the simulation
 context: "cpu" # 'cupy' # opencl
 
+# Device number for GPU simulation
+device_number: 0
+
 # Log
 log_file: tree_maker.log

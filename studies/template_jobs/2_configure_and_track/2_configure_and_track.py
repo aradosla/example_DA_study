@@ -52,8 +52,14 @@ def tree_maker_tagging(config, tag="started"):
 # --- Function to get context
 # ==================================================================================================
 def get_context(configuration):
+    # Get device number
+    if "device_number" not in configuration:
+        device_number = None
+    else:
+        device_number = configuration["device_number"]
+
     if configuration["context"] == "cupy":
-        return xo.ContextCupy()
+        return xo.ContextCupy(device=device_number)
     elif configuration["context"] == "opencl":
         return xo.ContextPyopencl()
     elif configuration["context"] == "cpu":

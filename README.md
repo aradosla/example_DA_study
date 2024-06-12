@@ -24,6 +24,8 @@ If you missed this step and clone the repository without the submodules, you can
 git submodule update --init --recursive
 ```
 
+### Installing with Poetry
+
 If not already done, install Poetry following the tutorial [here](https://python-poetry.org/docs/). Note that Poetry must have access to Python 3.10 or above for the rest of the tutorial to work. More importantly, the executable of Python must be accessible from a cluster node (e.g. located on AFS when submitting jobs to HTCondor) for a submission to work.
 
 You can check the base executable of Python that Poetry is using by running the following command:
@@ -44,18 +46,54 @@ For easier submission later, also impose the virtual environment to be created i
 poetry config virtualenvs.in-project true
 ```
 
+### Installing with Poetry for GPUs
+
+Using Poetry along with GPUs is a bit more complicated, as conda is not natively supported by Poetry. However, not all is lost as a simple trick allows to bypass this issue. First, from a conda-compatible Python environment (e.g. miniforge or miniconda), create a virtual environment with the following command:
+
+```bash
+conda create -n gpusim python=3.9
+conda activate gpusim
+```
+
+⚠️ **Make sure that the Python version is 3.9 as, for now, a bug with Poetry prevents using 3.10 or above.**
+
+Now configure Poetry to use the virtual environment you just created:
+  
+```bash
+poetry config virtualenvs.in-project false
+poetry config virtualenvs.path $CONDA_ENV_PATH
+poetry config virtualenvs.create false
+```
+
+Where ```$CONDA_ENV_PATH``` is the path to the base envs folder (e.g. ```/home/user/miniforge3/envs```).  
+
+You can then install the CUDA toolkit and the necessary packages (e.g. ```cupy```) in the virtual environment (from [Xsuite documentation](https://xsuite.readthedocs.io/en/latest/installation.html#gpu-multithreading-support) ):
+
+```bash
+conda install mamba -n base -c conda-forge
+mamba install cudatoolkit=11.8.0
+```
+
+Finally, you need to modify the path to the virtual environment in the ```source_python.sh``` file. 
+
+Replace the line 17 ```source $SCRIPT_DIR/.venv/bin/activate``` with the path to the conda environment you just used to create the virtual environment (e.g. ```source /home/user/miniforge3/bin/activate```, and add below ```conda activate gpusim```).
+
+You're now good to go with the next section, as Poetry will automatically detect that the conda virtual environment is activated and use it to install the packages.
+
+### Installing packages
+
 Finally, install the dependencies by running the following command:
 
 ```bash
 poetry install
 ```
 
-At this point, ensure that a `.venv` folder has been created in the repository folder. If not, follow the fix described in the next section.
+At this point, ensure that a `.venv` folder has been created in the repository folder (except if you modified the procedure to use GPUs, as explained above). If not, follow the fix described in the next section.
 
 Finally, you can make xsuite faster by precompiling the kernel, with:
 
 ```bash
-poetry run xsuite-prebuild
+poetry run xsuite-prebuild regenerate
 ```
 
 To run any subsequent Python command, either activate the virtual environment (activate a shell within Poetry) with:
@@ -80,6 +118,14 @@ poetry env list --full-path
 ```
 
 Identify the virtual environment that is being used and copy the corresponding path. Now, open the file `source_python.sh` and replace the line `source $SCRIPT_DIR/.venv/bin/activate`with the path to the virtual environment you just found (e.g. `source /path/to/your/virtual/environment/bin/activate`).
+
+### Installing without Poetry
+
+It is strongly recommended to use Poetry as it will handle all the packages dependencies and the virtual environment for you. However, if you prefer to install the packages manually, you can do so by running the following commands (granted that you have Python installed along with pip):
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Running a simple parameter scan simulation
 
