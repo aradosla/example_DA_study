@@ -34,7 +34,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 5
+d_config_particles["n_split"] = 1
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -215,13 +215,13 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "upper_triangle"  # 'lower_triangle', 'all'
+keep = "all"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -250,21 +250,7 @@ children["base_collider"]["config_mad"] = d_config_mad
 # ! otherwise the dictionnary will be mutated for all the children.
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
-for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-    # If requested, ignore conditions below the upper diagonal as they can't be reached in the LHC
-    if keep == "upper_triangle":
-        if qy < (qx - 2 + 0.0039):  # 0.039 instead of 0.04 to avoid rounding errors
-            continue
-    elif keep == "lower_triangle":
-        if qy >= (qx - 2 - 0.0039):
-            continue
-    else:
-        pass
-
-    # Mutate the appropriate collider parameters
-    for beam in ["lhcb1", "lhcb2"]:
-        d_config_collider["config_knobs_and_tuning"]["qx"][beam] = float(qx)
-        d_config_collider["config_knobs_and_tuning"]["qy"][beam] = float(qy)
+for idx_job, track in enumerate(track_array):
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
@@ -305,7 +291,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan_gz"
+study_name = "example_tunescan_gz_test"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):

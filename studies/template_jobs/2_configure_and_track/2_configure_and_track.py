@@ -496,6 +496,11 @@ def configure_collider(
     config_collider = config["config_collider"]
 
     # Rebuild collider
+    if config_sim["collider_file"].endswith(".gz"):
+        # Uncompress file
+        os.system(f"gunzip {config_sim['collider_file']}")
+        config_sim["collider_file"] = config_sim["collider_file"].replace(".gz", "")
+        
     collider = xt.Multiline.from_json(config_sim["collider_file"])
 
     # Install beam-beam

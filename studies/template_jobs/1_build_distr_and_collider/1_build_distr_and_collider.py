@@ -217,8 +217,10 @@ def build_distr_and_collider(config_file="config.yaml"):
     clean()
 
     # Save collider to json
-    os.makedirs("collider", exist_ok=True)
-    collider.to_json("collider/collider.json")
+    collider.to_json("collider.json")
+    
+    # Compress the collider file to ease the load on afs
+    os.system("gzip collider.json")
 
     # Tag end of the job
     tree_maker_tagging(configuration, tag="completed")
