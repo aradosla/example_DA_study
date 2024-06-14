@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import time
+from zipfile import ZipFile
 
 # Import third-party modules
 import numpy as np
@@ -496,10 +497,13 @@ def configure_collider(
     config_collider = config["config_collider"]
 
     # Rebuild collider
-    if config_sim["collider_file"].endswith(".gz"):
-        # Uncompress file
-        os.system(f"gunzip {config_sim['collider_file']}")
-        config_sim["collider_file"] = config_sim["collider_file"].replace(".gz", "")
+    if config_sim["collider_file"].endswith(".zip"):
+        # Uncompress file locally
+        with ZipFile(config_sim["collider_file"], "r") as zip_ref:
+            zip_ref.extractall()
+        config_sim["collider_file"] = (
+            "collider.json"  # config_sim["collider_file"].replace(".zip", "")
+        )
 
     collider = xt.Multiline.from_json(config_sim["collider_file"])
 
@@ -597,7 +601,7 @@ def configure_collider(
             }
             collider.metadata = config_dict
         # Dump collider
-        collider.to_json("collider.json")
+        collider.to_json("collider_final.json")
 
     return collider, config_sim, config_bb, collider_before_bb
 

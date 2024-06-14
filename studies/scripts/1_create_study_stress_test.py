@@ -268,7 +268,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
 
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
-    d_config_simulation["collider_file"] = "../collider.json.gz"
+    d_config_simulation["collider_file"] = "../collider.json.zip"
 
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
@@ -305,7 +305,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan_gz"
+study_name = "example_tunescan_stress_test"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):

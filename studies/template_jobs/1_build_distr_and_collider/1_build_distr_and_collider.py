@@ -10,6 +10,7 @@ import itertools
 import logging
 import os
 import shutil
+from zipfile import ZipFile
 
 # Import third-party modules
 import numpy as np
@@ -218,9 +219,10 @@ def build_distr_and_collider(config_file="config.yaml"):
 
     # Save collider to json
     collider.to_json("collider.json")
-    
-    # Compress the collider file to ease the load on afs
-    os.system("gzip collider.json")
+
+    # Compress the collider file to zip to ease the load on afs
+    with ZipFile("collider.json.zip", "w") as zipf:
+        zipf.write("collider.json")
 
     # Tag end of the job
     tree_maker_tagging(configuration, tag="completed")

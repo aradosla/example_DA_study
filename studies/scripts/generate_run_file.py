@@ -3,7 +3,7 @@ import yaml
 
 def generate_run_sh(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
-    file_string = ( 
+    file_string = (
         "#!/bin/bash\n"
         + f"source {node.root.parameters['setup_env_script']}\n"
         + f"cd {node.get_abs_path()}\n"
@@ -11,16 +11,19 @@ def generate_run_sh(node, generation_number):
         + "rm -rf final_* modules optics_repository optics_toolkit tools tracking_tools temp"
         " mad_collider.log __pycache__ twiss* errors fc* optics_orbit_at*\n"
     )
-    if 'use_eos_for_large_files' in node.root.parameters and node.root.parameters['use_eos_for_large_files']:
-        eos_path = node.root.parameters['eos_path']
+    if (
+        "use_eos_for_large_files" in node.root.parameters
+        and node.root.parameters["use_eos_for_large_files"]
+    ):
+        eos_path = node.root.parameters["eos_path"]
         if eos_path.endswith("/"):
             eos_path = eos_path[:-1]
         # Copy particles and collider
         file_string += (
             f"xrdcp -rf particles {eos_path}/\n"
-            f"xrdcp -f collider.json.gz {eos_path}/collider.json.gz"
+            f"xrdcp -f collider.json.zip {eos_path}/collider.json.zip"
         )
-        
+
     return file_string
 
 
@@ -51,24 +54,27 @@ def _generate_run_sh_htc_gen_2(node, python_command):
     # Get paths to mutate to log
     path_log = config["log_file"]
     new_path_log = f"{abs_path}/{path_log}"
-    
+
     # Get path to mutate to collider and particles
     path_collider = config["config_simulation"]["collider_file"]
-    path_particles = config["config_simulation"]["particle_file"] 
-    
-    if 'use_eos_for_large_files' in node.root.parameters and node.root.parameters['use_eos_for_large_files']:
-        eos_path = node.root.parameters['eos_path']
+    path_particles = config["config_simulation"]["particle_file"]
+
+    if (
+        "use_eos_for_large_files" in node.root.parameters
+        and node.root.parameters["use_eos_for_large_files"]
+    ):
+        eos_path = node.root.parameters["eos_path"]
         if eos_path.endswith("/"):
             eos_path = eos_path[:-1]
-        
+
         f"xrdcp {eos_path}/particles particles"
-        f"xrdcp {eos_path}/collider.json.gz collider.json.gz"
-        new_path_collider = "collider.json.gz"
-        new_path_particles = "particles/"+ path_particles.split("/")[-1]
+        f"xrdcp {eos_path}/collider.json.zip collider.json.zip"
+        new_path_collider = "collider.json.zip"
+        new_path_particles = "particles/" + path_particles.split("/")[-1]
     else:
         new_path_collider = f"{abs_path}/{path_collider}"
         new_path_particles = f"{abs_path}/{path_particles}"
-    
+
     # Prepare strings for sec
     path_collider = path_collider.replace("/", "\/")
     path_particles = path_particles.replace("/", "\/")
