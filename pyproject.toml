@@ -11,7 +11,7 @@ package-mode = false
 python = "^3.9"
 xmask = {path = "external_dependencies/xmask", develop = true}
 tree-maker = {git = "https://github.com/xsuite/tree_maker.git"}
-xsuite = "0.8"
+xsuite = "0.14"
 fastparquet = "^2024.5.0"
 cupy-cuda11x = "^13.1.0"
 psutil = "^5.9.8"

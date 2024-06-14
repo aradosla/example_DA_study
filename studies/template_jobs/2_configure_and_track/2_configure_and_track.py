@@ -500,7 +500,7 @@ def configure_collider(
         # Uncompress file
         os.system(f"gunzip {config_sim['collider_file']}")
         config_sim["collider_file"] = config_sim["collider_file"].replace(".gz", "")
-        
+
     collider = xt.Multiline.from_json(config_sim["collider_file"])
 
     # Install beam-beam
@@ -705,7 +705,7 @@ def configure_and_track(config_path="config.yaml"):
     # Save output
     particles_df.to_parquet("output_particles.parquet")
 
-    # Remote the correction folder, and potential C files remaining
+    # Remove the correction folder, and potential C files remaining
     with contextlib.suppress(Exception):
         os.system("rm -rf correction")
         os.system("rm -f *.cc")
