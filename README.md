@@ -34,7 +34,7 @@ You can check the base executable of Python that Poetry is using by running the 
 poetry env info
 ```
 
-If needed, you can change the exectutable with e.g:
+If needed (for instance, if your Python base executable is not on AFS), you can change the exectutable with e.g:
 
 ```bash
 poetry env use /path/to/python

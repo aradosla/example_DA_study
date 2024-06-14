@@ -251,7 +251,6 @@ children["base_collider"]["config_mad"] = d_config_mad
 # ==================================================================================================
 track_array = np.arange(d_config_particles["n_split"])
 for idx_job, track in enumerate(track_array):
-
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
     d_config_simulation["collider_file"] = "../collider.json.gz"
@@ -291,7 +290,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan_gz_test"
+study_name = "example_tunescan_gz_large_test"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
