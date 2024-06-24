@@ -501,11 +501,11 @@ def configure_collider(
         # Uncompress file locally
         with ZipFile(config_sim["collider_file"], "r") as zip_ref:
             zip_ref.extractall()
-        config_sim["collider_file"] = (
-            "collider.json"  # config_sim["collider_file"].replace(".zip", "")
+        collider = xt.Multiline.from_json(
+            config_sim["collider_file"].split("/")[-1].replace(".zip", "")
         )
-
-    collider = xt.Multiline.from_json(config_sim["collider_file"])
+    else:
+        collider = xt.Multiline.from_json(config_sim["collider_file"])
 
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
@@ -593,7 +593,7 @@ def configure_collider(
 
     if save_collider:
         # Save the final collider before tracking
-        print('Saving "collider.json')
+        print('Saving "collider_final.json')
         if save_config:
             config_dict = {
                 "config_mad": config_mad,
