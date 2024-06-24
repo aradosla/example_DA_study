@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "da-boilerplate"
 version = "0.1.0"
-description = "Dynamic aperture boilerplate for HL-LHC"
+description = "Dynamic aperture boilerplate for various LHC versions (including HL-LHC)"
 authors = ["Colas Droin <colas.noe.droin@cern.ch>"]
 license = "MIT"
 readme = "README.md"
