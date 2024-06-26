@@ -23,6 +23,7 @@ import tree_maker
 
 # Import user-defined modules
 import xmask as xm
+import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
 from misc import (
@@ -30,8 +31,8 @@ from misc import (
     generate_orbit_correction_setup,
     get_worst_bunch,
     load_and_check_filling_scheme,
-    luminosity_leveling,
     luminosity_leveling_ip1_5,
+    return_fingerprint,
 )
 
 # Initialize yaml reader
@@ -291,27 +292,9 @@ def do_levelling(
 
         config_bb["num_particles_per_bunch"] = float(bunch_intensity)
 
-    # Set up the constraints for lumi optimization in IP8
-    additional_targets_lumi = []
-    if "constraints" in config_lumi_leveling["ip8"]:
-        for constraint in config_lumi_leveling["ip8"]["constraints"]:
-            obs, beam, sign, val, at = constraint.split("_")
-            if sign == "<":
-                ineq = xt.LessThan(float(val))
-            elif sign == ">":
-                ineq = xt.GreaterThan(float(val))
-            else:
-                raise ValueError(f"Unsupported sign for luminosity optimization constraint: {sign}")
-            target = xt.Target(obs, ineq, at=at, line=beam, tol=1e-6)
-            additional_targets_lumi.append(target)
-
-    # Then level luminosity in IP 2/8 changing the separation
-    collider = luminosity_leveling(
-        collider,
-        config_lumi_leveling=config_lumi_leveling,
-        config_beambeam=config_bb,
-        additional_targets_lumi=additional_targets_lumi,
-        crab=crab,
+    # Do levelling in IP2 and IP8
+    xlhc.luminosity_leveling(
+        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
     )
 
     # Update configuration
@@ -682,6 +665,10 @@ def configure_and_track(config_path="config.yaml"):
         return_collider_before_bb=False,
     )
 
+    # Compute collider fingerprint
+    fingerprint = return_fingerprint(config_sim["beam"], collider)
+    hash_fingerprint = hash(fingerprint)
+
     # Reset the tracker to go to GPU if needed
     if config["context"] in ["cupy", "opencl"]:
         collider.discard_trackers()
@@ -705,6 +692,9 @@ def configure_and_track(config_path="config.yaml"):
 
     # Assign the old id to the sorted dataframe
     particles_df["particle_id"] = particle_id
+
+    # Add to the output dataframe
+    particles_df.attrs["hash"] = hash_fingerprint
 
     # Save output
     particles_df.to_parquet("output_particles.parquet")

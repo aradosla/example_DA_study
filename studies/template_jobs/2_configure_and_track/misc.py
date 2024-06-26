@@ -481,107 +481,6 @@ def generate_orbit_correction_setup():
     }
 
 
-def luminosity_leveling(
-    collider, config_lumi_leveling, config_beambeam, additional_targets_lumi=None, crab=False
-):
-    if additional_targets_lumi is None:
-        additional_targets_lumi = []
-    for ip_name in config_lumi_leveling.keys():
-        print(f"\n --- Leveling in {ip_name} ---")
-
-        config_this_ip = config_lumi_leveling[ip_name]
-        bump_range = config_this_ip["bump_range"]
-
-        assert config_this_ip[
-            "preserve_angles_at_ip"
-        ], "Only preserve_angles_at_ip=True is supported for now"
-        assert config_this_ip[
-            "preserve_bump_closure"
-        ], "Only preserve_bump_closure=True is supported for now"
-
-        beta0_b1 = collider.lhcb1.particle_ref.beta0[0]
-        f_rev = 1 / (collider.lhcb1.get_length() / (beta0_b1 * clight))
-
-        targets = []
-        if "luminosity" in config_this_ip.keys():
-            targets.append(
-                xt.TargetLuminosity(
-                    ip_name=ip_name,
-                    luminosity=config_this_ip["luminosity"],
-                    crab=crab,
-                    tol=1e30,  # 0.01 * config_this_ip["luminosity"],
-                    f_rev=f_rev,
-                    num_colliding_bunches=config_this_ip["num_colliding_bunches"],
-                    num_particles_per_bunch=config_beambeam["num_particles_per_bunch"],
-                    sigma_z=config_beambeam["sigma_z"],
-                    nemitt_x=config_beambeam["nemitt_x"],
-                    nemitt_y=config_beambeam["nemitt_y"],
-                    log=True,
-                )
-            )
-
-            # Added this line for constraints
-            targets.extend(additional_targets_lumi)
-        elif "separation_in_sigmas" in config_this_ip.keys():
-            targets.append(
-                xt.TargetSeparation(
-                    ip_name=ip_name,
-                    separation_norm=config_this_ip["separation_in_sigmas"],
-                    tol=1e-4,  # in sigmas
-                    plane=config_this_ip["plane"],
-                    nemitt_x=config_beambeam["nemitt_x"],
-                    nemitt_y=config_beambeam["nemitt_y"],
-                )
-            )
-        else:
-            raise ValueError("Either `luminosity` or `separation_in_sigmas` must be specified")
-
-        if config_this_ip["impose_separation_orthogonal_to_crossing"]:
-            targets.append(xt.TargetSeparationOrthogonalToCrossing(ip_name="ip8"))
-        vary = [xt.VaryList(config_this_ip["knobs"], step=1e-4)]
-        # Target and knobs to rematch the crossing angles and close the bumps
-        for line_name in ["lhcb1", "lhcb2"]:
-            targets += [
-                # Preserve crossing angle
-                xt.TargetList(
-                    ["px", "py"], at=ip_name, line=line_name, value="preserve", tol=1e-7, scale=1e3
-                ),
-                # Close the bumps
-                xt.TargetList(
-                    ["x", "y"],
-                    at=bump_range[line_name][-1],
-                    line=line_name,
-                    value="preserve",
-                    tol=1e-5,
-                    scale=1,
-                ),
-                xt.TargetList(
-                    ["px", "py"],
-                    at=bump_range[line_name][-1],
-                    line=line_name,
-                    value="preserve",
-                    tol=1e-5,
-                    scale=1e3,
-                ),
-            ]
-
-        vary.append(xt.VaryList(config_this_ip["corrector_knob_names"], step=1e-7))
-
-        # Match
-        tw0 = collider.twiss(lines=["lhcb1", "lhcb2"])
-        collider.match(
-            lines=["lhcb1", "lhcb2"],
-            start=[bump_range["lhcb1"][0], bump_range["lhcb2"][0]],
-            end=[bump_range["lhcb1"][-1], bump_range["lhcb2"][-1]],
-            init=tw0,
-            init_at=xt.START,
-            targets=targets,
-            vary=vary,
-        )
-
-    return collider
-
-
 def compute_PU(luminosity, num_colliding_bunches, T_rev0, cross_section=81e-27):
     return luminosity / num_colliding_bunches * cross_section * T_rev0
 
@@ -651,3 +550,80 @@ def luminosity_leveling_ip1_5(
             f"Optimization for leveling in IP 1/5 succeeded with I={res.x:.2e} particles per bunch"
         )
     return res.x
+
+
+def return_fingerprint(line_name, collider):
+    line = collider[line_name]
+
+    tw = line.twiss()
+    tt = line.get_table()
+
+    det = line.get_amplitude_detuning_coefficients(a0_sigmas=0.1, a1_sigmas=0.2, a2_sigmas=0.3)
+
+    det_table = xt.Table(
+        {
+            "name": np.array(list(det.keys())),
+            "value": np.array([v for v in det.values()]),
+        }
+    )
+
+    nl_chrom = line.get_non_linear_chromaticity(
+        delta0_range=(-2e-4, 2e-4), num_delta=5, fit_order=3
+    )
+
+    out = ""
+
+    out += f"Line: {line_name}\n"
+    out += "\n"
+
+    out += "Installed element types:\n"
+    out += repr([nn for nn in sorted(list(set(tt.element_type))) if len(nn) > 0]) + "\n"
+    out += "\n"
+
+    out += f'Tunes:        Qx  = {tw["qx"]:.5f}       Qy = {tw["qy"]:.5f}\n'
+    out += "Chromaticity: Q'x = " + f'{tw["dqx"]:.2f}     ' + "Q'y = " + f'{tw["dqy"]:.2f}\n'
+    out += f'c_minus:      {tw["c_minus"]:.5e}\n'
+    out += "\n"
+
+    out += f'Synchrotron tune: {tw["qs"]:5e}\n'
+    out += f'Slip factor:      {tw["slip_factor"]:.5e}\n'
+    out += "\n"
+
+    out += "Twiss parameters and phases at IPs:\n"
+    out += (
+        tw.rows["ip.*"]
+        .cols["name s betx bety alfx alfy mux muy"]
+        .show(output=str, max_col_width=int(1e6), digits=8)
+    )
+    out += "\n\n"
+
+    out += "Dispersion at IPs:\n"
+    out += (
+        tw.rows["ip.*"]
+        .cols["name s dx dy dpx dpy"]
+        .show(output=str, max_col_width=int(1e6), digits=8)
+    )
+    out += "\n\n"
+
+    out += "Crab dispersion at IPs:\n"
+    out += (
+        tw.rows["ip.*"]
+        .cols["name s dx_zeta dy_zeta dpx_zeta dpy_zeta"]
+        .show(output=str, max_col_width=int(1e6), digits=8)
+    )
+    out += "\n\n"
+
+    out += "Amplitude detuning coefficients:\n"
+    out += det_table.show(output=str, max_col_width=int(1e6), digits=6)
+    out += "\n\n"
+
+    out += "Non-linear chromaticity:\n"
+    out += f'dnqx = {list(nl_chrom["dnqx"])}\n'
+    out += f'dnqy = {list(nl_chrom["dnqy"])}\n'
+    out += "\n\n"
+
+    out += "Tunes and momentum compaction vs delta:\n"
+    out += nl_chrom.show(output=str, max_col_width=int(1e6), digits=6)
+    out += "\n\n"
+
+    return out
