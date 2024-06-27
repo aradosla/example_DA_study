@@ -26,7 +26,7 @@ git submodule update --init --recursive
 
 ### Installing with Poetry
 
-If not already done, install Poetry following the tutorial [here](https://python-poetry.org/docs/). Note that Poetry must have access to Python 3.9 or above for the rest of the tutorial to work. More importantly, the executable of Python must be accessible from a cluster node (e.g. located on AFS when submitting jobs to HTCondor) for a submission to work.
+If not already done, install Poetry following the tutorial [here](https://python-poetry.org/docs/). Note that Poetry must have access to Python 3.9 or above for the rest of the tutorial to work. More importantly, the executable of Python must be accessible from a cluster node (e.g. located on AFS when submitting jobs to HTCondor) for a submission to work. Ideally, Poetry should use a Python distribution located on your local machine (shared acress all of your projects), and then use another Python distribution (e.g. miniforge or miniconda) on AFS for the simulations (which can be shared across projects or not, depending on the needs).
 
 You can check the base executable of Python that Poetry is using by running the following command:
 
@@ -46,9 +46,11 @@ For easier submission later, also impose the virtual environment to be created i
 poetry config virtualenvs.in-project true
 ```
 
+If you're not interested in using GPUs, you can jump directly to the [Installing packages](#installing-packages) section. Otherwise, follow the next section.
+
 ### Installing with Poetry for GPUs
 
-Using Poetry along with GPUs is a bit more complicated, as conda is not natively supported by Poetry. However, not all is lost as a simple trick allows to bypass this issue. First, from a conda-compatible Python environment (e.g. miniforge or miniconda), create a virtual environment with the following command:
+Using Poetry along with GPUs is a bit more complicated, as conda is not natively supported by Poetry. However, not all is lost as a simple trick allows to bypass this issue. First, from your (hopefully conda-compatible) Python environment, create a virtual environment with the following command:
 
 ```bash
 conda create -n gpusim python=3.9
