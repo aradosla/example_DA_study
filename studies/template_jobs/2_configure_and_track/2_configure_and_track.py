@@ -23,6 +23,7 @@ import tree_maker
 
 # Import user-defined modules
 import xmask as xm
+import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
 from misc import (
@@ -30,8 +31,8 @@ from misc import (
     generate_orbit_correction_setup,
     get_worst_bunch,
     load_and_check_filling_scheme,
-    luminosity_leveling,
     luminosity_leveling_ip1_5,
+    return_fingerprint,
 )
 
 # Initialize yaml reader
@@ -76,7 +77,7 @@ def get_context(configuration):
 def read_configuration(config_path="config.yaml"):
     # Read configuration for simulations
     with open(config_path, "r") as fid:
-        config = ryaml.load(fid)
+        config_gen_2 = ryaml.load(fid)
 
     # Also read configuration from previous generation
     try:
@@ -86,8 +87,7 @@ def read_configuration(config_path="config.yaml"):
         with open("../1_build_distr_and_collider/" + config_path, "r") as fid:
             config_gen_1 = ryaml.load(fid)
 
-    config_mad = config_gen_1["config_mad"]
-    return config, config_mad
+    return config_gen_1, config_gen_2
 
 
 def generate_configuration_correction_files(output_folder="correction"):
@@ -291,27 +291,9 @@ def do_levelling(
 
         config_bb["num_particles_per_bunch"] = float(bunch_intensity)
 
-    # Set up the constraints for lumi optimization in IP8
-    additional_targets_lumi = []
-    if "constraints" in config_lumi_leveling["ip8"]:
-        for constraint in config_lumi_leveling["ip8"]["constraints"]:
-            obs, beam, sign, val, at = constraint.split("_")
-            if sign == "<":
-                ineq = xt.LessThan(float(val))
-            elif sign == ">":
-                ineq = xt.GreaterThan(float(val))
-            else:
-                raise ValueError(f"Unsupported sign for luminosity optimization constraint: {sign}")
-            target = xt.Target(obs, ineq, at=at, line=beam, tol=1e-6)
-            additional_targets_lumi.append(target)
-
-    # Then level luminosity in IP 2/8 changing the separation
-    collider = luminosity_leveling(
-        collider,
-        config_lumi_leveling=config_lumi_leveling,
-        config_beambeam=config_bb,
-        additional_targets_lumi=additional_targets_lumi,
-        crab=crab,
+    # Do levelling in IP2 and IP8
+    xlhc.luminosity_leveling(
+        collider, config_lumi_leveling=config_lumi_leveling, config_beambeam=config_bb
     )
 
     # Update configuration
@@ -663,27 +645,32 @@ def track(collider, particles, config_sim, save_input_particles=False):
 # ==================================================================================================
 def configure_and_track(config_path="config.yaml"):
     # Get configuration
-    config, config_mad = read_configuration(config_path)
+    config_gen_1, config_gen_2 = read_configuration(config_path)
 
     # Get context
-    context = get_context(config)
+    context = get_context(config_gen_2)
 
     # Tag start of the job
-    tree_maker_tagging(config, tag="started")
+    tree_maker_tagging(config_gen_2, tag="started")
 
     # Configure collider (not saved, since it may trigger overload of afs)
     collider, config_sim, config_bb, _ = configure_collider(
-        config,
-        config_mad,
+        config_gen_2,
+        config_gen_1["config_mad"],
         context,
-        save_collider=config["dump_collider"],
-        save_config=config["dump_config_in_collider"],
+        save_collider=config_gen_2["dump_collider"],
+        save_config=config_gen_2["dump_config_in_collider"],
         config_path=config_path,
         return_collider_before_bb=False,
     )
 
+    # Compute collider fingerprint
+    # (need to be done before tracking as collider can't be twissed after optimization)
+    fingerprint = return_fingerprint(config_sim["beam"], collider)
+    hash_fingerprint = hash(fingerprint)
+
     # Reset the tracker to go to GPU if needed
-    if config["context"] in ["cupy", "opencl"]:
+    if config_gen_2["context"] in ["cupy", "opencl"]:
         collider.discard_trackers()
         collider.build_trackers(_context=context)
 
@@ -706,6 +693,13 @@ def configure_and_track(config_path="config.yaml"):
     # Assign the old id to the sorted dataframe
     particles_df["particle_id"] = particle_id
 
+    # Add some metadata to the output for better interpretability
+    particles_df.attrs["hash"] = hash_fingerprint
+    particles_df.attrs["fingerprint"] = fingerprint
+    particles_df.attrs["configuration_gen_1"] = config_gen_1
+    particles_df.attrs["configuration_gen_2"] = config_gen_2
+    particles_df.attrs["date"] = time.strftime("%Y-%m-%d %H:%M:%S")
+
     # Save output
     particles_df.to_parquet("output_particles.parquet")
 
@@ -714,7 +708,7 @@ def configure_and_track(config_path="config.yaml"):
         os.system("rm -rf correction")
         os.system("rm -f *.cc")
     # Tag end of the job
-    tree_maker_tagging(config, tag="completed")
+    tree_maker_tagging(config_gen_2, tag="completed")
 
 
 # ==================================================================================================
