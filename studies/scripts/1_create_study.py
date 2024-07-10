@@ -53,13 +53,13 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 ### For run III
 d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.40"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.1"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 6800
+beam_energy_tot = 450.0
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -83,10 +83,10 @@ d_config_tune_and_chroma = {
     "dqy": {},
 }
 for beam in ["lhcb1", "lhcb2"]:
-    d_config_tune_and_chroma["qx"][beam] = 62.31
-    d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 15.0
-    d_config_tune_and_chroma["dqy"][beam] = 15.0
+    d_config_tune_and_chroma["qx"][beam] = 62.27
+    d_config_tune_and_chroma["qy"][beam] = 60.295
+    d_config_tune_and_chroma["dqx"][beam] = 20.0
+    d_config_tune_and_chroma["dqy"][beam] = 20.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
@@ -98,36 +98,40 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 d_config_knobs = {}
 
 # Exp. configuration in IR1, IR2, IR5 and IR8
-d_config_knobs["on_x1"] = -145.000
-d_config_knobs["on_sep1"] = 0.0
-d_config_knobs["phi_IR1"] = 180.000
+d_config_knobs["on_disp"] = 0.000
+d_config_knobs["vrf400"] = 5.5
+
+d_config_knobs["on_x1"] = 170.000
+d_config_knobs["on_sep1"] = -2.0
+d_config_knobs["phi_IR1"] = 90.000
 
 d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = 1.0  # 1.000
-d_config_knobs["on_x2v"] = 200.000
+d_config_knobs["on_sep2h"] = -3.5  # 1.000
+d_config_knobs["on_x2v"] = 170.000
 d_config_knobs["on_sep2v"] = 0.000
 d_config_knobs["phi_IR2"] = 90.000
 
-d_config_knobs["on_x5"] = 145.000
-d_config_knobs["on_sep5"] = 0.0
-d_config_knobs["phi_IR5"] = 90.000
+d_config_knobs["on_x5"] = 170.000
+d_config_knobs["on_sep5"] = 2.0
+d_config_knobs["phi_IR5"] = 0.000
 
-d_config_knobs["on_x8h"] = 0.000
-d_config_knobs["on_sep8h"] = -0.01  # -1.000
-d_config_knobs["on_x8v"] = 200.000
-d_config_knobs["on_sep8v"] = 0.000
+d_config_knobs["on_x8h"] = -170.000
+d_config_knobs["on_sep8h"] = -0.0  # -1.000
+d_config_knobs["on_x8v"] = 0.000
+d_config_knobs["on_sep8v"] = -3.500
 d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 300.0
-d_config_knobs["i_oct_b2"] = 300.0
+d_config_knobs["i_oct_b1"] = 55.0
+d_config_knobs["i_oct_b2"] = 55.0
 
 ### leveling configuration
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
 d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.6e11
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
 
@@ -150,9 +154,9 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.15e11  # type: ignore
-d_config_beambeam["nemitt_x"] = 2.2e-6  # type: ignore
-d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
+d_config_beambeam["num_particles_per_bunch"] = 1.6e11  # type: ignore
+d_config_beambeam["nemitt_x"] = 1.5e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 1.5e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
@@ -163,7 +167,7 @@ d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
 filling_scheme_path = os.path.abspath(
-    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
+    "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
 )
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
@@ -187,6 +191,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 # Add luminosity configuration
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
+d_config_collider["skip_leveling"] = True
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
@@ -223,8 +228,8 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = [62.27]#np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
+array_qy = [60.295] #np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end

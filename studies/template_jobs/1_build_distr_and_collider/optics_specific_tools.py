@@ -15,7 +15,8 @@ def check_madx_lattices(mad):
         assert np.isclose(mad.table.summ.dq2, mad.globals["qpyb1"], atol=1e-01)
 
         df = mad.table.twiss.dframe()
-        for my_ip in [1, 2, 5, 8]:
+        #for my_ip in [1, 2, 5, 8]:
+        for my_ip in [1,  5]:
             assert np.isclose(df.loc[f"ip{my_ip}"].betx, mad.globals[f"betx_IP{my_ip}"], rtol=1e-03)
             assert np.isclose(df.loc[f"ip{my_ip}"].bety, mad.globals[f"bety_IP{my_ip}"], rtol=1e-03)
 

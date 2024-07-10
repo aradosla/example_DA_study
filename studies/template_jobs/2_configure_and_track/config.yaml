@@ -90,7 +90,7 @@ config_collider:
       ip5: 25
       ip8: 20
     sigma_z: 0.09
-    num_particles_per_bunch: 1.15e11
+    num_particles_per_bunch: 2.3e11
     nemitt_x: 2.2e-6
     nemitt_y: 2.2e-6
     mask_with_filling_pattern:
@@ -108,7 +108,7 @@ config_collider:
       max_intensity: 1.8e11
       max_PU: 70
 
-  skip_leveling: false
+  skip_leveling: true
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
