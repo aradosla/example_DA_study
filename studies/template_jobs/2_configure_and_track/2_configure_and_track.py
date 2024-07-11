@@ -2,8 +2,9 @@
 are called sequentially, in the order in which they are defined. Modularity has been favored over
 simple scripting for reproducibility, to allow rebuilding the collider from a different program
 (e.g. dahsboard)."""
-
+# %%
 import contextlib
+from pathlib import Path
 
 # ==================================================================================================
 # --- Imports
@@ -488,7 +489,42 @@ def configure_collider(
         )
     else:
         collider = xt.Multiline.from_json(config_sim["collider_file"])
+     
 
+    ########################### Exciter ######################################
+    '''
+
+    # Insert exciter element
+    # Sample data for exciter
+    A = 0.0  # Amplitude
+    f = 50.0  # Frequency
+    phi = 0.0  # Phase
+    sampling_frequency = 1000.0  # Sampling frequency in Hz
+    total_time = 1.0  # Total time in seconds
+    num_turns = config_sim["n_turns"]
+    #N_turns = 100  # Number of turns
+
+    time = np.arange(0, total_time, 1 / sampling_frequency)
+    samples = A * np.sin(2 * np.pi * f * time + phi)
+
+    # Initialize the exciter
+    exciter = xt.Exciter(
+        _context=context,  # Assuming context is passed correctly
+        samples=samples,
+        sampling_frequency=sampling_frequency,
+        duration=num_turns / sampling_frequency,
+        frev=sampling_frequency,
+        knl=[0.000012]
+    )
+
+    # Insert the exciter into the specified line and index
+    collider['lhcb1'].insert_element(
+        element=exciter,
+        name='RF_KO_EXCITER',
+        index='mb.b9r3.b1'
+    )
+
+    '''
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
 
@@ -591,61 +627,175 @@ def configure_collider(
 # ==================================================================================================
 # --- Function to prepare particles distribution for tracking
 # ==================================================================================================
-def prepare_particle_distribution(collider, context, config_sim, config_bb):
+def prepare_particle_distribution(collider, context, config_sim):
     beam = config_sim["beam"]
 
+    #particle_df = pd.read_parquet(config_sim["particle_file"])
     particle_df = pd.read_parquet(config_sim["particle_file"])
 
-    r_vect = particle_df["normalized amplitude in xy-plane"].values
-    theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # type: ignore # [rad]
+    print(particle_df.x)
 
-    A1_in_sigma = r_vect * np.cos(theta_vect)
-    A2_in_sigma = r_vect * np.sin(theta_vect)
 
     particles = collider[beam].build_particles(
-        x_norm=A1_in_sigma,
-        y_norm=A2_in_sigma,
-        delta=config_sim["delta_max"],
-        scale_with_transverse_norm_emitt=(config_bb["nemitt_x"], config_bb["nemitt_y"]),
+        x=particle_df.x.values,
+        y=particle_df.y.values,
+        px = particle_df.px.values,
+        py = particle_df.py.values,
+        zeta = particle_df.zeta.values,
+        delta=particle_df.delta.values,
         _context=context,
     )
 
-    particle_id = particle_df.particle_id.values
-    return particles, particle_id
 
+    particle_id = particle_df.particle_id.values
+
+    return particles, particle_id
 
 # ==================================================================================================
 # --- Function to do the tracking
 # ==================================================================================================
-def track(collider, particles, config_sim, save_input_particles=False):
+def track(collider, particles, config_sim, config_bb, save_input_particles=False):
     # Get beam being tracked
+    config, config_mad = read_configuration("config.yaml")
+    context = get_context(config)
     beam = config_sim["beam"]
 
-    # Optimize line for tracking
-    collider[beam].optimize_for_tracking()
+    # Optimize line for tracking (not working for now)
+    # collider[beam].optimize_for_tracking()
 
     # Save initial coordinates if requested
     if save_input_particles:
-        pd.DataFrame(particles.to_dict()).to_parquet("input_particles.parquet")
+        pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")              # here save the initial distribution
 
     # Track
     num_turns = config_sim["n_turns"]
     a = time.time()
-    collider[beam].track(particles, turn_by_turn_monitor=False, num_turns=num_turns)
+
+    collider[beam].optimize_for_tracking()
+    collider.discard_trackers()
+    line = collider[beam]
+    line.build_tracker(_context = context)
+    #collider.build_trackers(_context=context)
+    
+
+    
+    # ================================= New part ==================================
+    x_tot =           []
+    y_tot =           []
+    px_tot =          []
+    py_tot =          []
+    zeta_tot =        []
+    turns_tot =       []
+    particle_id_tot = []
+    pzeta_tot =       []
+
+
+    x_phys =          []
+    y_phys =          []
+    zeta_phys =       []
+    px_phys =         []
+    py_phys =         []
+    pzeta_phys =      []
+    state_all =       []
+
+    for i in range(num_turns):
+        line.track(particles, num_turns = 1, turn_by_turn_monitor=True, freeze_longitudinal=True)
+        x_phys.append(np.copy(particles.x))
+        y_phys.append(np.copy(particles.y))
+        zeta_phys.append(np.copy(particles.zeta))
+        px_phys.append(np.copy(particles.px))
+        py_phys.append(np.copy(particles.py))
+        pzeta_phys.append(np.copy(particles.delta))
+        state_all.append(np.copy(particles.state))
+        coord = line.twiss().get_normalized_coordinates(particles, nemitt_x = config_bb["nemitt_x"], #m*rad
+        nemitt_y = config_bb['nemitt_y']) #m*rad)
+        x_tot.append(coord.x_norm)
+        y_tot.append(coord.y_norm)
+        zeta_tot.append(coord.zeta_norm)
+        px_tot.append(coord.px_norm)
+        py_tot.append(coord.py_norm)
+        pzeta_tot.append(coord.pzeta_norm)
+        turns_tot.append(np.ones(len(coord.x_norm))*i)
+        particle_id_tot.append(coord.particle_id)
+    
+    x_physflat = [item for sublist in x_phys for item in sublist]
+    y_physflat = [item for sublist in y_phys for item in sublist]
+    zeta_physflat = [item for sublist in zeta_phys for item in sublist]
+    px_physflat = [item for sublist in px_phys for item in sublist]
+    py_physflat = [item for sublist in py_phys for item in sublist]
+    pzeta_physflat = [item for sublist in pzeta_phys for item in sublist]
+    state_allflat = [item for sublist in state_all for item in sublist]
+
+    x_normflat = [item for sublist in x_tot for item in sublist]
+    y_normflat = [item for sublist in y_tot for item in sublist]
+    zeta_normflat = [item for sublist in zeta_tot for item in sublist]
+    px_normflat = [item for sublist in px_tot for item in sublist]
+    py_normflat = [item for sublist in py_tot for item in sublist]
+    pzeta_normflat = [item for sublist in pzeta_tot for item in sublist]
+
+    particle_id_flat = [item for sublist in particle_id_tot for item in sublist]
+    turns_flat = [item for sublist in turns_tot for item in sublist]
+    dictionary = {"particle_id": particle_id_flat, "at_turn": turns_flat, "state":state_allflat, "x_phys": x_physflat, "y_phys": y_physflat, "zeta_phys": zeta_physflat, "px_phys": px_physflat, "py_phys": py_physflat, "pzeta_phys": pzeta_physflat, "x_norm": x_normflat, "y_norm": y_normflat, "zeta_norm": zeta_normflat, "px_norm": px_normflat, "py_norm": py_normflat, "pzeta_norm": pzeta_normflat}
+    result_phys = pd.DataFrame(dictionary)
+
+    gamma_rel = particles.gamma0[0]
+    betx_rel = particles.beta0[0]
+    tw0 = line.twiss()
+
+    # Emittance
+
+    geomx_all_std = []
+    geomy_all_std = []
+    normx_all_std = []
+    normy_all_std = []
+
+
+    for turn in range(num_turns):
+        #print(turn)
+        sigma_delta = float(np.std(result_phys[result_phys['at_turn'] == turn].pzeta_phys))
+        sigma_x = float(np.std(result_phys[result_phys['at_turn'] == turn].x_phys))
+        sigma_y = float(np.std(result_phys[result_phys['at_turn'] == turn].y_phys))
+        
+        geomx_emittance = (sigma_x**2-(tw0[:,0]["dx"][0]*sigma_delta)**2)/tw0[:,0]["betx"][0]
+        
+        normx_emittance = geomx_emittance*(gamma_rel*betx_rel)
+        geomx_all_std.append(geomx_emittance)
+        normx_all_std.append(normx_emittance)
+
+        geomy_emittance = (sigma_y**2-(tw0[:,0]["dy"][0]*sigma_delta)**2)/tw0[:,0]["bety"][0]
+        normy_emittance = geomy_emittance*(gamma_rel*betx_rel)
+        geomy_all_std.append(geomy_emittance)
+        normy_all_std.append(normy_emittance)
+
+    pd.set_option('float_format', '{:.10f}'.format) 
+    for i in range(num_turns):
+        mask = result_phys["at_turn"] == i
+        result_phys.loc[mask, 'norm_emitx'] = normx_all_std[i] * np.ones(mask.sum())
+        result_phys.loc[mask, 'norm_emity'] = normy_all_std[i] * np.ones(mask.sum())
+
     b = time.time()
 
+    
     print(f"Elapsed time: {b-a} s")
-    print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us")
+    #print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us")
 
-    return particles
-
+    return result_phys
 
 # ==================================================================================================
 # --- Main function for collider configuration and tracking
 # ==================================================================================================
 def configure_and_track(config_path="config.yaml"):
+
+   
     # Get configuration
     config_gen_1, config_gen_2 = read_configuration(config_path)
+    path = config_gen_1['log_file']
+    folder, tail = os.path.split(path)
+    new_folder = 'Noise_sim_try'
+    parent_folder, current_folder = os.path.split(folder)
+    new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{current_folder}"
+    Path(new_directory).mkdir(parents=True, exist_ok=True)
+
 
     # Get context
     context = get_context(config_gen_2)
@@ -675,33 +825,17 @@ def configure_and_track(config_path="config.yaml"):
         collider.build_trackers(_context=context)
 
     # Prepare particle distribution
-    particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
+    print('Now preparing distribution!')
+    particles, particle_id = prepare_particle_distribution(collider, context, config_sim)
 
     # Track
-    particles = track(collider, particles, config_sim)
+    print('Now tracking!')
+    particles = track(collider, particles, config_sim, config_bb)
 
+    particles.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{current_folder}/output_particles_new.parquet")
+    print('The parquet should be saved')
     # Get particles dictionnary
     particles_dict = particles.to_dict()
-
-    # Convert to dataframe
-    particles_df = pd.DataFrame(particles_dict)
-
-    # ! Very important, otherwise the particles will be mixed in each subset
-    # Sort by parent_particle_id
-    particles_df = particles_df.sort_values("parent_particle_id")
-
-    # Assign the old id to the sorted dataframe
-    particles_df["particle_id"] = particle_id
-
-    # Add some metadata to the output for better interpretability
-    particles_df.attrs["hash"] = hash_fingerprint
-    particles_df.attrs["fingerprint"] = fingerprint
-    particles_df.attrs["configuration_gen_1"] = config_gen_1
-    particles_df.attrs["configuration_gen_2"] = config_gen_2
-    particles_df.attrs["date"] = time.strftime("%Y-%m-%d %H:%M:%S")
-
-    # Save output
-    particles_df.to_parquet("output_particles.parquet")
 
     # Remove the correction folder, and potential C files remaining
     with contextlib.suppress(Exception):
