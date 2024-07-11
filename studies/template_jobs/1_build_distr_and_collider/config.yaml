@@ -4,6 +4,11 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
+  N_particles: 5e4
+  norm_emitt_x: 1.5e-6             
+  norm_emitt_y: 1.5e-6 
+  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/master_study/master_jobs/1_build_distr_and_collider/mydistribution.parquet
+ 
 
 config_mad:
   # Links to be made for tools and scripts
