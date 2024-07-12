@@ -1,6 +1,7 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# %%
 import copy
 import itertools
 import os
@@ -282,7 +283,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
     d_config_simulation["collider_file"] = "../collider.json.zip"
-
+    d_config_simulation['children'] = f'xtrack_{track:04}'
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "config_simulation": copy.deepcopy(d_config_simulation),
@@ -291,6 +292,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "dump_collider": dump_collider,
         "dump_config_in_collider": dump_config_in_collider,
     }
+    
 
 # ==================================================================================================
 # --- Simulation configuration
@@ -302,7 +304,7 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = os.getcwd() + "/../../source_python.sh"
+config["root"]["setup_env_script"] = '/afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate'
 
 
 # Recursively define the context for the simulations
@@ -318,7 +320,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan"
+study_name = "example_tunescan_gpu"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
@@ -357,3 +359,5 @@ start_time = time.time()
 root.make_folders(generate_run)
 print("The tree folders are ready.")
 print(f"--- {time.time() - start_time} seconds ---")
+
+# %%
