@@ -5,7 +5,7 @@ def generate_run_sh(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
     file_string = (
         "#!/bin/bash\n"
-        + f"source {node.root.parameters['setup_env_script']}\n"
+        + f"source /afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate\n"
         + f"cd {node.get_abs_path()}\n"
         + f"python {python_command} > output_python.txt 2> error_python.txt\n"
         + "rm -rf final_* modules optics_repository optics_toolkit tools tracking_tools temp"
