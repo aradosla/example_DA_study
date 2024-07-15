@@ -731,16 +731,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     pzeta_phys = cp.asnumpy(pzeta_phys).flatten()
     state_all = cp.asnumpy(state_all).flatten()
     particle_id_all = cp.asnumpy(particle_id_all).flatten()
-
-    x_norm = cp.asnumpy(x_norm).flatten()
-    y_norm = cp.asnumpy(y_norm).flatten()
-    zeta_norm = cp.asnumpy(zeta_norm).flatten()
-    px_norm = cp.asnumpy(px_norm).flatten()
-    py_norm = cp.asnumpy(py_norm).flatten()
-    pzeta_norm = cp.asnumpy(pzeta_norm).flatten()
     turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
-    particle_id_all_norm = cp.asnumpy(particle_id_all_norm).flatten()
-
+    
     # Convert results to DataFrame
     result_phys = pd.DataFrame({
         "x_phys": x_phys,
