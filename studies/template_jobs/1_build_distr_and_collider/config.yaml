@@ -9,7 +9,7 @@ config_particles:
   norm_emitt_y: 1.5e-6 
   bunch_intensity: 1.6e11
   sigma_z: 7.5e-2
-  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
+  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_fma/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
  
 
 config_mad:
