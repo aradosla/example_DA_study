@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 import ruamel.yaml
 import tree_maker
+import cupy as cp
 
 # Import user-defined modules
 import xmask as xm
@@ -491,17 +492,18 @@ def configure_collider(
         collider = xt.Multiline.from_json(config_sim["collider_file"])
      
 
-    ########################### Exciter ######################################
-    '''
-
+    ########################## Exciter ######################################
+    
+    
     # Insert exciter element
     # Sample data for exciter
-    A = 0.0  # Amplitude
+    A = 1.0  # Amplitude
     f = 50.0  # Frequency
     phi = 0.0  # Phase
-    sampling_frequency = 1000.0  # Sampling frequency in Hz
-    total_time = 1.0  # Total time in seconds
+    sampling_frequency = 11245.5  # Sampling frequency in Hz
     num_turns = config_sim["n_turns"]
+    total_time = num_turns/sampling_frequency  # Total time in seconds
+
     #N_turns = 100  # Number of turns
 
     time = np.arange(0, total_time, 1 / sampling_frequency)
@@ -523,8 +525,8 @@ def configure_collider(
         name='RF_KO_EXCITER',
         index='mb.b9r3.b1'
     )
-
-    '''
+    
+    
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
 
@@ -672,114 +674,113 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     a = time.time()
 
     collider[beam].optimize_for_tracking()
-    collider.discard_trackers()
-    line = collider[beam]
-    line.build_tracker(_context = context)
-    #collider.build_trackers(_context=context)
-    
 
-    
-    # ================================= New part ==================================
-    x_tot =           []
-    y_tot =           []
-    px_tot =          []
-    py_tot =          []
-    zeta_tot =        []
-    turns_tot =       []
-    particle_id_tot = []
-    pzeta_tot =       []
+        
+   # Determine the number of intervals for storing data every 1000 turns
+    norm_intervals = (num_turns // 1000)
+    num_particles = len(particles.x)
 
+    # Preallocate arrays for physical coordinates
+    x_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    y_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    zeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    px_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    py_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    pzeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    state_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
 
-    x_phys =          []
-    y_phys =          []
-    zeta_phys =       []
-    px_phys =         []
-    py_phys =         []
-    pzeta_phys =      []
-    state_all =       []
+    # Preallocate arrays for normalized coordinates
+    x_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    y_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    zeta_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    px_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    py_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    pzeta_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
+    turns_totnorm = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
+
+    a = time.time()
 
     for i in range(num_turns):
-        line.track(particles, num_turns = 1, turn_by_turn_monitor=True, freeze_longitudinal=True)
-        x_phys.append(np.copy(particles.x))
-        y_phys.append(np.copy(particles.y))
-        zeta_phys.append(np.copy(particles.zeta))
-        px_phys.append(np.copy(particles.px))
-        py_phys.append(np.copy(particles.py))
-        pzeta_phys.append(np.copy(particles.delta))
-        state_all.append(np.copy(particles.state))
-        coord = line.twiss().get_normalized_coordinates(particles, nemitt_x = config_bb["nemitt_x"], #m*rad
-        nemitt_y = config_bb['nemitt_y']) #m*rad)
-        x_tot.append(coord.x_norm)
-        y_tot.append(coord.y_norm)
-        zeta_tot.append(coord.zeta_norm)
-        px_tot.append(coord.px_norm)
-        py_tot.append(coord.py_norm)
-        pzeta_tot.append(coord.pzeta_norm)
-        turns_tot.append(np.ones(len(coord.x_norm))*i)
-        particle_id_tot.append(coord.particle_id)
-    
-    x_physflat = [item for sublist in x_phys for item in sublist]
-    y_physflat = [item for sublist in y_phys for item in sublist]
-    zeta_physflat = [item for sublist in zeta_phys for item in sublist]
-    px_physflat = [item for sublist in px_phys for item in sublist]
-    py_physflat = [item for sublist in py_phys for item in sublist]
-    pzeta_physflat = [item for sublist in pzeta_phys for item in sublist]
-    state_allflat = [item for sublist in state_all for item in sublist]
+        c = time.time()
+        collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=True)
 
-    x_normflat = [item for sublist in x_tot for item in sublist]
-    y_normflat = [item for sublist in y_tot for item in sublist]
-    zeta_normflat = [item for sublist in zeta_tot for item in sublist]
-    px_normflat = [item for sublist in px_tot for item in sublist]
-    py_normflat = [item for sublist in py_tot for item in sublist]
-    pzeta_normflat = [item for sublist in pzeta_tot for item in sublist]
+        # Store particle data every 1000 turns
+        if (i + 1) % 1000 == 0:
+            interval_index = (i + 1) // 1000 - 1
+            coord = collider[beam].twiss().get_normalized_coordinates(particles,
+                                                                      nemitt_x=config_bb["nemitt_x"],
+                                                                      nemitt_y=config_bb['nemitt_y'])
 
-    particle_id_flat = [item for sublist in particle_id_tot for item in sublist]
-    turns_flat = [item for sublist in turns_tot for item in sublist]
-    dictionary = {"particle_id": particle_id_flat, "at_turn": turns_flat, "state":state_allflat, "x_phys": x_physflat, "y_phys": y_physflat, "zeta_phys": zeta_physflat, "px_phys": px_physflat, "py_phys": py_physflat, "pzeta_phys": pzeta_physflat, "x_norm": x_normflat, "y_norm": y_normflat, "zeta_norm": zeta_normflat, "px_norm": px_normflat, "py_norm": py_normflat, "pzeta_norm": pzeta_normflat}
-    result_phys = pd.DataFrame(dictionary)
+            # Store physical coordinates
+            x_phys[interval_index, :] = cp.asarray(particles.x)
+            y_phys[interval_index, :] = cp.asarray(particles.y)
+            zeta_phys[interval_index, :] = cp.asarray(particles.zeta)
+            px_phys[interval_index, :] = cp.asarray(particles.px)
+            py_phys[interval_index, :] = cp.asarray(particles.py)
+            pzeta_phys[interval_index, :] = cp.asarray(particles.delta)
+            state_all[interval_index, :] = cp.asarray(particles.state)
 
-    gamma_rel = particles.gamma0[0]
-    betx_rel = particles.beta0[0]
-    tw0 = line.twiss()
+            # Store normalized coordinates
+            x_norm[interval_index, :] = cp.asarray(coord.x_norm)
+            y_norm[interval_index, :] = cp.asarray(coord.y_norm)
+            zeta_norm[interval_index, :] = cp.asarray(coord.zeta_norm)
+            px_norm[interval_index, :] = cp.asarray(coord.px_norm)
+            py_norm[interval_index, :] = cp.asarray(coord.py_norm)
+            pzeta_norm[interval_index, :] = cp.asarray(coord.pzeta_norm)
+            turns_totnorm[interval_index, :] = cp.ones(num_particles, dtype=cp.int32) * (i + 1)
 
-    # Emittance
+            d = time.time()
+            print(f'Turn {i+1}, time {d-c}s')
 
-    geomx_all_std = []
-    geomy_all_std = []
-    normx_all_std = []
-    normy_all_std = []
+    # Convert results back to CPU and flatten arrays
+    x_phys = cp.asnumpy(x_phys).flatten()
+    y_phys = cp.asnumpy(y_phys).flatten()
+    zeta_phys = cp.asnumpy(zeta_phys).flatten()
+    px_phys = cp.asnumpy(px_phys).flatten()
+    py_phys = cp.asnumpy(py_phys).flatten()
+    pzeta_phys = cp.asnumpy(pzeta_phys).flatten()
+    state_all = cp.asnumpy(state_all).flatten()
 
+    x_norm = cp.asnumpy(x_norm).flatten()
+    y_norm = cp.asnumpy(y_norm).flatten()
+    zeta_norm = cp.asnumpy(zeta_norm).flatten()
+    px_norm = cp.asnumpy(px_norm).flatten()
+    py_norm = cp.asnumpy(py_norm).flatten()
+    pzeta_norm = cp.asnumpy(pzeta_norm).flatten()
+    turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
 
-    for turn in range(num_turns):
-        #print(turn)
-        sigma_delta = float(np.std(result_phys[result_phys['at_turn'] == turn].pzeta_phys))
-        sigma_x = float(np.std(result_phys[result_phys['at_turn'] == turn].x_phys))
-        sigma_y = float(np.std(result_phys[result_phys['at_turn'] == turn].y_phys))
-        
-        geomx_emittance = (sigma_x**2-(tw0[:,0]["dx"][0]*sigma_delta)**2)/tw0[:,0]["betx"][0]
-        
-        normx_emittance = geomx_emittance*(gamma_rel*betx_rel)
-        geomx_all_std.append(geomx_emittance)
-        normx_all_std.append(normx_emittance)
+    # Convert results to DataFrame
+    result_phys = pd.DataFrame({
+        "x_phys": x_phys,
+        "y_phys": y_phys,
+        "zeta_phys": zeta_phys,
+        "px_phys": px_phys,
+        "py_phys": py_phys,
+        "pzeta_phys": pzeta_phys,
+        "state": state_all,
+        "at_turn": turns_totnorm #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
+    })
 
-        geomy_emittance = (sigma_y**2-(tw0[:,0]["dy"][0]*sigma_delta)**2)/tw0[:,0]["bety"][0]
-        normy_emittance = geomy_emittance*(gamma_rel*betx_rel)
-        geomy_all_std.append(geomy_emittance)
-        normy_all_std.append(normy_emittance)
+    result_norm = pd.DataFrame({
+        "x_norm": x_norm,
+        "y_norm": y_norm,
+        "zeta_norm": zeta_norm,
+        "px_norm": px_norm,
+        "py_norm": py_norm,
+        "pzeta_norm": pzeta_norm,
+        "state": state_all,
+        "at_turn": turns_totnorm #np.repeat(np.arange(1000, (norm_intervals + 1) * 1000, 1000), num_particles)
+    })
 
-    pd.set_option('float_format', '{:.10f}'.format) 
-    for i in range(num_turns):
-        mask = result_phys["at_turn"] == i
-        result_phys.loc[mask, 'norm_emitx'] = normx_all_std[i] * np.ones(mask.sum())
-        result_phys.loc[mask, 'norm_emity'] = normy_all_std[i] * np.ones(mask.sum())
+    #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
+    #result_norm.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_norm0.parquet')
 
     b = time.time()
-
-    
     print(f"Elapsed time: {b-a} s")
-    #print(f"Elapsed time per particle per turn: {(b-a)/particles._capacity/num_turns*1e6} us")
 
-    return result_phys
+    return result_phys, result_norm
+
+
 
 # ==================================================================================================
 # --- Main function for collider configuration and tracking
@@ -789,7 +790,6 @@ def configure_and_track(config_path="config.yaml"):
    
     # Get configuration
     config_gen_1, config_gen_2 = read_configuration(config_path)
-    
 
 
     # Get context
@@ -808,10 +808,9 @@ def configure_and_track(config_path="config.yaml"):
         config_path=config_path,
         return_collider_before_bb=False,
     )
-    child = config_sim['children']
-    
-    new_folder = 'Noise_sim_try'
 
+    child = config_sim['children']
+    new_folder = 'Noise_sim_try_gpu'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
@@ -831,10 +830,13 @@ def configure_and_track(config_path="config.yaml"):
 
     # Track
     print('Now tracking!')
-    particles = track(collider, particles, config_sim, config_bb)
+    particles_phys, particles_norm  = track(collider, particles, config_sim, config_bb)
 
-    particles.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_new.parquet")
+    particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+    particles_norm.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_norm.parquet")
     print('The parquet should be saved')
+    # Get particles dictionnary
+    
 
     # Remove the correction folder, and potential C files remaining
     with contextlib.suppress(Exception):

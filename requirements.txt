@@ -1,4 +1,4 @@
--e file:///home/cdroin/example_DA_study/external_dependencies/xmask ; python_version >= "3.9" and python_version < "4.0"
+python_version >= "3.9" and python_version < "4.0"
 anytree==2.12.1 ; python_version >= "3.9" and python_version < "4"
 awkward-cpp==34 ; python_version >= "3.9" and python_version < "4.0"
 awkward==2.6.5 ; python_version >= "3.9" and python_version < "4.0"

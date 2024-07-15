@@ -183,7 +183,7 @@ config_simulation:
   collider_file: ../1_build_distr_and_collider/collider.json.zip
 
   # Distribution in the normalized xy space
-  particle_file: ../1_build_distr_and_collider/particles_new/00.parquet
+  particle_file: ../1_build_distr_and_collider/particles/00.parquet
 
   # Initial off-momentum
   delta_max: 27.e-5
@@ -199,7 +199,7 @@ dump_collider: false
 dump_config_in_collider: false
 
 # Context for the simulation
-context: "cpu" # 'cupy' # opencl
+context: 'cupy' #"cpu" # opencl
 
 # Device number for GPU simulation
 device_number: # 0
