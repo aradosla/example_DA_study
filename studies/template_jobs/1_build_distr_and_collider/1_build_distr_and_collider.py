@@ -216,7 +216,7 @@ def build_particle_distribution(config_mad, config_particles, collider):
 def write_particle_distribution(config_particles, particle_list):
     # Write distribution to parquet files
     #distribution_gaus = config_particles["distribution_gaus"]
-    distributions_folder = "particles_new"
+    distributions_folder = "particles"
     os.makedirs(distributions_folder, exist_ok=True)
     for idx_chunk, my_list in enumerate(particle_list):
         pd.DataFrame(

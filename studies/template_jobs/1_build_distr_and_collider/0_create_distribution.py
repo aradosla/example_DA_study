@@ -228,8 +228,8 @@ px_norm = np.random.normal(size=num_particles)
 y_norm = np.random.normal(size=num_particles)
 py_norm = np.random.normal(size=num_particles)
         
-#df_gaus = pd.DataFrame({'x': x_norm, 'y': y_norm, 'px': px_norm, 'py': py_norm})
-#print(df_gaus)
-#df_gaus.to_parquet('mydistribution.parquet')
+df_gaus = pd.DataFrame({'x': x_norm, 'y': y_norm, 'px': px_norm, 'py': py_norm})
+print(df_gaus)
+df_gaus.to_parquet('mydistribution.parquet')
 
 # %%
