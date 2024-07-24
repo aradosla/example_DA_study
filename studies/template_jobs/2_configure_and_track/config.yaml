@@ -91,8 +91,8 @@ config_collider:
       ip8: 20
     sigma_z: 0.09
     num_particles_per_bunch: 2.3e11
-    nemitt_x: 2.2e-6
-    nemitt_y: 2.2e-6
+    nemitt_x: 1.5e-6
+    nemitt_y: 1.5e-6
     mask_with_filling_pattern:
       pattern_fname: ../../filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj.json
       i_bunch_b1: 1963 # If not specified, the bunch with the worst schedule is chosen
@@ -188,8 +188,18 @@ config_simulation:
   # Initial off-momentum
   delta_max: 27.e-5
 
+  # Exciter
+  amplitude: 1.
+  frequency: 3000.
+  phi: 0.
+  sampling_frequency: 11245.5
+  knl: 0.000012
+  index: 'mb.b9r3.b1' #dipole #'mq.7r3.b1..1_exit' #quadrupole 
+  std_dev: 0.1
+  white_noise: false
+
   # Tracking
-  n_turns: 1000 # number of turns to track
+  n_turns: 10000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2

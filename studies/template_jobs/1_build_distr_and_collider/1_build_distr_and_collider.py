@@ -54,176 +54,45 @@ def load_configuration(config_path="config.yaml"):
 
 
 # ==================================================================================================
-# --- Function to import the particle distribution in the right format
-# ==================================================================================================
-def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
-                                    nemitt_x, nemitt_y, sigma_z,
-                                    total_intensity_particles=None,
-                                    particle_on_co=None,
-                                    R_matrix=None,
-                                    circumference=None,
-                                    momentum_compaction_factor=None,
-                                    rf_harmonic=None,
-                                    rf_voltage=None,
-                                    rf_phase=None,
-                                    p_increment=0.,
-                                    tracker=None,
-                                    line=None,
-                                    particle_ref=None,
-                                    particles_class=None,
-                                    engine=None,
-                                    _context=None, _buffer=None, _offset=None,
-                                    **kwargs, # They are passed to build_particles
-                                    ):
-
-    """
-    Generate a matched Gaussian bunch.
-
-    Parameters
-    ----------
-    line : xpart.Line
-        Line for which the bunch is generated.
-    num_particles : int
-        Number of particles to be generated.
-    nemitt_x : float
-        Normalized emittance in the horizontal plane (in m rad).
-    nemitt_y : float
-        Normalized emittance in the vertical plane (in m rad).
-    sigma_z : float
-        RMS bunch length in meters.
-    total_intensity_particles : float
-        Total intensity of the bunch in particles.
-
-    Returns
-    -------
-    part : xpart.Particles
-        Particles object containing the generated particles.
-
-    """
-
-    if line is not None and tracker is not None:
-        raise ValueError(
-            'line and tracker cannot be provided at the same time.')
-
-    if tracker is not None:
-        print(
-            "The argument tracker is deprecated. Please use line instead.",
-            DeprecationWarning)
-        line = tracker.line
-
-    if line is not None:
-        assert line.tracker is not None, ("The line has no tracker. Please use "
-                                          "`Line.build_tracker()`")
-
-    if (particle_ref is not None and particle_on_co is not None):
-        raise ValueError("`particle_ref` and `particle_on_co`"
-                " cannot be provided at the same time")
-
-    if particle_ref is None:
-        if particle_on_co is not None:
-            particle_ref = particle_on_co
-        elif line is not None and line.particle_ref is not None:
-            particle_ref = line.particle_ref
-        else:
-            raise ValueError(
-                "`line`, `particle_ref` or `particle_on_co` must be provided!")
-
-    zeta, delta = xp.generate_longitudinal_coordinates(
-            distribution='gaussian',
-            num_particles=num_particles,
-            particle_ref=(particle_ref if particle_ref is not None
-                          else particle_on_co),
-            line=line,
-            circumference=circumference,
-            momentum_compaction_factor=momentum_compaction_factor,
-            rf_harmonic=rf_harmonic,
-            rf_voltage=rf_voltage,
-            rf_phase=rf_phase,
-            p_increment=p_increment,
-            sigma_z=sigma_z,
-            engine=engine,
-            **kwargs)
-
-    assert len(zeta) == len(delta) == num_particles
-
-
-    ##########################
-    df_distribution = pd.read_parquet(config_particles["path_distribution"])
-    x_norm = df_distribution['x'].values
-    px_norm = df_distribution['px'].values
-    y_norm = df_distribution['y'].values
-    py_norm = df_distribution['py'].values
-
-    if total_intensity_particles is None:
-        # go to particles.weight = 1
-        total_intensity_particles = num_particles
-
-    part = xp.build_particles(_context=_context, _buffer=_buffer, _offset=_offset,
-                      R_matrix=R_matrix,
-                      #particles_class=particles_class,
-                      particle_on_co=particle_on_co,
-                      particle_ref=(
-                          particle_ref if particle_on_co is  None else None),
-                      line=line,
-                      zeta=zeta, delta=delta,
-                      x_norm=x_norm, px_norm=px_norm,
-                      y_norm=y_norm, py_norm=py_norm,
-                      nemitt_x=nemitt_x, nemitt_y=nemitt_y,
-                      weight=total_intensity_particles/num_particles,
-                      **kwargs)
-    return part
-
-
-
-
-# ==================================================================================================
 # --- Function to build particle distribution and write it to file
 # ==================================================================================================
-def build_particle_distribution(config_mad, config_particles, collider):
-    
-    #distribution_gaus = config_particles["distribution_gaus"]
-    N_particles = int(config_particles["N_particles"])
-    bunch_intensity = config_particles["bunch_intensity"]
-    normal_emitt_x = config_particles["norm_emitt_x"]
-    normal_emitt_y = config_particles["norm_emitt_y"]
-    sigma_z = config_particles["sigma_z"]
+def build_particle_distribution(config_particles):
+    # Define radius distribution
+    r_min = config_particles["r_min"]
+    r_max = config_particles["r_max"]
+    n_r = config_particles["n_r"]
+    radial_list = np.linspace(r_min, r_max, n_r, endpoint=False)
 
-    particle_ref = xp.Particles(
-                        mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9) #config_mad['beam_config']['lhcb1']['beam_energy_tot'])
-    gaussian_bunch = generate_matched_gaussian_bunch_colored(config_particles,
-            num_particles = N_particles, total_intensity_particles = bunch_intensity,
-            nemitt_x = normal_emitt_x, nemitt_y=normal_emitt_y, sigma_z = sigma_z,
-            particle_ref = particle_ref,
-            line = collider['lhcb1'])
+    # Filter out particles with low and high amplitude to accelerate simulation
+    # radial_list = radial_list[(radial_list >= 4.5) & (radial_list <= 7.5)]
+
+    # Define angle distribution
+    n_angles = config_particles["n_angles"]
+    theta_list = np.linspace(0, 90, n_angles + 2)[1:-1]
+
     # Define particle distribution as a cartesian product of the above
-
     particle_list = [
-    (particle_id, x, y, px, py, zeta, delta)
-    for particle_id, (x, y, px, py, zeta, delta) in enumerate(zip(gaussian_bunch.x, gaussian_bunch.y, gaussian_bunch.px, gaussian_bunch.py, gaussian_bunch.zeta, gaussian_bunch.delta))
+        (particle_id, ii[1], ii[0])
+        for particle_id, ii in enumerate(itertools.product(theta_list, radial_list))
     ]
-   
-    print('first',particle_list)
+
     # Split distribution into several chunks for parallelization
-    n_split = config_particles['n_split']
-    particle_list = np.array(np.array_split(particle_list, n_split))
-    array_of_lists = np.array([arr.tolist() for arr in particle_list])
-    particle_list = array_of_lists
-    print('second',particle_list)
+    n_split = config_particles["n_split"]
+    particle_list = list(np.array_split(particle_list, n_split))
 
     # Return distribution
     return particle_list
 
-def write_particle_distribution(config_particles, particle_list):
+
+def write_particle_distribution(particle_list):
     # Write distribution to parquet files
-    #distribution_gaus = config_particles["distribution_gaus"]
     distributions_folder = "particles"
     os.makedirs(distributions_folder, exist_ok=True)
     for idx_chunk, my_list in enumerate(particle_list):
         pd.DataFrame(
-        my_list,
-        columns=["particle_id", "x", "y", "px", "py", "zeta", "delta"],
+            my_list,
+            columns=["particle_id", "normalized amplitude in xy-plane", "angle in xy-plane [deg]"],
         ).to_parquet(f"{distributions_folder}/{idx_chunk:02}.parquet")
-
 
 # ==================================================================================================
 # --- Function to build collider from mad model
@@ -342,10 +211,10 @@ def build_distr_and_collider(config_file="config.yaml"):
     collider = activate_RF_and_twiss(collider, config_mad, sanity_checks)
 
     # Build particle distribution
-    particle_list = build_particle_distribution(config_mad, config_particles, collider)
+    particle_list = build_particle_distribution(config_particles)
 
     # Write particle distribution to file
-    write_particle_distribution(config_particles, particle_list)
+    write_particle_distribution(particle_list)
 
     # Clean temporary files
     clean()

@@ -6,6 +6,9 @@ import numpy as np
 import xtrack as xt
 from scipy.constants import c as clight
 from scipy.optimize import minimize_scalar
+import nafflib as NAFFlib
+from pathlib import Path
+import pandas as pd
 
 
 def reformat_filling_scheme_from_lpc(filling_scheme_path, filling_scheme_path_converted):
@@ -627,3 +630,35 @@ def return_fingerprint(line_name, collider):
     out += "\n\n"
 
     return out
+
+def fma(result_phys):
+    new_folder = 'Noise_sim_try_gpu_fma'
+    new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}"
+    Path(new_directory).mkdir(parents=True, exist_ok=True)
+    df = result_phys
+    keys = []
+    qx_tot1 = []
+    qx_tot2 = []
+    qy_tot1 = []
+    qy_tot2 = []
+    diffusions = []
+    for key, group in df.groupby('particle_id'):
+        qx1 = abs(NAFFlib.get_tune(group.x_phys.values[:2000], 2))
+        qy1 = abs(NAFFlib.get_tune(group.y_phys.values[:2000], 2))
+        qx2 = abs(NAFFlib.get_tune(group.x_phys.values[-2000:], 2))
+        qy2 = abs(NAFFlib.get_tune(group.y_phys.values[-2000:], 2))
+        qx_tot1.append(qx1)
+        qy_tot1.append(qy1)
+        qx_tot2.append(qx2)
+        qy_tot2.append(qy2)
+        keys.append(key)
+        diffusion = np.sqrt( abs(qx1-qx2)**2 + abs(qy1-qy2)**2 )
+        if diffusion==0.0:
+            diffusion=1e-60
+        diffusion = np.log10(diffusion)
+        diffusions.append(diffusion)
+    dff = pd.DataFrame({'particle_id': keys,'qx1': qx_tot1, 'qy1': qy_tot1, 'qx2':qx_tot2, 'qy2':qy_tot2, 'diffusion': diffusions} )
+    dff = dff.merge(df, on='particle_id')
+    return dff
+
+

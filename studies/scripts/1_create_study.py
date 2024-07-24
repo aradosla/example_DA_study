@@ -32,7 +32,7 @@ d_config_particles["r_max"] = 10
 d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
-d_config_particles["n_angles"] = 5
+d_config_particles["n_angles"] = 40
 
 # Number of split for parallelization
 d_config_particles["n_split"] = 5
@@ -149,7 +149,7 @@ d_config_leveling = {
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
 d_config_leveling["ip8"]["luminosity"] = 2.0e33
 
-### Beam beam configuration
+### Beam beam configurationdified
 
 # Define dictionary for the beam beam settings
 d_config_beambeam = {"mask_with_filling_pattern": {}}
@@ -205,7 +205,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 5000
+d_config_simulation["n_turns"] = 10000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
