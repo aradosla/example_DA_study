@@ -34,16 +34,16 @@ You can check the base executable of Python that Poetry is using by running the 
 poetry env info
 ```
 
+For easier submission later, impose the virtual environment to be created in the repository folder by running the following command:
+
+```bash
+poetry config virtualenvs.in-project true
+```
+
 If needed (for instance, if your Python base executable is not on AFS), you can change the exectutable with e.g:
 
 ```bash
 poetry env use /path/to/python
-```
-
-For easier submission later, also impose the virtual environment to be created in the repository folder by running the following command:
-
-```bash
-poetry config virtualenvs.in-project true
 ```
 
 If you're not interested in using GPUs, you can jump directly to the [Installing packages](#installing-packages) section. Otherwise, follow the next section.
@@ -91,6 +91,12 @@ poetry install
 ```
 
 At this point, ensure that a `.venv` folder has been created in the repository folder (except if you modified the procedure to use GPUs, as explained above). If not, follow the fix described in the next section.
+
+⚠️ **If you have a bug with nafflib installation, do the following:**
+  
+  ```bash
+  poetry run pip install nafflib
+  ```
 
 Finally, you can make xsuite faster by precompiling the kernel, with:
 
@@ -238,6 +244,8 @@ This is described in the file ```studies/scripts/config.yaml```:
 ```yaml
 'root':
   setup_env_script: 'none'
+  # Following parameter is ignored when run_on is not htc_docker or slurm_docker
+  singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:7844a437"
   generations:
     1: # Build the particle distribution and base collider
       job_folder: "../../template_jobs/1_build_distr_and_collider"
@@ -248,9 +256,6 @@ This is described in the file ```studies/scripts/config.yaml```:
       context: "cpu"
       # Following parameter is ignored when run_on is not htc or htc_docker
       htc_job_flavor: 'tomorrow'
-      # Following parameter is ignored when run_on is not htc_docker or slurm_docker
-      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:7844a437"
-      
     2: # Launch the pymask and prepare the colliders
       job_folder: "../../template_jobs/2_configure_and_track"
       job_executable: 2_configure_and_track.py
@@ -260,8 +265,6 @@ This is described in the file ```studies/scripts/config.yaml```:
       context: "cpu"
       # Following parameter is ignored when run_on is not htc or htc_docker
       htc_job_flavor: 'tomorrow' 
-      # Following parameter is ignored when run_on is not htc_docker or slurm_docker
-      singularity_image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/cdroin/da-study-docker:7844a437"
   # Children will be added below in the script 001_make_folders.py
   children:
 ```
@@ -269,6 +272,7 @@ This is described in the file ```studies/scripts/config.yaml```:
 This file defines the structure of the tree of jobs, which python files must be called at each generation, with which parameters, with which python distribution, and on which machine/cluster. More precisely:
 
 - ```setup_env_script``` is the path to the conda environment that will be used to run Python in the simulations. By default, is set to ```none```, but is updated by the ```1_create_study.py``` script to point to the conda environment.
+- ```singularity_image```: this is an optional parameter that can bmust be specified when running a simulation with ```htc_docker``` or ```slurm_docker```. This is useful to ensure reproducibility. See section [Using computing clusters](#using-computing-clusters) below for more details.
 - ```job_folder```: for each generation, this describes the folder containing the files used to run the simulation. There should be at least a python script, and a ```config.yaml``` file. The python script then reads the parameters of the currunt simulation in the ```config.yaml file```, and runs the simulation accordingly.
 - ```job_executable```, this is the name of the python script that will be run at each generation.
 - ```files_to_clone```: this is a list of files that will be copied from the ```job_folder``` to the simulation folder. This is useful to copy files that are common to all simulations.
@@ -283,7 +287,6 @@ This file defines the structure of the tree of jobs, which python files must be 
   - ```cupy```: the simulations will be run on the GPU using CUDA. This is useful to run simulations with large number of particles (you need to have cupy installed), especially on HTCondor. However, note that simulations must use Docker when running on HTCondor with GPU.
   - ```opencl```: the simulations will be run on the GPU using OpenCL. This is useful to run simulations with large number of particles (you need to have pyopencl installed), especially on the Bologna cluster.
 - ```htc_job_flavor```: this is an optional parameter that can be used to define the job flavor on HTCondor. Long jobs (>8h, <24h) should most likely use ```tomorrow```. See all flavours [here](https://batchdocs.web.cern.ch/local/submit.html).
-- ```singularity_image```: this is an optional parameter that can bmust be specified when running a simulation with ```htc_docker``` or ```slurm_docker```. This is useful to ensure reproducibility. See section [Using computing clusters](#using-computing-clusters) below for more details.
 - ```children```: this is a list of children for each generation. More precisely, this contains the set of parameters used by each job of each generation. This is generated by the ```1_create_study.py``` script, and should not be modified manually.
 
 To get a better idea of how this file is used, you can check the json mutated version at the root of each scan (i.e. ```studies/scans/study_name/tree_maker.json```).
