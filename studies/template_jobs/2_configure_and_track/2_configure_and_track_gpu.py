@@ -493,22 +493,22 @@ def configure_collider(
      
 
     ########################## Exciter ######################################
-    
-    
-    # Insert exciter element
-    # Sample data for exciter
-    A = 1.0  # Amplitude
-    f = 50.0  # Frequency
-    phi = 0.0  # Phase
-    sampling_frequency = 11245.5  # Sampling frequency in Hz
+
+    # Insert exciter element 
+    sampling_frequency = config_sim['sampling_frequency']  # Sampling frequency in Hz
     num_turns = config_sim["n_turns"]
     total_time = num_turns/sampling_frequency  # Total time in seconds
-
-    #N_turns = 100  # Number of turns
-
     time = np.arange(0, total_time, 1 / sampling_frequency)
-    samples = A * np.sin(2 * np.pi * f * time + phi)
 
+    if config_sim['white_noise']:
+        std_dev = config_sim['std_dev']
+        samples = np.random.normal(0, std_dev, len(time))
+    else:
+        A = config_sim['amplitude']  # Amplitude
+        f = config_sim['frequency']  # Frequency
+        phi = config_sim['phi']  # Phase
+        samples = A * np.sin(2 * np.pi * f * time + phi)
+    
     # Initialize the exciter
     exciter = xt.Exciter(
         _context=context,  # Assuming context is passed correctly
@@ -516,16 +516,17 @@ def configure_collider(
         sampling_frequency=sampling_frequency,
         duration=num_turns / sampling_frequency,
         frev=sampling_frequency,
-        knl=[0.000012]
+        knl=[config_sim["knl"]]
     )
 
     # Insert the exciter into the specified line and index
     collider['lhcb1'].insert_element(
         element=exciter,
         name='RF_KO_EXCITER',
-        index='mb.b9r3.b1'
+        index= config_sim["index"]
     )
     
+
     
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
@@ -677,8 +678,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
 
         
    # Determine the number of intervals for storing data every 1000 turns
-    norm_intervals = (num_turns // 1000)
-    num_particles = len(particles.x)
+    norm_intervals = int(num_turns // 1000)
+    num_particles = int(len(particles.x))
 
     # Preallocate arrays for physical coordinates
     x_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
@@ -688,6 +689,7 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     py_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
     pzeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
     state_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
+    #particles_id_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
 
     # Preallocate arrays for normalized coordinates
     x_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
@@ -697,12 +699,13 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     py_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
     pzeta_norm = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
     turns_totnorm = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
+    
 
     a = time.time()
 
     for i in range(num_turns):
         c = time.time()
-        collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=True)
+        collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=False)
 
         # Store particle data every 1000 turns
         if (i + 1) % 1000 == 0:
@@ -719,6 +722,7 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
             py_phys[interval_index, :] = cp.asarray(particles.py)
             pzeta_phys[interval_index, :] = cp.asarray(particles.delta)
             state_all[interval_index, :] = cp.asarray(particles.state)
+            #particles_id_all[interval_index, :] = cp.asarray(particles.particle_id)
 
             # Store normalized coordinates
             x_norm[interval_index, :] = cp.asarray(coord.x_norm)
@@ -728,6 +732,7 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
             py_norm[interval_index, :] = cp.asarray(coord.py_norm)
             pzeta_norm[interval_index, :] = cp.asarray(coord.pzeta_norm)
             turns_totnorm[interval_index, :] = cp.ones(num_particles, dtype=cp.int32) * (i + 1)
+            #particles_id_all[interval_index, :] = cp.asarray(particles.particle_id)
 
             d = time.time()
             print(f'Turn {i+1}, time {d-c}s')
@@ -740,6 +745,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     py_phys = cp.asnumpy(py_phys).flatten()
     pzeta_phys = cp.asnumpy(pzeta_phys).flatten()
     state_all = cp.asnumpy(state_all).flatten()
+    #particles_id_all = cp.asnumpy(particles_id_all).flatten()
+
 
     x_norm = cp.asnumpy(x_norm).flatten()
     y_norm = cp.asnumpy(y_norm).flatten()
@@ -748,6 +755,7 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
     py_norm = cp.asnumpy(py_norm).flatten()
     pzeta_norm = cp.asnumpy(pzeta_norm).flatten()
     turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
+    #particles_id_all = cp.asnumpy(particles_id_all).flatten()
 
     # Convert results to DataFrame
     result_phys = pd.DataFrame({
@@ -758,7 +766,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
         "py_phys": py_phys,
         "pzeta_phys": pzeta_phys,
         "state": state_all,
-        "at_turn": turns_totnorm #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
+        "at_turn": turns_totnorm #"particle_id": particles_id_all #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
+        
     })
 
     result_norm = pd.DataFrame({
@@ -769,7 +778,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
         "py_norm": py_norm,
         "pzeta_norm": pzeta_norm,
         "state": state_all,
-        "at_turn": turns_totnorm #np.repeat(np.arange(1000, (norm_intervals + 1) * 1000, 1000), num_particles)
+        "at_turn": turns_totnorm #, "particles_id": particles_id_all #np.repeat(np.arange(1000, (norm_intervals + 1) * 1000, 1000), num_particles)
+        
     })
 
     #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
@@ -810,7 +820,7 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    new_folder = 'Noise_sim_try_gpu'
+    new_folder = 'Noise_sim_dipol_try2_3kHz_6e-10'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 

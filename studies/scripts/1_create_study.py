@@ -35,7 +35,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 5
+d_config_particles["n_split"] = 10
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -205,7 +205,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 10000
+d_config_simulation["n_turns"] = int(1e6)
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
