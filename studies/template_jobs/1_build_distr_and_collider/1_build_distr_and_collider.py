@@ -189,7 +189,7 @@ def build_particle_distribution(config_mad, config_particles, collider):
     sigma_z = config_particles["sigma_z"]
 
     particle_ref = xp.Particles(
-                        mass0=xp.PROTON_MASS_EV, q0=1, energy0=7000e9) #config_mad['beam_config']['lhcb1']['beam_energy_tot'])
+                        mass0=xp.PROTON_MASS_EV, q0=1, energy0=450e9) #config_mad['beam_config']['lhcb1']['beam_energy_tot'])
     gaussian_bunch = generate_matched_gaussian_bunch_colored(config_particles,
             num_particles = N_particles, total_intensity_particles = bunch_intensity,
             nemitt_x = normal_emitt_x, nemitt_y=normal_emitt_y, sigma_z = sigma_z,

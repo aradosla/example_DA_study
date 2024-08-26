@@ -4,12 +4,12 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
-  N_particles: 5000
+  N_particles: 50000
   norm_emitt_x: 1.5e-6             
   norm_emitt_y: 1.5e-6 
   bunch_intensity: 1.6e11
   sigma_z: 7.5e-2
-  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
+  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_track/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
  
 
 config_mad:
@@ -23,9 +23,9 @@ config_mad:
   # Beam parameters
   beam_config:
     lhcb1:
-      beam_energy_tot: 6800 # [GeV]
+      beam_energy_tot: 450 #6800 # [GeV]
     lhcb2:
-      beam_energy_tot: 6800 # [GeV]
+      beam_energy_tot: 450 #6800 # [GeV]
 
   # Enable machine imperfections
   enable_imperfections: false
