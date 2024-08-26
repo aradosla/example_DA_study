@@ -496,7 +496,7 @@ def configure_collider(
      
 
     ########################## Exciter ######################################
-    ''' 
+    
     
     # Insert exciter element 
     sampling_frequency = config_sim['sampling_frequency']  # Sampling frequency in Hz
@@ -529,7 +529,6 @@ def configure_collider(
         name='RF_KO_EXCITER',
         index= config_sim["index"]
     )
-    '''
     
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
@@ -633,31 +632,6 @@ def configure_collider(
 # ==================================================================================================
 # --- Function to prepare particles distribution for tracking
 # ==================================================================================================
-'''
-def prepare_particle_distribution(collider, context, config_sim):
-    beam = config_sim["beam"]
-
-    #particle_df = pd.read_parquet(config_sim["particle_file"])
-    particle_df = pd.read_parquet(config_sim["particle_file"])
-
-    print(particle_df.x)
-
-
-    particles = collider[beam].build_particles(
-        x=particle_df.x.values,
-        y=particle_df.y.values,
-        px = particle_df.px.values,
-        py = particle_df.py.values,
-        zeta = particle_df.zeta.values,
-        delta=particle_df.delta.values,
-        _context=context,
-    )
-
-
-    particle_id = particle_df.particle_id.values
-
-    return particles, particle_id
-'''
 
 def prepare_particle_distribution(collider, context, config_sim, config_bb):
     beam = config_sim["beam"]
@@ -725,38 +699,6 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
 
     return result_phys
 
-'''
-
-def fma(result_phys):
-    new_folder = 'Noise_sim_try_gpu_fma'
-    new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}"
-    Path(new_directory).mkdir(parents=True, exist_ok=True)
-    df = result_phys
-    keys = []
-    qx_tot1 = []
-    qx_tot2 = []
-    qy_tot1 = []
-    qy_tot2 = []
-    diffusions = []
-    for key, group in df.groupby('particle_id'):
-        qx1 = abs(NAFFlib.get_tune(group.x_phys.values[:2000], 2))
-        qy1 = abs(NAFFlib.get_tune(group.y_phys.values[:2000], 2))
-        qx2 = abs(NAFFlib.get_tune(group.x_phys.values[-2000:], 2))
-        qy2 = abs(NAFFlib.get_tune(group.y_phys.values[-2000:], 2))
-        qx_tot1.append(qx1)
-        qy_tot1.append(qy1)
-        qx_tot2.append(qx2)
-        qy_tot2.append(qy2)
-        keys.append(key)
-        diffusion = np.sqrt( abs(qx1-qx2)**2 + abs(qy1-qy2)**2 )
-        if diffusion==0.0:
-            diffusion=1e-60
-        diffusion = np.log10(diffusion)
-        diffusions.append(diffusion)
-    dff = pd.DataFrame({'particle_id': keys,'qx1': qx_tot1, 'qy1': qy_tot1, 'qx2':qx_tot2, 'qy2':qy_tot2, 'diffusion': diffusions} )
-    dff = dff.merge(df, on='particle_id')
-    return dff
-''' 
 
 
 
@@ -788,7 +730,7 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    new_folder = 'Noise_sim_try_gpu_fma'
+    new_folder = 'Noise_sim_try_gpu_fma_quad_300hz'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
@@ -811,14 +753,15 @@ def configure_and_track(config_path="config.yaml"):
     particles_phys  = track(collider, particles, config_sim, config_bb)
 
 
-    particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+    #particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
 
-    print('The parquet should be saved')
-
+   
     fma_result = fma(particles_phys)
     fma_result.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fma.parquet")
+    #fma_result.to_parquet(f"fma_{child}.parquet")
     # Get particles dictionnary
-    
+    print('The parquet should be saved')
+
 
     # Remove the correction folder, and potential C files remaining
     with contextlib.suppress(Exception):

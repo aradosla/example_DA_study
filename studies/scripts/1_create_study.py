@@ -28,14 +28,14 @@ d_config_particles = {}
 
 # Radius of the initial particle distribution
 d_config_particles["r_min"] = 0
-d_config_particles["r_max"] = 10
+d_config_particles["r_max"] = 6
 d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
-d_config_particles["n_angles"] = 100
+d_config_particles["n_angles"] = 50
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 1
+d_config_particles["n_split"] = 5
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -208,7 +208,7 @@ d_config_simulation = {}
 d_config_simulation["n_turns"] = 10000
 
 # Initial off-momentum
-d_config_simulation["delta_max"] = 27.0e-5
+d_config_simulation["delta_max"] = 0. #27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"

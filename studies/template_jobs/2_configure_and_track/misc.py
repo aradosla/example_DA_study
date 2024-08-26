@@ -1,13 +1,11 @@
 # Imports
 import json
 import os
-
 import numpy as np
 import xtrack as xt
 from scipy.constants import c as clight
 from scipy.optimize import minimize_scalar
 import nafflib as NAFFlib
-from pathlib import Path
 import pandas as pd
 
 
@@ -632,9 +630,6 @@ def return_fingerprint(line_name, collider):
     return out
 
 def fma(result_phys):
-    new_folder = 'Noise_sim_try_gpu_fma'
-    new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}"
-    Path(new_directory).mkdir(parents=True, exist_ok=True)
     df = result_phys
     keys = []
     qx_tot1 = []

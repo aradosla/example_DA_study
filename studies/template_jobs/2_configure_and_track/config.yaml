@@ -186,15 +186,15 @@ config_simulation:
   particle_file: ../1_build_distr_and_collider/particles/00.parquet
 
   # Initial off-momentum
-  delta_max: 27.e-5
+  delta_max: 0. #27.e-5
 
   # Exciter
   amplitude: 1.
-  frequency: 3000.
+  frequency: 300. # 3000.
   phi: 0.
   sampling_frequency: 11245.5
-  knl: 0.000012
-  index: 'mb.b9r3.b1' #dipole #'mq.7r3.b1..1_exit' #quadrupole 
+  knl: 0.000012 #0.0000000006
+  index: mq.11r3.b1 #mb.b9r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
   std_dev: 0.1
   white_noise: false
 

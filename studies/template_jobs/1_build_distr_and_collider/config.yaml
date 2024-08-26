@@ -2,7 +2,7 @@ config_particles:
   r_min: 2.0
   r_max: 10.0
   n_r: 256
-  n_angles: 5
+  n_angles: 40
   n_split: 15
   N_particles: 5000
   norm_emitt_x: 1.5e-6             
