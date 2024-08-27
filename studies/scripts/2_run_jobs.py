@@ -1,12 +1,14 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# Standard library imports
 import copy
 import os
 import subprocess
 import time
 from pathlib import Path
 
+# Third party imports
 import psutil
 import tree_maker
 import yaml
@@ -16,7 +18,7 @@ import yaml
 # --- Class for job submission
 # ==================================================================================================
 class ClusterSubmission:
-    def __init__(self, config, path_root):
+    def __init__(self, config, path_root, singularity_image=None):
         # Configuration of the current generation
         self.config = config
         if config["run_on"] in ["local_pc", "htc", "slurm", "htc_docker", "slurm_docker"]:
@@ -42,8 +44,8 @@ class ClusterSubmission:
         self.path_dic_id_to_job = f"{self.path_root}/id_job.yaml"
 
         # Path to singularity image
-        if "singularity_image" in self.config:
-            self.path_image = self.config["singularity_image"]
+        if singularity_image is not None:
+            self.path_image = singularity_image
         elif self.run_on in ["slurm_docker", "htc_docker"]:
             raise ValueError("Error: Singularity image must be specified for docker submission")
         else:
@@ -532,7 +534,10 @@ def submit_jobs_generation(root, generation=1):
 
     # Submit all the pending jobs of a given generation
     config_generation = root.parameters["generations"][f"{generation}"]
-    cluster_submission = ClusterSubmission(config_generation, root.get_abs_path())
+    singularity_image = root.parameters["singularity_image"]
+    cluster_submission = ClusterSubmission(
+        config_generation, root.get_abs_path(), singularity_image
+    )
     path_file = f"../submission_files/{dic_int_to_str[generation]}_generation.sub"
     l_filenames, l_path_jobs = cluster_submission.write_sub_files(
         root.generation(generation), path_file
