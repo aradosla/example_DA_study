@@ -12,7 +12,7 @@ Jobs can be efficiently stored and parallelized using the
 
 For most scans (with GPUs not involved), the small guide below should be enough to get you started.
 
-Ensure Python (> 3.9) is available on your machine. If not, install it with, for instance, miniforge or miniconda. Since this Python version will be your base one, it is recommended to install it in a fast location (for CERN users, *not AFS*), such that it can be used by all your projects (creating virtual environment everytime).
+Ensure Python (at least 3.9) is available on your machine. If not, install it with, for instance, miniforge or miniconda. Since this Python version will be your base one, it is recommended to install it in a fast location (for CERN users, *not AFS*), such that it can be used by all your projects (creating virtual environment everytime).
 
 For instance, to install Python with miniforge in your home directory, run the following commands:
 
