@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "da-boilerplate"
 version = "0.1.0"
-description = "Dynamic aperture boilerplate for various LHC versions (including HL-LHC)"
+description = "Dynamic aperture boilerplate for LHC (including HL-LHC) simulations"
 authors = ["Colas Droin <colas.noe.droin@cern.ch>"]
 license = "MIT"
 readme = "README.md"
@@ -11,7 +11,7 @@ package-mode = false
 python = "^3.9"
 xmask = {path = "external_dependencies/xmask", develop = true}
 tree-maker = {git = "https://github.com/xsuite/tree_maker.git"}
-xsuite = "^0.16.2"
+xsuite = "^0.16.3"
 fastparquet = "^2024.5.0"
 cupy-cuda11x = "^13.2.0"
 psutil = "^6.0.0"

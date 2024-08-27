@@ -4,7 +4,7 @@ This repository contains a template that allows users to compute the dynamics ap
 under different parametric scenarios.
 
 Jobs can be efficiently stored and parallelized using the
-[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [XSuite](https://github.com/xsuite/xsuite).
+[Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [Xsuite](https://github.com/xsuite/xsuite).
 
 ℹ️ If you do not need to do large parametric scans, this repository is probably not what you're looking for.
 

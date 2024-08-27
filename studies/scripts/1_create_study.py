@@ -1,13 +1,17 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# Standard library imports
 import copy
 import itertools
 import os
 import time
 
+# Third party imports
 import numpy as np
 import yaml
+
+# Local imports
 from generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
@@ -221,7 +225,7 @@ array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "upper_triangle"  # 'lower_triangle', 'all'
+keep = "upper_triangle"  # "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #

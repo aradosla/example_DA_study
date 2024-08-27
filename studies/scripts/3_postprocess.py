@@ -1,146 +1,151 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# Standard library imports
+import logging
 import time
 
+# Third party imports
 import pandas as pd
 import tree_maker
-import yaml
-
-# ==================================================================================================
-# --- Load tree of jobs
-# ==================================================================================================
-
-# Start of the script
-print("Analysis of output simulation files started")
-start = time.time()
-
-# Load Data
-study_name = "example_tunescan"
-fix = f"/../scans/{study_name}"
-root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
-# Add suffix to the root node path to handle scans that are not in the root directory
-root.add_suffix(suffix=fix)
 
 
 # ==================================================================================================
-# --- # Browse simulations folder and extract relevant observables
+# --- Functions to browse simulations folder and extract relevant observables
 # ==================================================================================================
-l_problematic_sim = []
-l_df_to_merge = []
-for node in root.generation(1):
-    with open(f"{node.get_abs_path()}/config.yaml", "r") as fid:
-        config_parent = yaml.safe_load(fid)
-    for node_child in node.children:
-        with open(f"{node_child.get_abs_path()}/config.yaml", "r") as fid:
-            config_child = yaml.safe_load(fid)
+# Get a given data from a dictionary with position provided as a list
+def get_from_dict(dataDict, mapList):
+    for k in mapList:
+        dataDict = dataDict[k]
+    return dataDict
 
-        try:
-            # Read the particle path as relative
+
+def get_particles_data(root):
+    l_df_output = []
+
+    # ? Ideally node tree browsing should be done in a recursive way, but how to know in advance which
+    # ? generation is being tracked?
+    for node in root.generation(1):
+        for node_child in node.children:
             try:
-                particle = pd.read_parquet(
-                    f"{node_child.get_abs_path()}/{config_child['config_simulation']['particle_file']}"
+                df_output = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
+            except Exception as e:
+                print(e)
+                logging.warning(
+                    node_child.get_abs_path() + " does not have output_particles.parquet"
                 )
+                continue
 
-            except Exception:
-                particle = pd.read_parquet(f"{config_child['config_simulation']['particle_file']}")
+            # Register paths and names of the nodes
+            df_output["path base collider"] = f"{node.get_abs_path()}"
+            df_output["name base collider"] = f"{node.name}"
+            df_output["path simulation"] = f"{node_child.get_abs_path()}"
+            df_output["name simulation"] = f"{node_child.name}"
 
-            df_sim = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
+            # Add to the list
+            l_df_output.append(df_output)
 
-        except Exception as e:
-            print(e)
-            l_problematic_sim.append(node_child.get_abs_path())
-            continue
+    return l_df_output
 
-        # Register paths and names of the nodes
-        df_sim["path base collider"] = f"{node.get_abs_path()}"
-        df_sim["name base collider"] = f"{node.name}"
-        df_sim["path simulation"] = f"{node_child.get_abs_path()}"
-        df_sim["name simulation"] = f"{node_child.name}"
 
-        # Get node parameters as dictionnaries for parameter assignation
-        dic_child_collider = node_child.parameters["config_collider"]
-        dic_child_simulation = node_child.parameters["config_simulation"]
-        try:
-            dic_parent_collider = node.parameters["config_mad"]
-        except Exception:
-            print("No parent collider could be loaded")
-        dic_parent_particles = node.parameters["config_particles"]
+def reorganize_particles_data(l_df_output, dic_parameters_of_interest):
+    for df_output in l_df_output:
+        # Get generation configurations as dictionnaries for parameter assignation
+        dic_child_collider = df_output.attrs["configuration_gen_2"]["config_collider"]
+        dic_child_simulation = df_output.attrs["configuration_gen_2"]["config_simulation"]
+        dic_parent_collider = df_output.attrs["configuration_gen_1"]["config_mad"]
+        dic_parent_particles = df_output.attrs["configuration_gen_1"]["config_particles"]
 
         # Get which beam is being tracked
-        df_sim["beam"] = dic_child_simulation["beam"]
+        df_output["beam"] = dic_child_simulation["beam"]
 
-        # Get scanned parameters (complete with the requested scanned parameters)
-        df_sim["qx"] = dic_child_collider["config_knobs_and_tuning"]["qx"]["lhcb1"]
-        df_sim["qy"] = dic_child_collider["config_knobs_and_tuning"]["qy"]["lhcb1"]
-        df_sim["dqx"] = dic_child_collider["config_knobs_and_tuning"]["dqx"]["lhcb1"]
-        df_sim["dqy"] = dic_child_collider["config_knobs_and_tuning"]["dqy"]["lhcb1"]
-        df_sim["i_bunch_b1"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
-            "i_bunch_b1"
-        ]
-        df_sim["i_bunch_b2"] = dic_child_collider["config_beambeam"]["mask_with_filling_pattern"][
-            "i_bunch_b2"
-        ]
-        df_sim["num_particles_per_bunch"] = dic_child_collider["config_beambeam"][
-            "num_particles_per_bunch"
-        ]
-        df_sim["i_oct_b1"] = dic_child_collider["config_knobs_and_tuning"]["knob_settings"][
-            "i_oct_b1"
-        ]
-        df_sim["i_oct_b2"] = dic_child_collider["config_knobs_and_tuning"]["knob_settings"][
-            "i_oct_b2"
-        ]
-        df_sim["crossing_angle"] = abs(
-            float(dic_child_collider["config_knobs_and_tuning"]["knob_settings"]["on_x1"])
-        )
+        # Select simulations parameters of interest
+        for name_param, l_path_param in dic_parameters_of_interest.items():
+            df_output[name_param] = get_from_dict(dic_child_collider, l_path_param)
 
-        # Merge with particle data
-        df_sim_with_particle = pd.merge(df_sim, particle, on=["particle_id"])
-        l_df_to_merge.append(df_sim_with_particle)
+        # Feel free to add more parameters of interest here (e.g. from dic_child_simulation)
+
+    return l_df_output
+
+
+def merge_and_group_by_parameters_of_interest(
+    l_df_output,
+    l_group_by_parameters=["beam", "name base collider", "qx", "qy"],
+    only_keep_lost_particles=True,
+    l_parameters_to_keep=["normalized amplitude in xy-plane", "qx", "qy", "dqx", "dqy"],
+):
+    # Merge the dataframes from all simulations together
+    df_all_sim = pd.concat(l_df_output)
+
+    if only_keep_lost_particles:
+        # Extract the particles that were lost for DA computation
+        df_all_sim = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
+
+    # Check if the dataframe is empty
+    if df_all_sim.empty:
+        logging.warning("No unstable particles found, the output dataframe will be empty.")
+
+    # Group by parameters of interest
+    df_grouped = df_all_sim.groupby(l_group_by_parameters)
+
+    # Return the grouped dataframe, keeping only the minimum values of the parameters of interest
+    # (should not have impact except for DA, which we want to be minimal)
+    return pd.DataFrame(
+        [df_grouped[parameter].min() for parameter in l_parameters_to_keep]
+    ).transpose()
+
 
 # ==================================================================================================
-# --- # Merge all jobs outputs in one dataframe and save it
+# --- Postprocess the data
 # ==================================================================================================
+if __name__ == "__main__":
+    # Start of the script
+    print("Analysis of output simulation files started")
+    start = time.time()
 
-# Merge the dataframes from all simulations together
-df_all_sim = pd.concat(l_df_to_merge)
+    # Load Data
+    study_name = "example_tunescan"
+    fix = f"/../scans/{study_name}"
+    root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
+    # Add suffix to the root node path to handle scans that are not in the root directory
+    root.add_suffix(suffix=fix)
 
-# Extract the particles that were lost for DA computation
-df_lost_particles = df_all_sim[df_all_sim["state"] != 1]  # Lost particles
+    # Get particles data
+    l_df_output = get_particles_data(root)
 
-# Check if the dataframe is empty
-if df_lost_particles.empty:
-    print("No unstable particles found, the output dataframe will be empty.")
+    # Define parameters of interest
+    dic_parameters_of_interest = {
+        "qx": ["config_knobs_and_tuning", "qx", "lhcb1"],
+        "qy": ["config_knobs_and_tuning", "qy", "lhcb1"],
+        "dqx": ["config_knobs_and_tuning", "dqx", "lhcb1"],
+        "dqy": ["config_knobs_and_tuning", "dqy", "lhcb1"],
+        "i_oct": ["config_knobs_and_tuning", "knob_settings", "i_oct_b1"],
+        "i_bunch": ["config_beambeam", "mask_with_filling_pattern", "i_bunch_b1"],
+        "num_particles_per_bunch": ["config_beambeam", "num_particles_per_bunch"],
+    }
 
-# Group by working point (Update this with the knobs you want to group by !)
-group_by_parameters = ["name base collider", "qx", "qy"]
+    # Reorganize data
+    l_df_output = reorganize_particles_data(l_df_output, dic_parameters_of_interest)
 
-# We always want to keep beam in the final result
-group_by_parameters = ["beam"] + group_by_parameters
-l_parameters_to_keep = [
-    "normalized amplitude in xy-plane",
-    "qx",
-    "qy",
-    "dqx",
-    "dqy",
-    "i_bunch_b1",
-    "i_bunch_b2",
-    "i_oct_b1",
-    "i_oct_b2",
-    "num_particles_per_bunch",
-    "crossing_angle",
-]
-
-# Min is computed in the groupby function, but values should be identical
-my_final = pd.DataFrame(
-    [
-        df_lost_particles.groupby(group_by_parameters)[parameter].min()
-        for parameter in l_parameters_to_keep
+    # Merge and group by parameters of interest
+    l_group_by_parameters = ["beam", "name base collider", "qx", "qy"]
+    l_parameters_to_keep = [
+        "normalized amplitude in xy-plane",
+        "qx",
+        "qy",
+        "dqx",
+        "dqy",
+        "i_bunch",
+        "i_oct",
+        "num_particles_per_bunch",
     ]
-).transpose()
+    only_keep_lost_particles = True
+    df_final = merge_and_group_by_parameters_of_interest(
+        l_df_output, l_group_by_parameters, only_keep_lost_particles, l_parameters_to_keep
+    )
+    print("Final dataframe for current set of simulations: ", df_final)
 
-# Save data and print time
-my_final.to_parquet(f"../scans/{study_name}/da.parquet")
-print("Final dataframe for current set of simulations: ", my_final)
-end = time.time()
-print("Elapsed time: ", end - start)
+    # Save data and print time
+    df_final.to_parquet(f"../scans/{study_name}/da.parquet")
+    end = time.time()
+    print("Elapsed time: ", end - start)

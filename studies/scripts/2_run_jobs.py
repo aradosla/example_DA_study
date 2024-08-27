@@ -1,12 +1,14 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
+# Standard library imports
 import copy
 import os
 import subprocess
 import time
 from pathlib import Path
 
+# Third party imports
 import psutil
 import tree_maker
 import yaml

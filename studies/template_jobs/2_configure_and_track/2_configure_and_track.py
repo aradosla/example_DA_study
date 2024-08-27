@@ -611,7 +611,7 @@ def prepare_particle_distribution(collider, context, config_sim, config_bb):
     )
 
     particle_id = particle_df.particle_id.values
-    return particles, particle_id
+    return particles, particle_id, r_vect, theta_vect
 
 
 # ==================================================================================================
@@ -675,7 +675,9 @@ def configure_and_track(config_path="config.yaml"):
         collider.build_trackers(_context=context)
 
     # Prepare particle distribution
-    particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
+    particles, particle_id, l_amplitude, l_angle = prepare_particle_distribution(
+        collider, context, config_sim, config_bb
+    )
 
     # Track
     particles = track(collider, particles, config_sim)
@@ -692,6 +694,10 @@ def configure_and_track(config_path="config.yaml"):
 
     # Assign the old id to the sorted dataframe
     particles_df["particle_id"] = particle_id
+
+    # Register the amplitude and angle in the dataframe
+    particles_df["normalized amplitude in xy-plane"] = l_amplitude
+    particles_df["angle in xy-plane [deg]"] = l_angle * 180 / np.pi
 
     # Add some metadata to the output for better interpretability
     particles_df.attrs["hash"] = hash_fingerprint
