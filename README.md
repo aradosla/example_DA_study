@@ -6,11 +6,11 @@ under different parametric scenarios.
 Jobs can be efficiently stored and parallelized using the
 [Tree Maker](https://github.com/xsuite/tree_maker) package, while collider generation and particle tracking harness the power of [Xsuite](https://github.com/xsuite/xsuite).
 
-ℹ️ If you do not need to do large parametric scans, this repository is probably not what you're looking for.
+ℹ️ If you do not need to do large parametric scans, this template is probably not what you're looking for! You should instead refer to the [simple DA study repo](https://github.com/ColasDroin/simple_DA_study), which adapts the template to run tracking simulation without doing any scan or parallelized cluster submission.
 
 ## Quick installation guide
 
-For most scans (with GPUs not involved), the small guide below should be enough to get you started.
+For most scans (with GPUs not involved), the small guide below should be enough to get you started. Otherwise, or if you encounter problems, please refer to the [full installation guide](doc/installation_guide.md).
 
 Ensure Python (at least 3.9) is available on your machine. If not, install it with, for instance, miniforge or miniconda. Since this Python version will be your base one, it is recommended to install it in a fast location (for CERN users, *not AFS*), such that it can be used by all your projects (creating virtual environment everytime).
 
@@ -36,6 +36,13 @@ If not already done, install Poetry (system-wide) with the following command:
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Note that, at this point, you might need to add Poetry to your PATH. Simply follow what the Poetry installer tells you to do. For instance, for bash, you will have to run something like:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 If everything worked, impose the virtual environment to be created in the repository folder (needed so that jobs from HTCondor can access your Python distribution, especially if you don't plan on using a docker image) by running the following command:
@@ -87,8 +94,6 @@ You can ensure that everything works by:
     ```
 
     At this point, you should have an output parquet file in the ```studies/scans/study_name``` folder.
-
-If you encounter any issue, please refer to the [full installation guide](doc/installation_guide.md) for more information.
 
 ## How to use this template
 
