@@ -94,8 +94,8 @@ config_collider:
     nemitt_y: 1.65e-6
     mask_with_filling_pattern:
       pattern_fname: ../../filling_scheme/50ns_1240b_1088_1088_398_56bpi_PbPb_converted.json
-      i_bunch_b1: 480 # If not specified, the bunch with the worst schedule is chosen
-      i_bunch_b2: 1363 # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
+      i_bunch_b1: # If not specified, the bunch with the worst schedule is chosen
+      i_bunch_b2: # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
   skip_leveling: false
   config_lumi_leveling:
