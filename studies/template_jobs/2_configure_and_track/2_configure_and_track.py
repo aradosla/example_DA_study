@@ -402,38 +402,57 @@ def configure_beam_beam(collider, config_bb):
 # --- Function to compute luminosity once the collider is configured
 # ==================================================================================================
 def record_final_luminosity(collider, config_bb, l_n_collisions, crab):
-    # Get the final luminoisty in all IPs
-    twiss_b1 = collider["lhcb1"].twiss()
-    twiss_b2 = collider["lhcb2"].twiss()
-    l_lumi = []
-    l_PU = []
+    
+    # Define the IPs in which the luminosity will be computed
     l_ip = ["ip1", "ip2", "ip5", "ip8"]
-    for n_col, ip in zip(l_n_collisions, l_ip):
-        try:
-            L = xt.lumi.luminosity_from_twiss(  # type: ignore
-                n_colliding_bunches=n_col,
-                num_particles_per_bunch=config_bb["num_particles_per_bunch"],
-                ip_name=ip,
-                nemitt_x=config_bb["nemitt_x"],
-                nemitt_y=config_bb["nemitt_y"],
-                sigma_z=config_bb["sigma_z"],
-                twiss_b1=twiss_b1,
-                twiss_b2=twiss_b2,
-                crab=crab,
-            )
-            PU = compute_PU(L, n_col, twiss_b1["T_rev0"])
-        except Exception:
-            print(f"There was a problem during the luminosity computation in {ip}... Ignoring it.")
-            L = 0
-            PU = 0
-        l_lumi.append(L)
-        l_PU.append(PU)
+    
+    # Function to compute the luminosity and pile-up
+    def twiss_and_compute_lumi(collider, config_bb, l_n_collisions, crab):
+        twiss_b1 = collider["lhcb1"].twiss()
+        twiss_b2 = collider["lhcb2"].twiss()
+        l_lumi = []
+        l_PU = []
+        for n_col, ip in zip(l_n_collisions, l_ip):
+            try:
+                L = xt.lumi.luminosity_from_twiss(  # type: ignore
+                    n_colliding_bunches=n_col,
+                    num_particles_per_bunch=config_bb["num_particles_per_bunch"],
+                    ip_name=ip,
+                    nemitt_x=config_bb["nemitt_x"],
+                    nemitt_y=config_bb["nemitt_y"],
+                    sigma_z=config_bb["sigma_z"],
+                    twiss_b1=twiss_b1,
+                    twiss_b2=twiss_b2,
+                    crab=crab,
+                )
+                PU = compute_PU(L, n_col, twiss_b1["T_rev0"])
+            except Exception:
+                print(f"There was a problem during the luminosity computation in {ip}... Ignoring it.")
+                L = 0
+                PU = 0
+            l_lumi.append(L)
+            l_PU.append(PU)
+            
+        return l_lumi, l_PU
+    
+    # Get the final luminoisty in all IPs, without beam-beam
+    collider.vars["beambeam_scale"] = 0
+    l_lumi, l_PU = twiss_and_compute_lumi(collider, config_bb, l_n_collisions, crab)
+    
+    # Update configuration
+    for ip, L, PU in zip(l_ip, l_lumi, l_PU):
+        config_bb[f"luminosity_{ip}_without_beam_beam"] = float(L)
+        config_bb[f"Pile-up_{ip}_without_beam_beam"] = float(PU)
+        
+    # Same with beam-beam
+    collider.vars["beambeam_scale"] = 1
+    l_lumi, l_PU = twiss_and_compute_lumi(collider, config_bb, l_n_collisions, crab)    
 
     # Update configuration
     for ip, L, PU in zip(l_ip, l_lumi, l_PU):
-        config_bb[f"luminosity_{ip}_after_optimization"] = float(L)
-        config_bb[f"Pile-up_{ip}_after_optimization"] = float(PU)
-
+        config_bb[f"luminosity_{ip}_with_beam_beam"] = float(L)
+        config_bb[f"Pile-up_{ip}_with_beam_beam"] = float(PU)
+        
     return config_bb
 
 
