@@ -193,7 +193,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 50000
+d_config_simulation["n_turns"] = 100
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 24.0e-5

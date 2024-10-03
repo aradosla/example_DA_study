@@ -97,9 +97,10 @@ class ClusterSubmission:
                     + "log  = log.txt\n"
                 ),
                 "body": (
-                    lambda path_node: f"initialdir = {path_node}\n"
+                    lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
@@ -116,9 +117,10 @@ class ClusterSubmission:
                     + f' "{self.path_image}"\n'
                 ),
                 "body": (
-                    lambda path_node: f"initialdir = {path_node}\n"
+                    lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
@@ -268,19 +270,16 @@ class ClusterSubmission:
                 if self._test_node(node, path_job, running_jobs, queuing_jobs):
                     print(f'Writing submission command for node "{path_node}"')
                     # Write instruction for submission
-                    fid.write(str_body(path_node))
-
-                    # if user has defined a htc_job_flavor in config.yaml otherwise default is "espresso"
-                    if write_htc_job_flavour:
-                        if "htc_job_flavor" in self.config:
-                            htc_job_flavor = self.config["htc_job_flavor"]
-                        else:
-                            print(
-                                "Warning: htc_job_flavor not defined in config.yaml. Using espresso"
-                                " as default"
-                            )
-                            htc_job_flavor = "espresso"
-                        fid.write(f'+JobFlavour  = "{htc_job_flavor}"\n')
+                    if self.run_on in ["htc", "htc_docker"] and "htc_job_flavor" in self.config:
+                        fid.write(str_body(path_node, self.config["htc_job_flavor"]))
+                    elif self.run_on in ["htc", "htc_docker"]:
+                        print(
+                            "Warning: htc_job_flavor not defined in config.yaml. Using espresso as"
+                            " default"
+                        )
+                        fid.write(str_body(path_node, "espresso"))
+                    else:
+                        fid.write(str_body(path_node))
 
                     # Add job to list
                     l_path_jobs.append(path_job)

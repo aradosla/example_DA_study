@@ -36,7 +36,7 @@ def check_madx_lattices(mad):
 def check_xsuite_lattices(my_line):
     tw = my_line.twiss(method="6d", matrix_stability_tol=100)
     print(f"--- Now displaying Twiss result at all IPS for line {my_line}---")
-    print(tw[:, "ip.*"])
+    print(tw.rows["ip.*"])
     # print qx and qy
     print(f"--- Now displaying Qx and Qy for line {my_line}---")
     print(tw.qx, tw.qy)

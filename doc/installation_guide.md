@@ -109,6 +109,13 @@ At this point, ensure that a `.venv` folder has been created in the repository f
   poetry run pip install nafflib
   ```
 
+  ⚠️ **If you have a bug with conda compilers, do the following:**
+
+  ```bash
+  poetry shell
+  conda install compilers cmake
+  ```
+
 Finally, you can make xsuite faster by precompiling the kernel, with:
 
 ```bash

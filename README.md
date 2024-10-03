@@ -32,7 +32,7 @@ In any case, run the following command to clone the repository and all the relev
 git clone --recurse-submodules https://github.com/xsuite/DA_study_template.git my_DA_study
 ```
 
-If not already done, install Poetry (system-wide) with the following command:
+If not already done, you can install Poetry (system-wide) with the command below. Before running it, ensure that the Python environment you want to use is isolated from your project (poetry should not be installed in the same environment as the one you will use for the project).
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
