@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import shutil
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile
 
 # Import third-party modules
 import numpy as np
@@ -229,7 +229,7 @@ def build_distr_and_collider(config_file="config.yaml"):
     collider.to_json("collider.json")
 
     # Compress the collider file to zip to ease the load on afs
-    with ZipFile("collider.json.zip", "w") as zipf:
+    with ZipFile("collider.json.zip", "w", ZIP_DEFLATED, compresslevel=9) as zipf:
         zipf.write("collider.json")
 
     # Tag end of the job
