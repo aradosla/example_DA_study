@@ -61,7 +61,7 @@ config_collider:
       lhcb2: 15.0
 
     # Linear coupling
-    delta_cmr: 0.00
+    delta_cmr: 0.02
     delta_cmi: 0.0
 
     knob_names:
@@ -193,13 +193,14 @@ config_simulation:
   frequency: 3000. #300.
   phi: 0.
   sampling_frequency: 11245.5
-  knl: 0.0000000006 #0.000012 
-  index:  mq.11r3.b1 #mb.b9r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
-  std_dev: 0.1
-  white_noise: false
+  #knl: 0.0000000006 #0.000012 
+  knl: 1. #0.000012 
+  index: mb.b9r3.b1  #mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
+  std_dev: 1e-8
+  white_noise: True
 
   # Tracking
-  n_turns: 10000000 # number of turns to track
+  n_turns: 100000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2

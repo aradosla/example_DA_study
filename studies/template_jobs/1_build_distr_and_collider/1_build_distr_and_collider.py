@@ -127,12 +127,13 @@ def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
         else:
             raise ValueError(
                 "`line`, `particle_ref` or `particle_on_co` must be provided!")
-
+        
+   
     zeta, delta = xp.generate_longitudinal_coordinates(
-            distribution='gaussian',
+            distribution='qgaussian',
             num_particles=num_particles,
             particle_ref=(particle_ref if particle_ref is not None
-                          else particle_on_co),
+                        else particle_on_co),
             line=line,
             circumference=circumference,
             momentum_compaction_factor=momentum_compaction_factor,
@@ -143,7 +144,8 @@ def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
             sigma_z=sigma_z,
             engine=engine,
             **kwargs)
-
+  
+    
     assert len(zeta) == len(delta) == num_particles
 
 

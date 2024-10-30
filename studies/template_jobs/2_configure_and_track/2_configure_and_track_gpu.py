@@ -502,6 +502,7 @@ def configure_collider(
 
     if config_sim['white_noise']:
         std_dev = config_sim['std_dev']
+        np.random.seed(0)
         samples = np.random.normal(0, std_dev, len(time))
     else:
         A = config_sim['amplitude']  # Amplitude
@@ -519,6 +520,7 @@ def configure_collider(
         knl=[config_sim["knl"]]
     )
 
+    
     # Insert the exciter into the specified line and index
     collider['lhcb1'].insert_element(
         element=exciter,
@@ -527,7 +529,6 @@ def configure_collider(
     )
     
 
-    
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
 
@@ -678,7 +679,7 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
 
         
    # Determine the number of intervals for storing data every 1000 turns
-    norm_intervals = int(num_turns // 1000)
+    norm_intervals = int(num_turns // 100)
     num_particles = int(len(particles.x))
 
     # Preallocate arrays for physical coordinates
@@ -708,8 +709,8 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
         collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=False)
 
         # Store particle data every 1000 turns
-        if (i + 1) % 1000 == 0:
-            interval_index = (i + 1) // 1000 - 1
+        if (i + 1) % 100 == 0:
+            interval_index = (i + 1) // 100 - 1
             coord = collider[beam].twiss().get_normalized_coordinates(particles,
                                                                       nemitt_x=config_bb["nemitt_x"],
                                                                       nemitt_y=config_bb['nemitt_y'])
@@ -820,7 +821,7 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    new_folder = 'Noise_sim_dipol_try2_3kHz_6e-10'
+    new_folder = 'Scalinglaw_test_whitenoise_gaussian_coupling015'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
