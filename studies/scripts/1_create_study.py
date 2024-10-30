@@ -90,7 +90,7 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 20.0
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
+d_config_tune_and_chroma["delta_cmr"] = 0.015  # type: ignore
 d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 
 ### Knobs configuration
@@ -205,7 +205,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = int(1e6)
+d_config_simulation["n_turns"] = int(1e5)
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5

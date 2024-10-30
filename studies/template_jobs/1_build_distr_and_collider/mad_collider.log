@@ -71,3 +71,53 @@ exec, myslice;
         };
         seqedit, sequence=lhcb2; flatten; cycle, start=IP3; flatten; endedit;
         ;
+
+        ! Set twiss formats for MAD-X parts (macro from opt. toolkit)
+        exec, twiss_opt;
+        ;
+call, file="acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.37";
+on_alice := on_alice_normalized * 7000./nrj;
+on_lhcb := on_lhcb_normalized * 7000./nrj;
+use, sequence=lhcb1;
+twiss;
+use, sequence=lhcb2;
+twiss;
+nrj = 450;
+bv_aux = 1;
+
+    beam, particle=proton,sequence=lhcb1,
+        energy=450,
+        sigt=0.0001,
+        bv=1,
+        npart=1,
+        sige=1e-06,
+        ex=2.0850490847999996e-09,
+        ey=2.0850490847999996e-09,
+        mass=0.93827208816,
+        charge=1.0;
+    ;
+use, sequence=lhcb1;
+use, sequence=lhcb1;
+twiss;
+
+    beam, particle=proton,sequence=lhcb2,
+        energy=450,
+        sigt=0.0001,
+        bv=-1,
+        npart=1,
+        sige=1e-06,
+        ex=2.0850490847999996e-09,
+        ey=2.0850490847999996e-09,
+        mass=0.93827208816,
+        charge=1.0;
+    ;
+use, sequence=lhcb2;
+use, sequence=lhcb2;
+twiss;
+use, sequence=lhcb1;
+exec, crossing_disable;
+exec, crossing_save;
+ver_lhc_run = 3.0;
+par_verbose = 1;
+call, file="/afs/cern.ch/work/a/aradosla/private/miniforge3/lib/python3.10/site-packages/xmask/lhc/madx_scripts/submodule_04a_s1_prepare_nom_twiss_table.madx";
+call, file="/afs/cern.ch/work/a/aradosla/private/miniforge3/lib/python3.10/site-packages/xmask/lhc/madx_scripts/submodule_04e_s1_synthesize_knobs.madx";

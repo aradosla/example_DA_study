@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import yaml
 import scipy
-
+# %%
 def load_configuration(config_path="config.yaml"):
     # Load configuration
     with open(config_path, "r") as fid:
@@ -63,7 +63,7 @@ def df_colored_func(n_part):
 configuration, config_particles = load_configuration(config_path = 'config.yaml')
 num_particles = int(float(config_particles["N_particles"]))
 
-
+# %%
 ###### qGaussian new ######
 
 import numpy as np
@@ -88,7 +88,11 @@ def _eq2(x, q):
     if q == 1:
         return np.exp(x)
     else:
-        return (1 + (1 - q) * x)**(1 / (1 - q))
+        # Ensure that the argument inside the power remains non-negative
+        result = (1 + (1 - q) * x)
+        # Take the real part if result is complex, otherwise return result
+        return np.real(result)**(1 / (1 - q)) if np.all(result >= 0) else 0
+
 
 def qGauss(x, A, mu, q, b, offset):
     result = A * np.sqrt(b) / _Cq2(q) * _eq2(-b * (x - mu)**2, q) + offset
@@ -135,8 +139,44 @@ y_q = inverse_qGauss_CDF(uniform_samples_y, A, mu, q, b, offset)
 px_q = inverse_qGauss_CDF(uniform_samples_px, A, mu, q, b, offset)
 py_q = inverse_qGauss_CDF(uniform_samples_py, A, mu, q, b, offset)
 df_q = pd.DataFrame({'x': x_q, 'y': y_q, 'px': px_q, 'py': py_q})
-df_q.to_parquet('mydistribution.parquet')
+#df_q.to_parquet('mydistribution.parquet')
+print(df_q)
+# %%
+from scipy.optimize import curve_fit
 
+# Define the q-Gaussian function
+def q_gaussian(x, beta, q, A):
+    if q == 1:
+        return A * np.exp(-beta * x**2)
+    else:
+        return A * (1 + (q - 1) * beta * x**2)**(1 / (1 - q))
+
+
+hist, bin_edges = np.histogram(df_q['x'], bins=100, density=True)
+bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+# Initial guess for the parameters
+initial_guess = [1, 1.5, 1]
+
+# Fit the q-Gaussian to the histogram data
+params, covariance = curve_fit(q_gaussian, bin_centers, hist, p0=initial_guess)
+beta, q, A = params
+# Plotting the q-Gaussian fit
+x = np.linspace(bin_edges[0], bin_edges[-1], 1000)
+y = q_gaussian(x, *params)
+plt.figure(figsize=(15, 10))
+plt.plot(x, y, 'b-', linewidth=2, label=f'q-Gaussian fit: q={q:.2f}')
+plt.hist(df_q['x'], bins = 200, density=True)
+plt.title('Histogram with q-Gaussian Fit, 50k particles', size = 30)
+
+plt.ylabel('Density', size = 30)
+plt.xlabel('x [$\sigma$]', size = 30)
+plt.legend(loc='upper right', fontsize=26)  # Adjust fontsize as needed
+plt.xticks(fontsize=20)  # Change font size of x-axis ticks
+plt.yticks(fontsize=20)  # Change font size of y-axis ticks
+plt.grid(True)
+plt.xlim(-6, 6)
+plt.show()
 # %%
 
 '''
