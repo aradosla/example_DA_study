@@ -5,12 +5,12 @@ config_particles:
   n_angles: 5
   n_split: 15
   N_particles: 50000
-  norm_emitt_x: 1.5e-6             
-  norm_emitt_y: 1.5e-6 
-  bunch_intensity: 1.6e11
-  sigma_z: 7.5e-2
+  norm_emitt_x: 1.e-6             
+  norm_emitt_y: 1.e-7 # last simulation I had 1e-6
+  bunch_intensity: 5.5e15
+  sigma_z: 9.0e-2 #7.5e-2
   gaussian_z: False
-  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_track/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
+  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
  
 
 config_mad:

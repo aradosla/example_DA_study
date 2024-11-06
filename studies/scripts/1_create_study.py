@@ -35,7 +35,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 10
+d_config_particles["n_split"] = 5
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -90,7 +90,7 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqy"][beam] = 20.0
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.015  # type: ignore
+d_config_tune_and_chroma["delta_cmr"] = 0.0  # type: ignore
 d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 
 ### Knobs configuration
@@ -132,7 +132,7 @@ d_config_knobs["i_oct_b2"] = 55.0
 d_config_leveling_ip1_5 = {"constraints": {}}
 d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
 d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.6e11
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 6e15 #1.6e11
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
 
@@ -155,9 +155,9 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.6e11  # type: ignore
-d_config_beambeam["nemitt_x"] = 1.5e-6  # type: ignore
-d_config_beambeam["nemitt_y"] = 1.5e-6  # type: ignore
+d_config_beambeam["num_particles_per_bunch"] =  5e15 #1.6e11   # type: ignore
+d_config_beambeam["nemitt_x"] = 1.e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 1.e-7 #1.e-7  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
@@ -205,10 +205,10 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = int(1e5)
+d_config_simulation["n_turns"] = int(5e3)
 
 # Initial off-momentum
-d_config_simulation["delta_max"] = 27.0e-5
+d_config_simulation["delta_max"] = 27.0e-5 #0.0003645818301378719 
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"

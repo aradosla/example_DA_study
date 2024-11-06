@@ -61,7 +61,7 @@ config_collider:
       lhcb2: 15.0
 
     # Linear coupling
-    delta_cmr: 0.02
+    delta_cmr: 0.0
     delta_cmi: 0.0
 
     knob_names:
@@ -89,10 +89,10 @@ config_collider:
       ip2: 20
       ip5: 25
       ip8: 20
-    sigma_z: 0.09
-    num_particles_per_bunch: 2.3e11
-    nemitt_x: 1.5e-6
-    nemitt_y: 1.5e-6
+    sigma_z: 8.9e-2 #0.09
+    num_particles_per_bunch: 5e15 #2.3e11
+    nemitt_x: 1.e-6
+    nemitt_y: 1.e-6
     mask_with_filling_pattern:
       pattern_fname: ../../filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj.json
       i_bunch_b1: 1963 # If not specified, the bunch with the worst schedule is chosen
@@ -105,7 +105,7 @@ config_collider:
     vary:
       - num_particles_per_bunch
     constraints:
-      max_intensity: 1.8e11
+      max_intensity: 6e15 #1.8e11
       max_PU: 70
 
   skip_leveling: true
@@ -186,7 +186,7 @@ config_simulation:
   particle_file: ../1_build_distr_and_collider/particles/00.parquet
 
   # Initial off-momentum
-  delta_max: 27.e-5
+  delta_max: 0.001 #27.e-5
 
  # Exciter
   amplitude: 1.
@@ -200,7 +200,7 @@ config_simulation:
   white_noise: True
 
   # Tracking
-  n_turns: 100000 # number of turns to track
+  n_turns: 5000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2
