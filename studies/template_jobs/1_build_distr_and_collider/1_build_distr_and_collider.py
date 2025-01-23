@@ -130,7 +130,7 @@ def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
         
    
     zeta, delta = xp.generate_longitudinal_coordinates(
-            distribution='qgaussian',
+            distribution='gaussian',
             num_particles=num_particles,
             particle_ref=(particle_ref if particle_ref is not None
                         else particle_on_co),

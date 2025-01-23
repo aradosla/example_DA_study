@@ -5,8 +5,8 @@ config_particles:
   n_angles: 5
   n_split: 15
   N_particles: 50000
-  norm_emitt_x: 1.5e-6             
-  norm_emitt_y: 1.5e-6 
+  norm_emitt_x: 1.8e-6             
+  norm_emitt_y: 1.8e-6 
   bunch_intensity: 1.6e11
   sigma_z: 7.5e-2
   gaussian_z: False
@@ -19,14 +19,14 @@ config_mad:
     acc-models-lhc: /afs/cern.ch/eng/lhc/optics/runIII
 
   # Optics file
-  optics_file: acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.37
+  optics_file: acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.34
 
   # Beam parameters
   beam_config:
     lhcb1:
-      beam_energy_tot: 450 #6800 # [GeV]
+      beam_energy_tot: 6800 # [GeV]
     lhcb2:
-      beam_energy_tot: 450 #6800 # [GeV]
+      beam_energy_tot: 6800 # [GeV]
 
   # Enable machine imperfections
   enable_imperfections: false
