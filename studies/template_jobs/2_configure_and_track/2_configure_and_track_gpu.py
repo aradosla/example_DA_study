@@ -506,6 +506,7 @@ def configure_collider(
 
     if config_sim['white_noise']:
         std_dev = config_sim['std_dev']
+        np.random.seed(0)
         samples = np.random.normal(0, std_dev, len(time))
     else:
         A = config_sim['amplitude']  # Amplitude
