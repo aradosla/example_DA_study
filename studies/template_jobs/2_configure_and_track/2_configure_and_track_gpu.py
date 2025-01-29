@@ -507,7 +507,7 @@ def configure_collider(
     def create_sine_wave(frequencies, amplitudes,time):
         #time = np.arange(0, num_turns / sampling_frequency, 1 / sampling_frequency)
         sine_wave = np.zeros_like(time)
-        for freq, amp in zip(frequencies, amplitudes):
+        for freq, amp in zip(frequencies[:len(amplitudes)], amplitudes):
             sine_wave += amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
         return sine_wave
 
@@ -533,15 +533,14 @@ def configure_collider(
         knl=[config_sim["knl"]]
     )
 
-    '''
+    
     # Insert the exciter into the specified line and index
     collider['lhcb1'].insert_element(
         element=exciter,
         name='RF_KO_EXCITER',
         index= config_sim["index"]
     )
-    '''
-
+    
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
 
@@ -663,10 +662,25 @@ def prepare_particle_distribution(collider, context, config_sim):
         _context=context,
     )
 
-
     particle_id = particle_df.particle_id.values
 
     return particles, particle_id
+
+# ==================================================================================================
+# --- Function to do the FFT of the particles
+# ==================================================================================================
+
+
+
+def cmp_fft(df, specific_particle, frev=11245.5,repeat_fft=1):
+    fourier =  np.fft.fft(df[df['particle_id'] == specific_particle].x_phys)
+    fourier = fourier/len(fourier)*2.0
+    fourier = np.concatenate([fourier]*repeat_fft)
+    freqs   = np.linspace(0, frev*repeat_fft, len(fourier))
+    return pd.Series([freqs, fourier.real, fourier.imag])
+
+
+
 
 # ==================================================================================================
 # --- Function to do the tracking
@@ -780,37 +794,56 @@ def track(collider, particles, config_sim, config_bb, save_input_particles=False
 
     """
 
-    x_phys = collider['lhcb1'].record_last_track.x.flatten()
-    y_phys = collider['lhcb1'].record_last_track.y.flatten()
-    px_phys = collider['lhcb1'].record_last_track.px.flatten()
-    py_phys = collider['lhcb1'].record_last_track.py.flatten()
-    zeta_phys = collider['lhcb1'].record_last_track.zeta.flatten()
-    pzeta_phys = collider['lhcb1'].record_last_track.delta.flatten()
-    state_all = collider['lhcb1'].record_last_track.state.flatten()
-    turns_totnorm = collider['lhcb1'].record_last_track.at_turn.flatten()
-    particles_id_all = collider['lhcb1'].record_last_track.particle_id.flatten()
+    x_phys = collider['lhcb1'].record_last_track.x
+    y_phys = collider['lhcb1'].record_last_track.y
+    px_phys = collider['lhcb1'].record_last_track.px
+    py_phys = collider['lhcb1'].record_last_track.py
+    zeta_phys = collider['lhcb1'].record_last_track.zeta
+    pzeta_phys = collider['lhcb1'].record_last_track.delta
+    state_all = collider['lhcb1'].record_last_track.state
+    turns_totnorm = collider['lhcb1'].record_last_track.at_turn
+    particles_id_all = collider['lhcb1'].record_last_track.particle_id
 
     # Convert results to DataFrame
     result_phys = pd.DataFrame({
-        "x_phys": x_phys,
-        "y_phys": y_phys,
-        "zeta_phys": zeta_phys,
-        "px_phys": px_phys,
-        "py_phys": py_phys,
-        "pzeta_phys": pzeta_phys,
-        "state": state_all,
-        "at_turn": turns_totnorm, #"particle_id": particles_id_all #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
-        "particle_id": particles_id_all
+        "x_phys": x_phys.flatten(),
+        "y_phys": y_phys.flatten(),
+        "zeta_phys": zeta_phys.flatten(),
+        "px_phys": px_phys.flatten(),
+        "py_phys": py_phys.flatten(),
+        "pzeta_phys": pzeta_phys.flatten(),
+        "state": state_all.flatten(),
+        "at_turn": turns_totnorm.flatten(), #"particle_id": particles_id_all #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
+        "particle_id": particles_id_all.flatten()
     })
+
+    # Save the FFTs
+    idx = np.arange(0, len(np.unique(result_phys['particle_id'])))
+  
+    fourier_tot_real = []
+    fourier_tot_imag = []
+    # FFT average
+    for idd in idx:
+        try:
+            freqs, fourier_real, fourier_imag= cmp_fft(result_phys, specific_particle = idd, frev=11245.5, repeat_fft=2)
     
 
+            fourier_tot_real.append(fourier_real)
+            fourier_tot_imag.append(fourier_imag)
+   
+        except Exception as e:
+            print(f'Error! {e}') 
+    
+    dff = pd.DataFrame({'fourier_real': fourier_tot_real, 'fourier_imag': fourier_tot_imag})
+    aux = dff.apply(lambda x: x.fourier_real + 1j*x.fourier_imag, axis=1).mean()
+    df_final = pd.DataFrame({'freqs': freqs, 'fourier_real': np.real(aux), 'fourier_imag': np.imag(aux)})
     #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
     #result_norm.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_norm0.parquet')
 
     b = time.time()
     print(f"Elapsed time: {b-a} s")
 
-    return result_phys
+    return df_final
 
 
 
@@ -842,7 +875,7 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    new_folder = '50_Hz_noise_simulation'
+    new_folder = '50_Hz_noise_simulation_excitation_realtry_1m particles'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
@@ -862,9 +895,10 @@ def configure_and_track(config_path="config.yaml"):
 
     # Track
     print('Now tracking!')
-    particles_phys = track(collider, particles, config_sim, config_bb)
+    fft_average = track(collider, particles, config_sim, config_bb)
 
-    particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+    #particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+    fft_average.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fft_average.parquet")
    
     print('The parquet should be saved')
     # Get particles dictionnary

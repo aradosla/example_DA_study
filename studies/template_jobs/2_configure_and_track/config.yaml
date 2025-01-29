@@ -198,7 +198,7 @@ config_simulation:
   index: mb.b9r3.b1  #mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
   std_dev: 1e-8
   white_noise: True
-  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
+  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/corrected_A.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
   noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_f.txt
 
   # Tracking
