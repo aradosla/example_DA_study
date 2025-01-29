@@ -261,7 +261,7 @@ samples = inverse_cdf(uniform_random_numbers)
 ###### Colored distribution ######
 df_colored = df_colored_func(num_particles)
 #df_colored.to_parquet('mydistribution.parquet')
-
+# %%
 ###### Gaussian distribution ######
 x_norm = np.random.normal(size=num_particles)
 px_norm = np.random.normal(size=num_particles)

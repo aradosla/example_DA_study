@@ -1,3 +1,19 @@
+# Particles configuration
+config_particles:
+  r_min: 2.0
+  r_max: 10.0
+  n_r: 256
+  n_angles: 5
+  n_split: 15
+  N_particles: 40000
+  norm_emitt_x: 1.e-6             
+  norm_emitt_y: 1.e-7 # last simulation I had 1e-6
+  bunch_intensity: 5.5e12
+  sigma_z: 7.5e-2
+  gaussian_z: False
+  path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
+ 
+
 # Configuration for tuning of the collider
 config_collider:
   config_knobs_and_tuning:
@@ -34,7 +50,7 @@ config_collider:
       on_sol_alice: 0
 
       # RF voltage and phases
-      vrf400: 12.0 # [MV]
+      vrf400: 5.5 # [MV]
       lagrf400.b1: 0.5 # [rad]
       lagrf400.b2: 0. # [rad]
 
@@ -90,9 +106,9 @@ config_collider:
       ip5: 25
       ip8: 20
     sigma_z: 8.9e-2 #0.09
-    num_particles_per_bunch: 5e15 #2.3e11
-    nemitt_x: 1.e-6
-    nemitt_y: 1.e-6
+    num_particles_per_bunch: 5e12 #2.3e11
+    nemitt_x: 1.0e-6
+    nemitt_y: 1.0e-7
     mask_with_filling_pattern:
       pattern_fname: ../../filling_scheme/25ns_2228b_2216_1686_2112_hybrid_8b4e_2x56b_25ns_3x48b_12inj.json
       i_bunch_b1: 1963 # If not specified, the bunch with the worst schedule is chosen
@@ -105,7 +121,7 @@ config_collider:
     vary:
       - num_particles_per_bunch
     constraints:
-      max_intensity: 6e15 #1.8e11
+      max_intensity: 1.8e11 #6e15 #
       max_PU: 70
 
   skip_leveling: true
@@ -186,7 +202,7 @@ config_simulation:
   particle_file: ../1_build_distr_and_collider/particles/00.parquet
 
   # Initial off-momentum
-  delta_max: 0.001 #27.e-5
+  delta_max: 27.e-5
 
  # Exciter
   amplitude: 1.
@@ -200,14 +216,14 @@ config_simulation:
   white_noise: True
 
   # Tracking
-  n_turns: 5000 # number of turns to track
+  n_turns: 50000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2
 
 # Save collider or not
-dump_collider: false
-dump_config_in_collider: false
+dump_collider: True
+dump_config_in_collider: true
 
 # Context for the simulation
 context: 'cupy' #"cpu" # opencl

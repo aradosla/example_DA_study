@@ -35,7 +35,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 5
+d_config_particles["n_split"] = 1
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -123,8 +123,8 @@ d_config_knobs["on_sep8v"] = -3.500
 d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 55.0
-d_config_knobs["i_oct_b2"] = 55.0
+d_config_knobs["i_oct_b1"] = 55.0 #15.0
+d_config_knobs["i_oct_b2"] = 55.0 #15.0 
 
 ### leveling configuration
 
@@ -132,7 +132,7 @@ d_config_knobs["i_oct_b2"] = 55.0
 d_config_leveling_ip1_5 = {"constraints": {}}
 d_config_leveling_ip1_5["luminosity"] = 2.0e34  # type: ignore
 d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 6e15 #1.6e11
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 6e15
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
 
@@ -155,7 +155,7 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] =  5e15 #1.6e11   # type: ignore
+d_config_beambeam["num_particles_per_bunch"] =  5.5e12   # type: ignore
 d_config_beambeam["nemitt_x"] = 1.e-6  # type: ignore
 d_config_beambeam["nemitt_y"] = 1.e-7 #1.e-7  # type: ignore
 
@@ -205,10 +205,10 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = int(5e3)
+d_config_simulation["n_turns"] = int(5e4)
 
 # Initial off-momentum
-d_config_simulation["delta_max"] = 27.0e-5 #0.0003645818301378719 
+d_config_simulation["delta_max"] = 27.0e-5 #27.0e-5 #0.0003645818301378719 
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
@@ -219,8 +219,8 @@ d_config_simulation["beam"] = "lhcb1"
 # Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
 # configuration.
 # ==================================================================================================
-dump_collider = False
-dump_config_in_collider = False
+dump_collider = True
+dump_config_in_collider = True
 
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)

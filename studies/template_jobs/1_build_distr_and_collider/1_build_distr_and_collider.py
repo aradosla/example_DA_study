@@ -130,7 +130,7 @@ def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
         
    
     zeta, delta = xp.generate_longitudinal_coordinates(
-            distribution='qgaussian',
+            distribution='gaussian',
             num_particles=num_particles,
             particle_ref=(particle_ref if particle_ref is not None
                         else particle_on_co),
@@ -138,7 +138,7 @@ def generate_matched_gaussian_bunch_colored(config_particles, num_particles,
             circumference=circumference,
             momentum_compaction_factor=momentum_compaction_factor,
             rf_harmonic=rf_harmonic,
-            rf_voltage=rf_voltage,
+            rf_voltage=config_particles["vrf400"],
             rf_phase=rf_phase,
             p_increment=p_increment,
             sigma_z=sigma_z,
@@ -291,7 +291,7 @@ def activate_RF_and_twiss(collider, config_mad, sanity_checks=True):
         for knob, val in dic_rf.items():
             print(f"    {knob} = {val}")
     elif config_mad["ver_lhc_run"] == 3.0:
-        dic_rf = {"vrf400": 12.0, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
+        dic_rf = {"vrf400": 5.5, "lagrf400.b1": 0.5, "lagrf400.b2": 0.0}
         for knob, val in dic_rf.items():
             print(f"    {knob} = {val}")
     else:

@@ -1,0 +1,40 @@
+# HTCondor Submission File
+
+# Request a GPU
+request_GPUs = 1  # Change this as per your GPU requirement
+
+# Standard output and error files
+output = output.txt
+error  = error.txt
+log     = log.txt
+
+# The directory to run the job in
+initialdir = /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000
+
+# The executable to run
+executable = /afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate
+
+# The script to run in the environment
+arguments = "source /afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate && \
+             cp -f /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000/../config.yaml . && \
+             mkdir xtrack_0000 && \
+             cp -f /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000/config.yaml xtrack_0000 && \
+             cd xtrack_0000 && \
+             sed -i 's/..\/collider.json.zip/\/afs\/cern.ch\/work\/a\/aradosla\/private\/example_DA_study_ibs\/studies\/scans\/example_tunescan_gpu\/base_collider\/xtrack_0000\/..\/collider.json.zip/g' config.yaml && \
+             sed -i 's/..\/particles\/00.parquet/\/afs\/cern.ch\/work\/a\/aradosla\/private\/example_DA_study_ibs\/studies\/scans\/example_tunescan_gpu\/base_collider\/xtrack_0000\/..\/particles\/00.parquet/g' config.yaml && \
+             sed -i 's/tree_maker.log/\/afs\/cern.ch\/work\/a\/aradosla\/private\/example_DA_study_ibs\/studies\/scans\/example_tunescan_gpu\/base_collider\/xtrack_0000\/tree_maker.log/g' config.yaml && \
+             python /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000/2_configure_and_track_gpu.py > output_python.txt 2> error_python.txt && \
+             rm -f ../config.yaml && \
+             mv config.yaml config_final.yaml && \
+             cp -f *.txt *.parquet *.yaml *.json /afs/cern.ch/work/a/aradosla/private/example_DA_study_ibs/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000"
+
+# Request the GPU resource
+# Ensure the GPU is available
+# Depending on your HTCondor configuration, you may need to specify resources like this:
+# Request a GPU (Modify if your system requires a specific GPU request)
++SingularityImage = "/path/to/singularity/image"
++RequestCpus = 1
++RequestMemory = "4GB"  # Optional: specify memory request
+
+
+queue 1

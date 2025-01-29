@@ -105,5 +105,5 @@ def _generate_run_sh_htc_gen_2(node, python_command):
         # Change name of config 2nd gen to config_final.yaml
         f"mv config.yaml config_final.yaml\n"
         # Copy back output
-        f"cp -f *.txt *.parquet *.yaml {abs_path}\n"
+        f"cp -f *.txt *.parquet *.yaml *.json {abs_path}\n"
     )

@@ -112,14 +112,19 @@ class ClusterSubmission:
                     + "universe = vanilla\n"
                     + "+SingularityImage ="
                     + f' "{self.path_image}"\n'
+                    + "periodic_remove = (time() - EnteredCurrentStatus) > 14400\n"  # 4-hour limit
                 ),
+
+                ### hereeee
+                "tail": f"#{self.run_on}\n",
+
                 "body": (
                     lambda path_node: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
                     + "queue\n"
                 ),
-                "tail": f"#{self.run_on}\n",
+                
                 "submit_command": lambda filename: f"condor_submit {filename}",
             },
         }
@@ -145,8 +150,8 @@ class ClusterSubmission:
             yaml.dump(dic_id_to_job, fid)
 
         # Wait 0.5s to make sure the file is written on disk
-        time.sleep(0.5)
-
+        #time.sleep(0.5)
+        time.sleep(1.0)
     def _update_dic_id_to_job(self, running_jobs, queuing_jobs):
         # Look for jobs in the dictionnary that are not running or queuing anymore
         dic_id_to_job = self.dic_id_to_job
@@ -277,7 +282,7 @@ class ClusterSubmission:
                                 "Warning: htc_job_flavor not defined in config.yaml. Using espresso"
                                 " as default"
                             )
-                            htc_job_flavor = "espresso"
+                            htc_job_flavor = "tomorrow"
                         fid.write(f'+JobFlavour  = "{htc_job_flavor}"\n')
 
                     # Add job to list
