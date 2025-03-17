@@ -89,34 +89,20 @@ class ClusterSubmission:
             },
             "htc": {
                 "head": (
-                    #lambda path_node: (
-                     #   f"transfer_input_files = {path_node}.tar.gz, root://eosuser.cern.ch//eos/user/a/aradosla/python_for_afs/xsuite_env.tar.gz\n"
-                       
-                        "# This is a HTCondor submission file\n"
-                        "error  = error.txt\n"
-                        "output = output.txt\n"
-                        "log  = log.txt\n"
-                        "universe = vanilla\n"
-                        "+AccountingGroup = \"group_u_ATS.all\"\n"
-                    #)
+                    "# This is a HTCondor submission file\n"
+                    + "error  = error.txt\n"
+                    + "output = output.txt\n"
+                    + "log  = log.txt\n"
                 ),
                 "body": (
-                    lambda path_node: (
-                        f"initialdir = {path_node}\n"
-                        f"transfer_input_files = root://eosuser.cern.ch//eos/user/a/aradosla/envs/envs.tar.gz, {path_node}.tar.gz\n"
-                        f"executable = {path_node}/run.sh\n"
-                        f"request_GPUs = {self.request_GPUs}\n"
-                        #f"JobFlavour = self.config["htc_job_flavor"]"
-                        #"transfer_output_files = results/\n"
-                        #"output_destination = root://eosuser.cern.ch//eos/user/a/aradosla/condor/$(ClusterId)-$(ProcId)/\n"
-                        "queue\n"
-                    )
+                    lambda path_node: f"initialdir = {path_node}\n"
+                    + f"executable = {path_node}/run.sh\n"
+                    + f"request_GPUs = {self.request_GPUs}\n"
+                    + "queue\n"
                 ),
                 "tail": f"#{self.run_on}\n",
                 "submit_command": lambda filename: f"condor_submit {filename}",
             },
-
-
             "htc_docker": {
                 "head": (
                     "# This is a HTCondor submission file using Docker\n"
@@ -265,17 +251,15 @@ class ClusterSubmission:
 
         # Record list of jobs
         l_path_jobs = []
-        print('It fails right after')
+        print(str_head)
+        print(str_body)
         print(str_tail)
         # Write the submission file
         with open(filename, "w") as fid:
             fid.write(str_head)
-            
-
             for node in list_of_nodes:
                 # Get path node
                 path_node = node.get_abs_path()
-               
 
                 # Get corresponding path job
                 path_job = self._get_path_job(path_node)
@@ -284,7 +268,6 @@ class ClusterSubmission:
                 if self._test_node(node, path_job, running_jobs, queuing_jobs):
                     print(f'Writing submission command for node "{path_node}"')
                     # Write instruction for submission
-                    #fid.write(str_head(path_node))  # Call the lambda function
                     fid.write(str_body(path_node))
 
                     # if user has defined a htc_job_flavor in config.yaml otherwise default is "espresso"
@@ -556,7 +539,7 @@ def submit_jobs_generation(root, generation=1):
     l_filenames, l_path_jobs = cluster_submission.write_sub_files(
         root.generation(generation), path_file
     )
-    cluster_submission.submit(l_filenames, l_path_jobs)  #This one submits the jobs
+    cluster_submission.submit(l_filenames, l_path_jobs)
 
 
 def submit_jobs(study_name, print_uncompleted_jobs=False):

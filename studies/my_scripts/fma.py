@@ -274,7 +274,7 @@ def plot_res_order_specific(order, l=0, qz=0, c1='b', lst1='-', c2='b', lst2='--
     plt.ylim(c, d)
 
  # %%
-files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_sim_try_gpu_fma_without_noise/**/fma.parquet')
+files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_simulations/Noise_sim_try_gpu_fma_without_noise/**/fma.parquet')
 dffs = pd.DataFrame()
 for file in files:
     dff = pd.read_parquet(file)
@@ -299,17 +299,26 @@ cbar.set_label(r'$\rm \log_{10}\left({\sqrt{\Delta Q_x^2 + \Delta Q_y^2}}\right)
 plot_res_upto_order(12,c1 = 'darkgrey', c2 = 'darkgrey',c3='r',annotate=False)
 # %%# %%
 
-files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_sim_try_gpu_fma_quad/**/fma.parquet')
-dffs = pd.DataFrame()
+import glob
+import pandas as pd
+
+files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_simulations/Noise_sim_try_gpu_fma_quad/**/fma.parquet')
+
+df_list = []  # Use a list to store DataFrames
 for file in files:
     dff = pd.read_parquet(file)
-    dff = dff[(dff['at_turn'] < 2000) | (dff['at_turn'] > 8000)]
-    print(file)
-    dffs = pd.concat([dffs,dff], ignore_index=True)
+    dff = dff[(dff['at_turn'] < 2000) | (dff['at_turn'] > 8000)]  # Apply filtering
+    df_list.append(dff)  # Append to list instead of concatenating
+
+# Concatenate once at the end
+dffs = pd.concat(df_list, ignore_index=True)
+
+print("Loaded", len(files), "files into DataFrame with", len(dffs), "rows.")
+
 
 # %%
 fig, ax = plt.subplots()
-plt.scatter(dffs['qx1'],dffs['qy1'], s=3, edgecolors=None, c=dffs['diffusion'], vmin=-7, vmax=-3,cmap='jet')
+plt.scatter(dffs[dffs['at_turn'] == 0]['qx1'],dffs[dffs['at_turn'] == 0]['qy1'], s=3, edgecolors=None, c=dffs[dffs['at_turn'] == 0]['diffusion'], vmin=-7, vmax=-3,cmap='jet')
 plt.xlim(0.20, 0.34)
 plt.ylim(0.24, 0.4)
 ax.yaxis.set_major_locator(plt.MaxNLocator(3))
@@ -325,19 +334,22 @@ plot_res_upto_order(12,c1 = 'darkgrey', c2 = 'darkgrey',c3='r',annotate=False)
 
 # %%
 #files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_sim_try_gpu_fma_quad_1000hz/*.parquet')
-files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_first_working/Noise_sim_try_gpu_fma_dipol_6e-10/**/fma*.parquet')
-#dff_phys = []
-dffs = pd.DataFrame()
-for file in files[:3]:
+files = glob.glob('/eos/user/a/aradosla/SWAN_projects/Noise_simulations/Noise_first_working/Noise_sim_try_gpu_fma_dipol_6e-10/**/fma*.parquet')
+df_list = []  # Use a list to store DataFrames
+for file in files:
     dff = pd.read_parquet(file)
-    #dff_phys.append(dff[dff.particle_id == 0].x_phys)
-    #dff = dff[(dff['at_turn'] < 2000) | (dff['at_turn'] > 8000)]
-    print(file)
-    dffs = pd.concat([dffs,dff], ignore_index=True)
+    dff = dff[(dff['at_turn'] < 2000) | (dff['at_turn'] > 8000)]  # Apply filtering
+    df_list.append(dff)  # Append to list instead of concatenating
+
+# Concatenate once at the end
+dffs = pd.concat(df_list, ignore_index=True)
+
+print("Loaded", len(files), "files into DataFrame with", len(dffs), "rows.")
+
 
 # %%
 fig, ax = plt.subplots()
-plt.scatter(dffs['qx1'],dffs['qy1'], s=3, edgecolors=None, c=dffs['diffusion'], vmin=-7, vmax=-3,cmap='jet')
+plt.scatter(dffs[dffs['at_turn'] == 0]['qx1'],dffs[dffs['at_turn'] == 0]['qy1'], s=3, edgecolors=None, c=dffs[dffs['at_turn'] == 0]['diffusion'], vmin=-7, vmax=-3,cmap='jet')
 plt.xlim(0.25, 0.30)
 plt.ylim(0.26, 0.33)
 

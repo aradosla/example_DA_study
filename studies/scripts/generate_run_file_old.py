@@ -83,50 +83,15 @@ def _generate_run_sh_htc_gen_2(node, python_command):
     new_path_particles = new_path_particles.replace("/", "\/")
     new_path_log = new_path_log.replace("/", "\/")
 
-
-
     # Return final run script
     return (
         f"#!/bin/bash\n"
-        f"mkdir my_env\n"
-        f"tar -xvzf envs.tar.gz -C my_env\n"
-        f"source my_env/bin/activate\n"
-        #f"cp -f /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scans/example_tunescan_gpu/base_collider/xtrack_0000/../config.yaml .\n"
-        f"cp -f {abs_path}/../config.yaml .\n"
-        f"mkdir {local_path}\n"
-        f"tar -xvzf {local_path}.tar.gz -C {local_path}\n"
-        f"cd {local_path}\n"
-        # Mutate the paths in config to be absolute
-        f'sed -i "s/{path_collider}/{new_path_collider}/g" config.yaml\n'
-        f'sed -i "s/{path_particles}/{new_path_particles}/g" config.yaml\n'
-        f'sed -i "s/{path_log}/{new_path_log}/g" config.yaml\n'
-        # Run the job
-        f"python {node.get_abs_path()}/{python_command} > output_python.txt 2> error_python.txt\n"
-        # Delete the config of first gen so it's not copied back
-        f"rm -f ../config.yaml\n"
-        # Change name of config 2nd gen to config_final.yaml
-        f"mv config.yaml config_final.yaml\n"
-        #f"mkdir results\n"
-        # Copy mutated output files to results
-        #f"cp {abs_path}/output_python.txt {abs_path}/error_python.txt {abs_path}/results/\n"
-        #f"cp {abs_path}/*.parquet {abs_path}/results/\n"
-        #f"cp {abs_path}/*.yaml {abs_path}/results/\n"
-        f"cp -f *.txt *.parquet *.yaml {abs_path}\n"
-    )   
-    '''
-    return (
-        f"#!/bin/bash\n"
-        f"mkdir my_env\n"
-        f"tar -xvzf xsuite_env.tar.gz -C my_env\n"
-        f"source my_env/bin/activate\n"
-        f"mkdir {local_path}\n"
-        f"tar -xvzf {local_path}.tar.gz -C {local_path}\n"
-        #f'source {node.root.parameters["setup_env_script"]}\n'
+        f'source {node.root.parameters["setup_env_script"]}\n'
         # Copy config gen 1
-        #f"cp -f {abs_path}/../config.yaml .\n"
+        f"cp -f {abs_path}/../config.yaml .\n"
         # Copy config gen 2 in local path
-        #f"mkdir {local_path}\n"
-        #f"cp -f {abs_path}/config.yaml {local_path}\n"
+        f"mkdir {local_path}\n"
+        f"cp -f {abs_path}/config.yaml {local_path}\n"
         f"cd {local_path}\n"
         # Mutate the paths in config to be absolute
         f'sed -i "s/{path_collider}/{new_path_collider}/g" config.yaml\n'
@@ -139,10 +104,6 @@ def _generate_run_sh_htc_gen_2(node, python_command):
         f"rm -f ../config.yaml\n"
         # Change name of config 2nd gen to config_final.yaml
         f"mv config.yaml config_final.yaml\n"
-        f"mkdir results\n"
-        f"cp *.txt *.parquet *.yaml results/\n"
-
         # Copy back output
-        #f"cp -f *.txt *.parquet *.yaml {abs_path}\n"
-    )'
-    '''
+        f"cp -f *.txt *.parquet *.yaml {abs_path}\n"
+    )

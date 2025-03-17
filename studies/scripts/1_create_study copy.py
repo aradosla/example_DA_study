@@ -6,8 +6,8 @@ import copy
 import itertools
 import os
 import time
-
 import shutil
+
 import numpy as np
 import yaml
 from generate_run_file import (
@@ -36,7 +36,8 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 40
+d_config_particles["n_split"] = 5
+
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -87,8 +88,8 @@ d_config_tune_and_chroma = {
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 20.0 #0.1
-    d_config_tune_and_chroma["dqy"][beam] = 20.0 #0.1
+    d_config_tune_and_chroma["dqx"][beam] = 20.0
+    d_config_tune_and_chroma["dqy"][beam] = 20.0
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.0  # type: ignore
@@ -117,22 +118,22 @@ d_config_knobs["on_x5"] = 160.000
 d_config_knobs["on_sep5"] = 0.0
 d_config_knobs["phi_IR5"] = 0.000
 
-d_config_knobs["on_x8h"] = -200.000 #here should be -200 #-170.000 
-d_config_knobs["on_sep8h"] = 0.0 # -1.000 #-0.01
-d_config_knobs["on_x8v"] =  0.0 # 200.000
-d_config_knobs["on_sep8v"] = -1.000 #0.0
+d_config_knobs["on_x8h"] = -170.000
+d_config_knobs["on_sep8h"] = -0.01 # -1.000
+d_config_knobs["on_x8v"] = 200.000
+d_config_knobs["on_sep8v"] = 0.0
 d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
 d_config_knobs["i_oct_b1"] = 400.0
-d_config_knobs["i_oct_b2"] = 400.0 
+d_config_knobs["i_oct_b2"] = 400.0
 
 ### leveling configuration
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
 d_config_leveling_ip1_5["luminosity"] = 2.1e34  # type: ignore
-d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore
+d_config_leveling_ip1_5["skip_leveling"] = False #True  # type: ignore
 d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
@@ -193,7 +194,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 # Add luminosity configuration
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
-d_config_collider["skip_leveling"] = True
+d_config_collider["skip_leveling"] = False
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
@@ -206,7 +207,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = int(1e6)
+d_config_simulation["n_turns"] = int(1e4)
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
@@ -293,12 +294,14 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "dump_collider": dump_collider,
         "dump_config_in_collider": dump_config_in_collider,
     }
-    
+   
+        
 
 # ==================================================================================================
 # --- Simulation configuration
 # ==================================================================================================
 # Load the tree_maker simulation configuration
+
 config = yaml.safe_load(open("config.yaml"))
 
 # # Set the root children to the ones defined above
@@ -337,6 +340,7 @@ else:
 
 # Move to the folder that will contain the tree
 os.chdir(f"../scans/{study_name}")
+
 
 # Clean the id_job file
 id_job_file_path = "id_job.yaml"

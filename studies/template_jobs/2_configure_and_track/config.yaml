@@ -39,8 +39,8 @@ config_collider:
       lagrf400.b2: 0. # [rad]
 
       # Octupoles
-      i_oct_b1: 400. # [A]
-      i_oct_b2: 400. # [A]
+      i_oct_b1: 1. #400. # [A]
+      i_oct_b2: 1. #400. # [A]
 
     closed_orbit_correction:
       lhcb1: correction/corr_co_lhcb1.json
