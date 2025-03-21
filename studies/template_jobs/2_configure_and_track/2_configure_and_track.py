@@ -32,7 +32,7 @@ from misc import (
     get_worst_bunch,
     load_and_check_filling_scheme,
     luminosity_leveling_ip1_5,
-    return_fingerprint,
+    #return_fingerprint,
 )
 
 # Initialize yaml reader
@@ -141,24 +141,38 @@ def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling
     # Tunings
     for line_name in ["lhcb1", "lhcb2"]:
         knob_names = conf_knobs_and_tuning["knob_names"][line_name]
-
+    
         targets = {
-            "qx": conf_knobs_and_tuning["qx"][line_name],
-            "qy": conf_knobs_and_tuning["qy"][line_name],
-            "dqx": conf_knobs_and_tuning["dqx"][line_name],
-            "dqy": conf_knobs_and_tuning["dqy"][line_name],
-        }
-
-        xm.machine_tuning(
-            line=collider[line_name],
-            enable_closed_orbit_correction=True,
-            enable_linear_coupling_correction=match_linear_coupling_to_zero,
-            enable_tune_correction=True,
-            enable_chromaticity_correction=True,
-            knob_names=knob_names,
-            targets=targets,
-            line_co_ref=collider[line_name + "_co_ref"],
-            co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
+                "qx": conf_knobs_and_tuning["qx"][line_name],
+                "qy": conf_knobs_and_tuning["qy"][line_name],
+                "dqx": conf_knobs_and_tuning["dqx"][line_name],
+                "dqy": conf_knobs_and_tuning["dqy"][line_name],
+            }
+        try:
+            xm.machine_tuning(
+                line=collider[line_name],
+                enable_closed_orbit_correction=True,
+                enable_linear_coupling_correction=match_linear_coupling_to_zero,
+                enable_tune_correction=True,
+                enable_chromaticity_correction=True,
+                knob_names=knob_names,
+                targets=targets,
+                line_co_ref=collider[line_name + "_co_ref"],
+                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
+        )
+        except:
+            knob_names['q_knob_1']= 'kqtf.b1'
+            knob_names['q_knob_2']= 'kqtd.b1'
+            xm.machine_tuning(
+                line=collider[line_name],
+                enable_closed_orbit_correction=True,
+                enable_linear_coupling_correction=match_linear_coupling_to_zero,
+                enable_tune_correction=True,
+                enable_chromaticity_correction=True,
+                knob_names=knob_names,
+                targets=targets,
+                line_co_ref=collider[line_name + "_co_ref"],
+                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
         )
 
     return collider
@@ -663,8 +677,8 @@ def configure_and_track(config_path="config.yaml"):
 
     # Compute collider fingerprint
     # (need to be done before tracking as collider can't be twissed after optimization)
-    fingerprint = return_fingerprint(config_sim["beam"], collider)
-    hash_fingerprint = hash(fingerprint)
+    #fingerprint = return_fingerprint(config_sim["beam"], collider)
+    #hash_fingerprint = hash(fingerprint)
 
     # Reset the tracker to go to GPU if needed
     if config_gen_2["context"] in ["cupy", "opencl"]:
@@ -697,8 +711,8 @@ def configure_and_track(config_path="config.yaml"):
     particles_df["angle in xy-plane [deg]"] = l_angle * 180 / np.pi
 
     # Add some metadata to the output for better interpretability
-    particles_df.attrs["hash"] = hash_fingerprint
-    particles_df.attrs["fingerprint"] = fingerprint
+    #particles_df.attrs["hash"] = hash_fingerprint
+    #particles_df.attrs["fingerprint"] = fingerprint
     particles_df.attrs["configuration_gen_1"] = config_gen_1
     particles_df.attrs["configuration_gen_2"] = config_gen_2
     particles_df.attrs["date"] = time.strftime("%Y-%m-%d %H:%M:%S")

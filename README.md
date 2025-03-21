@@ -1,5 +1,14 @@
 # Dynamics aperture study template
 
+## Update for htcondor 2025
+
+To avoid being throttled due to AFS overload:
+1. Create python in eos with conda-pack
+2. copy optics repo from afs (only files needed) to send it through transfer_input in the submission scripts
+3. define in config.yaml in scripts directory which files must be transfered and which files must be returned.
+
+
+#
 This repository contains a template that allows users to compute the dynamics aperture of a collider
 under different parametric scenarios.
 

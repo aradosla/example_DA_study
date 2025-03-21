@@ -56,7 +56,9 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 # Optic file path (version, and round or flat)
 
 ### For run III ions
-d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics"
+#d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics"
+d_config_mad["links"]["acc-models-lhc"] = "optics"
+#d_config_mad["optics_file"] = "acc-models-lhc/runIII/RunIII_dev/ION_2025/opticsfile.24"
 d_config_mad["optics_file"] = "acc-models-lhc/runIII/RunIII_dev/ION_2024/opticsfile.21"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
@@ -102,20 +104,24 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 d_config_knobs = {}
 
 # Knobs at IPs
-d_config_knobs["on_x1"] = 170
+d_config_knobs["on_x1"] = 150
 d_config_knobs["on_sep1"] = 1e-3
-d_config_knobs["on_x2v"] = -170
+d_config_knobs["on_x2v"] = -150
 d_config_knobs["on_sep2h"] = 1e-3
 d_config_knobs["on_sep2v"] = 0
-d_config_knobs["on_x5"] = 170
+d_config_knobs["on_x5"] = 150
 d_config_knobs["on_sep5"] = 1e-3
-d_config_knobs["on_x8h"] = -135
+d_config_knobs["on_x8h"] = -210
 d_config_knobs["on_sep8v"] = 1e-10
 d_config_knobs["on_sep8h"] = 0
 d_config_knobs["on_disp"] = 1
+d_config_knobs["on_ov2"] = 0
+d_config_knobs["on_ov5"] = 0
+d_config_knobs["on_a2"] = 0
+d_config_knobs["on_a8"] = 0
 
 d_config_knobs["on_alice_normalized"] = 1
-d_config_knobs["on_lhcb_normalized"] = -1
+d_config_knobs["on_lhcb_normalized"] = 1
 
 # Octupoles
 d_config_knobs["i_oct_b1"] = 100.0
@@ -137,7 +143,7 @@ d_config_leveling = {
 d_config_leveling["ip1"]["luminosity"] = 6.4e27
 d_config_leveling["ip2"]["luminosity"] = 6.4e27
 d_config_leveling["ip5"]["luminosity"] = 6.4e27
-d_config_leveling["ip8"]["luminosity"] = 1.0e27
+d_config_leveling["ip8"]["luminosity"] = 1.5e27
 
 ### Beam beam configuration
 
@@ -145,9 +151,9 @@ d_config_leveling["ip8"]["luminosity"] = 1.0e27
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.8e8  # type: ignore
-d_config_beambeam["nemitt_x"] = 2.2e-6  # type: ignore
-d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
+d_config_beambeam["num_particles_per_bunch"] = 2.3e8  # type: ignore
+d_config_beambeam["nemitt_x"] = 2.42e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 2.42e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
@@ -158,7 +164,8 @@ d_config_beambeam["nemitt_y"] = 2.2e-6  # type: ignore
 # In this page, get the fill number of your fill of interest, and use it to replace the XXXX in the
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
-filling_scheme_path = os.path.abspath("../filling_scheme/50ns_1240b_1088_1088_398_56bpi_PbPb.json")
+#filling_scheme_path = os.path.abspath("filling_scheme/ions_filling_scheme_2025.json")
+filling_scheme_path = "../filling_scheme/ions_filling_scheme_2025.json"
 
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
@@ -193,7 +200,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 100
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 24.0e-5
@@ -217,13 +224,13 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "upper_triangle"  # "upper_triangle"  # 'lower_triangle', 'all'
+keep = "all"  # "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -291,7 +298,7 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = os.getcwd() + "/../../source_python.sh"
+#config["root"]["setup_env_script"] = os.getcwd() + "/../../source_python.sh"
 
 
 # Recursively define the context for the simulations
