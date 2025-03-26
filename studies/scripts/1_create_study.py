@@ -56,8 +56,8 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 # Optic file path (version, and round or flat)
 
 ### For run III
-#d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["links"]["acc-models-lhc"] = "optics"
+d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
+#d_config_mad["links"]["acc-models-lhc"] = "optics"
 #d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.46"
 d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.23"
 d_config_mad["ver_hllhc_optics"] = None
@@ -87,12 +87,17 @@ d_config_tune_and_chroma = {
     "qy": {},
     "dqx": {},
     "dqy": {},
+    "knob_names":{}
 }
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
     d_config_tune_and_chroma["dqx"][beam] = 20.0
     d_config_tune_and_chroma["dqy"][beam] = 20.0
+
+d_config_tune_and_chroma["knob_names"]["lhcb1"] = {}
+d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_1"] = "kqtf.b1"
+d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_2"] = "kqtd.b1"
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
