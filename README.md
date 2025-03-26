@@ -127,3 +127,6 @@ It should be relatively easy to accomodate the scripts for other parameters.
 ## License
 
 This repository is licensed under the MIT license. Please refer to the [LICENSE](LICENSE) file for more information.
+
+# 
+add in Manifest.in of xmak: recursive-include xmask/lhc *

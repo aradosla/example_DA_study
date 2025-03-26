@@ -7,6 +7,7 @@ in this script are called sequentially."""
 
 # Import standard library modules
 import itertools
+import json
 import logging
 import os
 import shutil
@@ -21,6 +22,7 @@ import pandas as pd
 import tree_maker
 import xmask as xm
 import xmask.lhc as xlhc
+import xobjects as xo
 import yaml
 from cpymad.madx import Madx
 
@@ -227,6 +229,8 @@ def build_distr_and_collider(config_file="config.yaml"):
     # Compress the collider file to zip to ease the load on afs
     with ZipFile("collider.json.zip", "w", ZIP_DEFLATED, compresslevel=9) as zipf:
         zipf.write("collider.json")
+    import os
+    os.rename('config.yaml', 'config_gen1.yaml')
 
     # Tag end of the job
     tree_maker_tagging(configuration, tag="completed")
