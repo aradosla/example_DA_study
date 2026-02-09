@@ -4,6 +4,10 @@ import pandas as pd
 import yaml
 import scipy
 # %%
+
+gaus = True
+qgaus = False
+
 def load_configuration(config_path="config.yaml"):
     # Load configuration
     with open(config_path, "r") as fid:
@@ -139,8 +143,8 @@ y_q = inverse_qGauss_CDF(uniform_samples_y, A, mu, q, b, offset)
 px_q = inverse_qGauss_CDF(uniform_samples_px, A, mu, q, b, offset)
 py_q = inverse_qGauss_CDF(uniform_samples_py, A, mu, q, b, offset)
 df_q = pd.DataFrame({'x': x_q, 'y': y_q, 'px': px_q, 'py': py_q})
-#df_q.to_parquet('mydistribution.parquet')
-print(df_q)
+
+#print(df_q)
 # %%
 from scipy.optimize import curve_fit
 
@@ -260,7 +264,7 @@ samples = inverse_cdf(uniform_random_numbers)
 
 ###### Colored distribution ######
 df_colored = df_colored_func(num_particles)
-#df_colored.to_parquet('mydistribution.parquet')
+
 
 ###### Gaussian distribution ######
 x_norm = np.random.normal(size=num_particles)
@@ -269,7 +273,16 @@ y_norm = np.random.normal(size=num_particles)
 py_norm = np.random.normal(size=num_particles)
         
 df_gaus = pd.DataFrame({'x': x_norm, 'y': y_norm, 'px': px_norm, 'py': py_norm})
-print(df_gaus)
-df_gaus.to_parquet('mydistribution.parquet')
+#print(df_gaus)
+
+if gaus:
+    df_gaus.to_parquet('mydistribution.parquet')
+    print(f'Gaussian saved, num part = {num_particles}')
+elif qgaus:
+    df_q.to_parquet('mydistribution.parquet')
+    print(f'qGaussian saved {q}, num part = {num_particles}')
+else:
+    df_colored.to_parquet('mydistribution.parquet')
+    print(f'pseudo KV saved, num part = {num_particles}')
 
 # %%

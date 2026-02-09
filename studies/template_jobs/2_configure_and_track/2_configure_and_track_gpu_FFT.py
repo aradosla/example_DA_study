@@ -5,6 +5,10 @@ are called sequentially, in the order in which they are defined. Modularity has 
 simple scripting for reproducibility, to allow rebuilding the collider from a different program
 (e.g. dahsboard)."""
 # %%
+import multiprocessing as mp
+mp.set_start_method("spawn", force=True)
+import cupy as cp
+print(cp.cuda.runtime.getDevice())
 import contextlib
 from pathlib import Path
 
@@ -23,7 +27,7 @@ import numpy as np
 import pandas as pd
 import ruamel.yaml
 import tree_maker
-import cupy as cp
+
 
 # Import user-defined modules
 import xmask as xm
@@ -42,6 +46,11 @@ from misc import (
 # Initialize yaml reader
 ryaml = ruamel.yaml.YAML()
 
+cp.get_default_memory_pool().free_all_blocks()
+cp.get_default_pinned_memory_pool().free_all_blocks()
+
+# Clear previous Xobjects context
+#xo.ContextCupy.clear()
 
 # ==================================================================================================
 # --- Function for tree_maker tagging
@@ -392,86 +401,6 @@ def configure_beam_beam(collider, config_bb):
         nemitt_y=config_bb["nemitt_y"],
     )
 
-    # --- STEP 0: extract config ---
-    num_particles = config_bb.get("asymmetric_intensity", None) #num_particles
-    #num_particles_for_int = config_bb.get("asymmetric_intensity", None)
-    nemitt_x = config_bb.get("nemitt_x", None)
-    nemitt_y = config_bb.get("nemitt_y", None)
-
-    # --- STEP 1: call configure_beambeam_interactions with scalars ---
-    # Use averages if dict, else use scalar directly
-    #num_particles_scalar = (num_particles['b1'] + num_particles['b2'])/2 if isinstance(num_particles, dict) else num_particles
-    #nemitt_x_scalar = (nemitt_x['b1'] + nemitt_x['b2'])/2 if isinstance(nemitt_x, dict) else nemitt_x
-    #nemitt_y_scalar = (nemitt_y['b1'] + nemitt_y['b2'])/2 if isinstance(nemitt_y, dict) else nemitt_y
-
-    #collider.configure_beambeam_interactions(
-    #    num_particles=num_particles_scalar,
-    #    nemitt_x=nemitt_x_scalar,
-    #    nemitt_y=nemitt_y_scalar,
-    #)
-
-    # --- STEP 2: overwrite DataFrames for actual per-beam values ---
-    
-    bb_df_cw = collider._bb_config['dataframes']['clockwise']
-    bb_df_acw = collider._bb_config['dataframes']['anticlockwise']
-
-    if bb_df_cw is not None:
-        if isinstance(num_particles, dict):
-            bb_df_cw['self_num_particles'] = num_particles['lhcb1'] * bb_df_cw['self_frac_of_bunch']
-            print("num_particles['lhcb1']", num_particles['lhcb1'])
-        if False:
-            if isinstance(nemitt_x, dict):
-                print('nemitt_x[b1]', nemitt_x['b1']) 
-                bb_df_cw['nemitt_x'] = nemitt_x['b1']
-            if isinstance(nemitt_y, dict):
-                print('nemitt_y[b1]', nemitt_y['b1']) 
-                bb_df_cw['nemitt_y'] = nemitt_y['b1']
-
-    if bb_df_acw is not None:
-        if isinstance(num_particles, dict):
-            # Set the correct per-beam intensities   
-            bb_df_acw['self_num_particles'] = num_particles['lhcb2'] * bb_df_acw['self_frac_of_bunch']
-            print("num_particles['lhcb2']", num_particles['lhcb2'])
-        if False:
-            if isinstance(nemitt_x, dict):
-                print('nemitt_x[b2]', nemitt_x['b2']) 
-                bb_df_acw['nemitt_x'] = nemitt_x['b2']
-            if isinstance(nemitt_y, dict):
-                print('nemitt_y[b2]', nemitt_y['b2']) 
-                bb_df_acw['nemitt_y'] = nemitt_y['b2']
-    
-    # --- STEP 3: apply filling pattern if any ---
-    if "mask_with_filling_pattern" in config_bb and (
-        "pattern_fname" in config_bb["mask_with_filling_pattern"]
-        and config_bb["mask_with_filling_pattern"]["pattern_fname"] is not None
-    ):
-        fname = config_bb["mask_with_filling_pattern"]["pattern_fname"]
-        with open(fname, "r") as fid:
-            filling = json.load(fid)
-        filling_pattern_cw = filling["beam1"]
-        filling_pattern_acw = filling["beam2"]
-
-        i_bunch_cw = config_bb["mask_with_filling_pattern"].get("i_bunch_b1")
-        i_bunch_acw = config_bb["mask_with_filling_pattern"].get("i_bunch_b2")
-
-        collider.apply_filling_pattern(
-            filling_pattern_cw=filling_pattern_cw,
-            filling_pattern_acw=filling_pattern_acw,
-            i_bunch_cw=i_bunch_cw,
-            i_bunch_acw=i_bunch_acw,
-        )
-
-    return collider
-
-
-'''
-def configure_beam_beam(collider, config_bb):
-    collider.configure_beambeam_interactions(
-        num_particles=config_bb["num_particles_per_bunch"],
-        nemitt_x=config_bb["nemitt_x"],
-        nemitt_y=config_bb["nemitt_y"],
-    )
-
     # Configure filling scheme mask and bunch numbers
     if "mask_with_filling_pattern" in config_bb and (
         "pattern_fname" in config_bb["mask_with_filling_pattern"]
@@ -502,7 +431,8 @@ def configure_beam_beam(collider, config_bb):
             i_bunch_acw=i_bunch_acw,
         )
     return collider
-'''
+
+
 # ==================================================================================================
 # --- Function to compute luminosity once the collider is configured
 # ==================================================================================================
@@ -542,51 +472,6 @@ def record_final_luminosity(collider, config_bb, l_n_collisions, crab):
     return config_bb
 
 
-def set_asymmetric_intensities(collider, config_bb, I_b1, I_b2, N_nominal, E_b1, E_b2, E_nominal):
-    """
-    Apply asymmetric beam intensities by scaling beam-beam forces
-    through the collider variable system (self.vars).
-
-    Parameters
-    ----------
-    collider : xt.Multiline
-        The collider object (with .lines and .vars defined).
-    config_bb : dict
-        The collider._bb_config dictionary containing beam-beam info.
-    I_b1 : float
-        Intensity of Beam 1 (protons per bunch).
-    I_b2 : float
-        Intensity of Beam 2 (protons per bunch).
-    N_nominal : float
-        Nominal bunch intensity (used for normalization).
-    """
-    #E_nominal = config_bb['nemitt_x']
-    scale_b1 = I_b1 / N_nominal * E_nominal / E_b1
-    scale_b2 = I_b2 / N_nominal * E_nominal / E_b2
-
-
-    print(f"\nApplying asymmetric intensities:")
-    print(f"  Beam 1: {I_b1:.3e} ({scale_b2:.3f} × nominal)")
-    print(f"  Beam 2: {I_b2:.3e} ({scale_b1:.3f} × nominal)\n")
-
-    for beam_label in ['clockwise', 'anticlockwise']:
-        df = config_bb['dataframes'][beam_label]
-        line_name = config_bb[f"{beam_label}_line"]
-        if line_name is None:
-            continue
-
-        line = collider.lines[line_name]
-
-        for bb_name in df.index:
-            var_name = f"{bb_name}_scale_strength"
-            #print(var_name)
-            if var_name in collider.vars:
-                if beam_label == 'clockwise':
-                    collider.vars[var_name] = scale_b2
-                else:
-                    collider.vars[var_name] = scale_b1
-                    
-
 # ==================================================================================================
 # --- Main function for collider configuration
 # ==================================================================================================
@@ -625,23 +510,22 @@ def configure_collider(
     num_turns = config_sim["n_turns"]
     total_time = num_turns/sampling_frequency  # Total time in seconds
     time = np.arange(0, total_time, 1 / sampling_frequency)
-    '''
-    if config_sim['white_noise']:
-        std_dev = config_sim['std_dev']
-        np.random.seed(0)
-        samples = np.random.normal(0, std_dev, len(time))
-    '''
+
+    #if config_sim['white_noise']:
+    #    std_dev = config_sim['std_dev']
+    #    np.random.seed(0)
+    #    samples = np.random.normal(0, std_dev, len(time))
     def create_sine_wave(frequencies, amplitudes,time):
         #time = np.arange(0, num_turns / sampling_frequency, 1 / sampling_frequency)
         sine_wave = np.zeros_like(time)
         for freq, amp in zip(frequencies[:len(amplitudes)], amplitudes):
-            sine_wave += 12 * amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
+            sine_wave += 1 * amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
         return sine_wave
 
     if config_sim['white_noise']:
         A = np.loadtxt(config_sim['noise_file_A'])
         f = np.loadtxt(config_sim['noise_file_f'])  # Frequency
-        #mask = (f < 7570) | (f > 7860)
+        #mask = (f < 7740) | (f > 8060)
         #f = f[mask]
         #A = A[mask]
         phi = config_sim['phi']  # Phase
@@ -660,18 +544,19 @@ def configure_collider(
         sampling_frequency=sampling_frequency,
         duration=num_turns / sampling_frequency,
         frev=sampling_frequency,
-        #knl = [0]
         knl=[config_sim["knl"]]
     )
     
     # Insert the exciter into the specified line and index
-     
+
     collider['lhcb1'].insert_element(
         element=exciter,
         name='RF_KO_EXCITER',
         index= config_sim["index"]
-    )
+    )   
+
     
+    #collider['lhcb1'].cycle(f"bpmcs.7l4.b1", inplace=True)
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
 
@@ -752,6 +637,8 @@ def configure_collider(
     ]
     config_bb = record_final_luminosity(collider, config_bb, l_n_collisions, crab)
 
+
+
     # Drop update configuration
     with open(config_path, "w") as fid:
         ryaml.dump(config, fid)
@@ -767,9 +654,6 @@ def configure_collider(
             collider.metadata = config_dict
         # Dump collider
         collider.to_json("collider_final.json")
-
-
-
 
     return collider, config_sim, config_bb, collider_before_bb
 
@@ -819,6 +703,7 @@ def cmp_fft(df, specific_particle, frev=11245.5,repeat_fft=1):
 # ==================================================================================================
 # --- Function to do the tracking
 # ==================================================================================================
+'''
 def track(collider, particles, config_sim, config_bb, particle_id, save_input_particles=False):
     # Get beam being tracked
     config, config_mad = read_configuration("config.yaml")
@@ -840,7 +725,6 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
         
    # Determine the number of intervals for storing data every 1000 turns
     ndata = 1000
-
     norm_intervals = int(num_turns // ndata)
     num_particles = int(len(particles.x))
 
@@ -915,10 +799,10 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     print(f"Elapsed time: {b-a} s")
 
     return result_phys
+'''
     
-    """
 
-    def track(collider, particles, config_sim, config_bb, save_input_particles=False):   just move that!!!!!!!!!!!!! delete tab
+def track(collider, particles, config_sim, config_bb, save_input_particles=False):   #just move that!!!!!!!!!!!!! delete tab
     # Get beam being tracked
     config, config_mad = read_configuration("config.yaml")
     context = get_context(config)
@@ -928,15 +812,17 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     # collider[beam].optimize_for_tracking()
 
     # Save initial coordinates if requested
-    if save_input_particles:
-        pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")              # here save the initial distribution
+    #if save_input_particles:
+    #    pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")              # here save the initial distribution
 
     # Track
     num_turns = config_sim["n_turns"]
     a = time.time()
 
     collider[beam].optimize_for_tracking()
-    collider[beam].track(particles, num_turns=num_turns, turn_by_turn_monitor=True, freeze_longitudinal=True)
+    collider[beam].track(particles, num_turns=num_turns, turn_by_turn_monitor=True, freeze_longitudinal=True, with_progress = True)
+    """
+    
     # List to store the intervals
     save_intervals = []
 
@@ -1023,9 +909,11 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     state_all = cp.asnumpy(state_all).flatten()
     particles_id_all = cp.asnumpy(particles_id_all).flatten()
     turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
+    """
 
-    """
-    """
+
+
+    
     x_phys = collider['lhcb1'].record_last_track.x
     y_phys = collider['lhcb1'].record_last_track.y
     px_phys = collider['lhcb1'].record_last_track.px
@@ -1058,8 +946,6 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     for idd in idx:
         try:
             freqs, fourier_real, fourier_imag= cmp_fft(result_phys, specific_particle = idd, frev=11245.5, repeat_fft=2)
-    
-
             fourier_tot_real.append(fourier_real)
             fourier_tot_imag.append(fourier_imag)
    
@@ -1069,6 +955,10 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     dff = pd.DataFrame({'fourier_real': fourier_tot_real, 'fourier_imag': fourier_tot_imag})
     aux = dff.apply(lambda x: x.fourier_real + 1j*x.fourier_imag, axis=1).mean()
     df_final = pd.DataFrame({'freqs': freqs, 'fourier_real': np.real(aux), 'fourier_imag': np.imag(aux)})
+    child = config_sim['children']
+   
+    #Path(new_directory).mkdir(parents=True, exist_ok=True)
+    #df_final.to_parquet(f"{new_directory}/fft_average.parquet")
     #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
     #result_norm.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_norm0.parquet')
 
@@ -1076,7 +966,7 @@ def track(collider, particles, config_sim, config_bb, particle_id, save_input_pa
     print(f"Elapsed time: {b-a} s")
 
     return df_final
-    """
+    
 
 
 # ==================================================================================================
@@ -1105,27 +995,17 @@ def configure_and_track(config_path="config.yaml"):
         config_path=config_path,
         return_collider_before_bb=False,
     )
-    
-    set_asymmetric_intensities(
-    collider=collider,
-    config_bb=collider._bb_config,
-    I_b1=config_bb['asymmetric_intensity']['lhcb1'],   # beam 1 intensity config_bb['asymmetric_intensity']['lhcb1']
-    I_b2=config_bb['asymmetric_intensity']['lhcb2'],   # beam 2 intensity config_bb['asymmetric_intensity']['lhcb2']
-    N_nominal=config_bb['num_particles_per_bunch'], 
-    E_b1 = config_bb['asymmetric_emittance']['lhcb1'],
-    E_b2 = config_bb['asymmetric_emittance']['lhcb2'],
-    E_nominal = config_bb['nemitt_x'])
+
     child = config_sim['children']
     #new_folder = '50_Hz_noise_simulation_excitation_realtry_1m particles'
     #new_folder = '50_Hz_VdM_10times_noise_tracking_1.6_emit3e-6_recheck'
     #new_folder = 'Colliding_noncolliding_study/noncolliding18cm10times_noise'
-    new_folder = 'Remake_Noise_ripple_2025/pushed_1.6ppb_50_Hz_120cm_correct_1Mturns_WITH_12excitation_WITH_beambeam_chroma20_oct400_'#_without_7750-8050Hz'# 'Remake_Noise_ripple/50_Hz_120cm_correct_no_noise' #
+    #new_folder = 'Remake_Noise_ripple_2025/50_Hz_120cm_correct_1Mturns_WITH_12excitation_WITH_beambeam_chroma20_oct400_another1_nonoise'#_without_7750-8050Hz'# 'Remake_Noise_ripple/50_Hz_120cm_correct_no_noise' #
     #new_folder = 'Remake_Noise_ripple_2025/optics44_12excitation_chroma20_oct-500_noise'
-    #new_folder = 'Injection_tracking/Tracking_50Hz_around3kHz_1time_all'
-    #new_folder = 'Vertical_plane/120cm_50Hz_vertical9614_5excitation_1Mturns_chroma20_oct400_no7570_7860'
-    #new_folder = 'MD_noise_11367/120cm_50Hz_OFF_5excitation_1Mturns_chroma20_oct400'
+    new_folder = 'Horizontal_plane_CROSSCHECK_BETA/FFT_spectrum_B1H_9614'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
+
 
     # Compute collider fingerprint
     # (need to be done before tracking as collider can't be twissed after optimization)
@@ -1143,11 +1023,11 @@ def configure_and_track(config_path="config.yaml"):
 
     # Track
     print('Now tracking!')
-    #fft_average = track(collider, particles, config_sim, config_bb)
-    particles_phys = track(collider, particles, config_sim, config_bb, particle_id)
+    fft_average = track(collider, particles, config_sim, config_bb)
+    #particles_phys = track(collider, particles, config_sim, config_bb, particle_id)
 
-    particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
-    #fft_average.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fft_average.parquet")
+    #particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+    fft_average.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fft_average.parquet")
    
     print('The parquet should be saved')
     # Get particles dictionnary

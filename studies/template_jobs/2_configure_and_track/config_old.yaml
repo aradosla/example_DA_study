@@ -4,27 +4,27 @@ config_collider:
     knob_settings:
       # Exp. configuration in IR1, IR2, IR5 and IR8***
       on_x1: 160.000
-      on_sep1: 0.0   #-0.550
-      phi_IR1: 0.0
+      on_sep1: 0.0 #-0.550
+      phi_IR1: 90.000
 
       on_x2h: 0.000
-      on_sep2h: 0.0  # 1.000
+      on_sep2h: -1.0 # 1.000
       on_x2v: 200.000
       on_sep2v: 0.000
       phi_IR2: 90.000
 
       on_x5: 160.000
-      on_sep5: 0.0  # 0.550
-      phi_IR5: -90.0
+      on_sep5: 0.0 # 0.550
+      phi_IR5: 0.000
 
       on_x8h: 0.000
-      on_sep8h: 0.0   #-1.000
+      on_sep8h: -0.01 #-1.000
       on_x8v: 200.000
       on_sep8v: 0.000
       phi_IR8: 180.000
 
       # Spurious dispersion correction
-      on_disp: 0.0
+      on_disp: 1.000
 
       # Magnets of the experiments
       on_alice_normalized: 1
@@ -39,8 +39,8 @@ config_collider:
       lagrf400.b2: 0. # [rad]
 
       # Octupoles
-      i_oct_b1: -300.0 #400. # [A]
-      i_oct_b2: -300.0 #400. # [A]
+      i_oct_b1: 1. #400. # [A]
+      i_oct_b2: 1. #400. # [A]
 
     closed_orbit_correction:
       lhcb1: correction/corr_co_lhcb1.json
@@ -90,107 +90,100 @@ config_collider:
       ip5: 25
       ip8: 20
     sigma_z: 0.09
-    num_particles_per_bunch: 230000000000.0
+    num_particles_per_bunch: 1.2e11
     nemitt_x: 1.8e-6
     nemitt_y: 1.8e-6
-    asymmetric_emittance:
-      lhcb1: 1.8e-6
-      lhcb2: 3.0e-6
-    asymmetric_intensity:
-      lhcb1: 160000000000.0  # Will be set later
-      lhcb2: 160000000000.0  # Will be set later
-    mask_with_filling_pattern: 
-      #pattern_fname: ../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json
-      pattern_fname: ../filling_scheme/25ns_2460b_2448_2089_2227_144bpi_20inj_fill10709.json
+    mask_with_filling_pattern:
+      pattern_fname: ../../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json
       i_bunch_b1:  # If not specified, the bunch with the worst schedule is chosen
       i_bunch_b2:  # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
   config_lumi_leveling_ip1_5:
     skip_leveling: false
-    luminosity: 2.3e+34
-    num_colliding_bunches:      # This will be set automatically according to the filling scheme
+    luminosity: 2.1e+34
+    num_colliding_bunches: null # This will be set automatically according to the filling scheme
     vary:
-    - num_particles_per_bunch
+      - num_particles_per_bunch
     constraints:
-      max_intensity: 1.8e11 # 230000000000.0 #
+      max_intensity: 1.4e11 #1.8e11
       max_PU: 70
 
   skip_leveling: false
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
-      plane: x
+      plane: "x"
       impose_separation_orthogonal_to_crossing: false
       knobs:
-      - on_sep2h
-      - on_sep2v
+        - on_sep2h
+        - on_sep2v
       bump_range:
         lhcb1:
-        - e.ds.l2.b1
-        - s.ds.r2.b1
+          - e.ds.l2.b1
+          - s.ds.r2.b1
         lhcb2:
-        - s.ds.r2.b2
-        - e.ds.l2.b2
+          - s.ds.r2.b2
+          - e.ds.l2.b2
       preserve_angles_at_ip: true
       preserve_bump_closure: true
       corrector_knob_names:
         # to preserve angles at ip
-      - corr_co_acbyvs4.l2b1
-      - corr_co_acbyhs4.l2b1
-      - corr_co_acbyvs4.r2b2
-      - corr_co_acbyhs4.r2b2
+        - corr_co_acbyvs4.l2b1
+        - corr_co_acbyhs4.l2b1
+        - corr_co_acbyvs4.r2b2
+        - corr_co_acbyhs4.r2b2
           # to close the bumps
-      - corr_co_acbyvs4.l2b2
-      - corr_co_acbyhs4.l2b2
-      - corr_co_acbyvs4.r2b1
-      - corr_co_acbyhs4.r2b1
-      - corr_co_acbyhs5.l2b2
-      - corr_co_acbyvs5.l2b2
-      - corr_co_acbchs5.r2b1
-      - corr_co_acbcvs5.r2b1
+        - corr_co_acbyvs4.l2b2
+        - corr_co_acbyhs4.l2b2
+        - corr_co_acbyvs4.r2b1
+        - corr_co_acbyhs4.r2b1
+        - corr_co_acbyhs5.l2b2
+        - corr_co_acbyvs5.l2b2
+        - corr_co_acbchs5.r2b1
+        - corr_co_acbcvs5.r2b1
     ip8:
       luminosity: 2.0e+33
-      num_colliding_bunches:      # This will be set automatically according to the filling scheme
+      num_colliding_bunches: null # This will be set automatically according to the filling scheme
       impose_separation_orthogonal_to_crossing: true
       knobs:
-      - on_sep8h
-      - on_sep8v
+        - on_sep8h
+        - on_sep8v
       constraints:
-      - x_lhcb1_<_0_ip8
+        - x_lhcb1_<_0_ip8
       # - x_lhcb2_>_0_ip8
       # - y_lhcb1_>_0_ip8
       # - y_lhcb2_<_0_ip8
       bump_range:
         lhcb1:
-        - e.ds.l8.b1
-        - s.ds.r8.b1
+          - e.ds.l8.b1
+          - s.ds.r8.b1
         lhcb2:
-        - s.ds.r8.b2
-        - e.ds.l8.b2
+          - s.ds.r8.b2
+          - e.ds.l8.b2
       preserve_angles_at_ip: true
       preserve_bump_closure: true
       corrector_knob_names:
         # to preserve angles at ip
-      - corr_co_acbyvs4.l8b1
-      - corr_co_acbyhs4.l8b1
-      - corr_co_acbyvs4.r8b2
-      - corr_co_acbyhs4.r8b2
+        - corr_co_acbyvs4.l8b1
+        - corr_co_acbyhs4.l8b1
+        - corr_co_acbyvs4.r8b2
+        - corr_co_acbyhs4.r8b2
           # to close the bumps
-      - corr_co_acbyvs4.l8b2
-      - corr_co_acbyhs4.l8b2
-      - corr_co_acbyvs4.r8b1
-      - corr_co_acbyhs4.r8b1
-      - corr_co_acbcvs5.l8b2
-      - corr_co_acbchs5.l8b2
-      - corr_co_acbyvs5.r8b1
-      - corr_co_acbyhs5.r8b1
+        - corr_co_acbyvs4.l8b2
+        - corr_co_acbyhs4.l8b2
+        - corr_co_acbyvs4.r8b1
+        - corr_co_acbyhs4.r8b1
+        - corr_co_acbcvs5.l8b2
+        - corr_co_acbchs5.l8b2
+        - corr_co_acbyvs5.r8b1
+        - corr_co_acbyhs5.r8b1
 
 config_simulation:
   # Collider file
-  collider_file: ../collider.json.zip
+  collider_file: ../1_build_distr_and_collider/collider.json.zip
 
   # Distribution in the normalized xy space
-  particle_file: ../particles/38.parquet
+  particle_file: ../1_build_distr_and_collider/particles/00.parquet
 
   # Initial off-momentum
   delta_max: 27.e-5
@@ -202,36 +195,26 @@ config_simulation:
   sampling_frequency: 11245.5
   #knl: 0.0000000006 #0.000012 
   knl: 1. #0.000012 
-  index:  mb.b9r3.b1 # bpmcs.7l4.b1 # mb.b9r3.b1 ##mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
-  std_dev: 1e-8 # 9e-9rad  # Standard deviation of the white noise
-  white_noise: true
-  ripple_noise: false
+  index: mb.b9r3.b1  #mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
+  std_dev: 1e-8
+  white_noise: True
   #noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/corrected_A.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
   #noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_f.txt
-  noise_file_A: 
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_A_injection.txt
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_A_V.txt
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_A_11367_ON.txt
-    /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_A_FLATTOP120cm1.txt              #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
-  noise_file_f: 
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_f_injection.txt
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_f_V.txt
-    #/eos/user/a/aradosla/SWAN_projects/Realistic_noise_simulations/50_Hz_noise_simulation_50k/noise_file_f_11367_OFF.txt
-    /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_f_FLATTOP120cm.txt
+  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_A_FLATTOP120cm1.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
+  noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_f_FLATTOP120cm.txt
 
   # Tracking
-  n_turns: 1000000 # number of turns to track
+  n_turns: 20000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2
 
 # Save collider or not
-  children: xtrack_0038
-dump_collider: true
-dump_config_in_collider: true
+dump_collider: false
+dump_config_in_collider: false
 
 # Context for the simulation
-context: cupy   #"cpu" # opencl
+context: 'cupy' #"cpu" # opencl
 
 # Device number for GPU simulation
 device_number: # 0

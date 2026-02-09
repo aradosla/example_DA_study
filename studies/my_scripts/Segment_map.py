@@ -598,12 +598,13 @@ for i, betx in enumerate(betx_values):
         slope_matrix[i, j] = slope_gaussemit  # You can also use slope_emit if desired
 
 # Plot colormap
-plt.figure()
+plt.figure(figsize = (5,3),dpi = 300)
 plt.pcolormesh(noise_levels, betx_values, slope_matrix.T, shading='auto', cmap='viridis')
-plt.colorbar(label='Slope')
-plt.xlabel('Noise Level')
-plt.ylabel('Betx')
-plt.title('Slope of Emittance Evolution')
+plt.colorbar(label=r'$d\epsilon/dt$')
+plt.xlabel('Noise level')
+plt.ylabel(r'$\beta_{s}$')
+
+#plt.title('Slope of Emittance Evolution')
 plt.show()
 
 # %%

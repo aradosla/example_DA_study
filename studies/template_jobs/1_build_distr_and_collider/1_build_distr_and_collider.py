@@ -358,6 +358,9 @@ def build_distr_and_collider(config_file="config.yaml"):
     # Compress the collider file to zip to ease the load on afs
     with ZipFile("collider.json.zip", "w") as zipf:
         zipf.write("collider.json")
+     
+    os.rename('config.yaml', 'config_gen1.yaml')
+
 
     # Tag end of the job
     tree_maker_tagging(configuration, tag="completed")

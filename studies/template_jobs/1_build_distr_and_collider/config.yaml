@@ -4,10 +4,10 @@ config_particles:
   n_r: 256
   n_angles: 5
   n_split: 15
-  N_particles: 200000
+  N_particles: 50000
   norm_emitt_x: 1.8e-6             
   norm_emitt_y: 1.8e-6 
-  bunch_intensity: 1.6e11
+  bunch_intensity: 2.8e11
   sigma_z: 7.5e-2
   gaussian_z: False
   path_distribution: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/template_jobs/1_build_distr_and_collider/mydistribution.parquet
