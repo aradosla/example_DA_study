@@ -1,41 +1,64 @@
-# Byte-compiled / optimized / DLL files
+# ================================
+# Python
+# ================================
+*.pyc
+*.pyo
+*.pyd
 __pycache__/
-*.py[cod]
-*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.manifest
+*.spec
 
-
-# Submission files
-studies/submission_files/*
-!studies/submission_files/.gitkeep
-miniforge/*
-modules/*
-
-# Heavy file
-*.json
-*.parquet
-
-# AFS files
-.__afs*
-
-# Python virtual environment
+# ================================
+# Virtual Environment
+# ================================
+my_env/
+.env/
+venv/
 .venv/
 
-#vscode config
+# ================================
+# Jupyter Notebooks
+# ================================
+.ipynb_checkpoints/
+*.nbconvert.ipynb
+
+# ================================
+# Data / Output / Logs
+# ================================
+*.log
+*.dat
+*.out
+*.tmp
+*.bak
+*.csv
+*.h5
+*.pkl
+*.pickle
+
+# ================================
+# OS / Editor Files
+# ================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.idea/
 .vscode/
+*.iml
+*.zip
+*.json
+# ================================
+# Specific project folders
+# ================================
+studies/tmp/
+studies/output/
+modules/tmp/
+modules/output/
 
-# Scans
-studies/scans/**/base_collider
-studies/scans/**/id_job.yaml
-studies/scans/**/tree_maker.json
-studies/scans/**/tree_maker.log
-!studies/scans/**/da.parquet
-!studies/scans/.gitkeep
-
-# filling_schemes
-!studies/filling_scheme/*
-
-# misc
-da-study-docker_latest.sif
-
-# Poetry lock file
-# poetry.lock
+modules/tree_maker/
+modules/xmask/
