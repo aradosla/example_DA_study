@@ -62,3 +62,5 @@ modules/output/
 
 modules/tree_maker/
 modules/xmask/
+studies/scans/
+studies/submission_files/
