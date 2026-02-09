@@ -56,8 +56,8 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 # Optic file path (version, and round or flat)
 
 ### For run III ions
-#d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics"
-d_config_mad["links"]["acc-models-lhc"] = "optics"
+d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics"
+#d_config_mad["links"]["acc-models-lhc"] = "optics"
 #d_config_mad["optics_file"] = "acc-models-lhc/runIII/RunIII_dev/ION_2025/opticsfile.24"
 d_config_mad["optics_file"] = "acc-models-lhc/runIII/RunIII_dev/ION_2024/opticsfile.21"
 d_config_mad["ver_hllhc_optics"] = None
@@ -165,8 +165,8 @@ d_config_beambeam["nemitt_y"] = 2.42e-6  # type: ignore
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
 #filling_scheme_path = os.path.abspath("filling_scheme/ions_filling_scheme_2025.json")
-filling_scheme_path = "../filling_scheme/ions_filling_scheme_2025.json"
-
+#filling_scheme_path = "../filling_scheme/ions_filling_scheme_2025.json"
+filling_scheme_path = "../filling_scheme/25ns_2760b_2748_2492_2574_288bpi_13inj_800ns_bs200ns_converted.json"
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
@@ -200,7 +200,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 1000000
+d_config_simulation["n_turns"] = 10000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 24.0e-5
@@ -224,8 +224,8 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:]
-array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:]
+array_qx = np.round(np.arange(62.305, 62.330, 0.005), decimals=4)[:]
+array_qy = np.round(np.arange(60.305, 60.330, 0.005), decimals=4)[:]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end

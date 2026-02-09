@@ -28,7 +28,11 @@ def get_particles_data(root):
     for node in root.generation(1):
         for node_child in node.children:
             try:
-                df_output = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
+                eos_base = "/eos/user/a/aradosla/xtrack"
+
+                df_output = pd.read_parquet(f"{eos_base}/{node_child.name}/output_particles.parquet")
+               
+                #df_output = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
             except Exception as e:
                 print(e)
                 logging.warning(
