@@ -1,17 +1,15 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-# Standard library imports
+# %%
 import copy
 import itertools
 import os
 import time
 
-# Third party imports
+import shutil
 import numpy as np
 import yaml
-
-# Local imports
 from generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
@@ -30,16 +28,15 @@ from tree_maker import initialize
 d_config_particles = {}
 
 # Radius of the initial particle distribution
-d_config_particles["r_min"] = 0
+d_config_particles["r_min"] = 2
 d_config_particles["r_max"] = 10
 d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
-#d_config_particles["n_r"] = 200
 
 # Number of angles for the initial particle distribution
-d_config_particles["n_angles"] = 50
+d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 50
+d_config_particles["n_split"] = 40
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -58,17 +55,15 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 
 ### For run III
 #d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-#d_config_mad["links"]["acc-models-lhc"] = "optics"
+
 d_config_mad["links"]["acc-models-lhc"] = "runIII"
-#d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.46"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.44"
-#d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.22"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.22"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 6800
+beam_energy_tot = 6800.0
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -90,55 +85,23 @@ d_config_tune_and_chroma = {
     "qy": {},
     "dqx": {},
     "dqy": {},
-   # "knob_names":{}
 }
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
     d_config_tune_and_chroma["qy"][beam] = 60.32
-    d_config_tune_and_chroma["dqx"][beam] = 20.0
-    d_config_tune_and_chroma["dqy"][beam] = 20.0
-
-#d_config_tune_and_chroma["knob_names"]["lhcb1"] = {}
-#d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_1"] = "kqtf.b1"
-#d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_2"] = "kqtd.b1"
+    d_config_tune_and_chroma["dqx"][beam] = 20.0 #0.1
+    d_config_tune_and_chroma["dqy"][beam] = 20.0 #0.1
 
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0. #0.001  # type: ignore change after!!!
+d_config_tune_and_chroma["delta_cmr"] = 0.0  # type: ignore
 d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 
 ### Knobs configuration
 
 # Define dictionary for the knobs settings
 d_config_knobs = {}
-
-d_config_knobs["on_disp"] = 0.000
-d_config_knobs["vrf400"] = 12.0
-'''
-# optics 2025 proton optics.23 120cm flattop
+#########old
 # Exp. configuration in IR1, IR2, IR5 and IR8
-d_config_knobs["on_x1"] = 160.000
-d_config_knobs["on_sep1"] = 0.0
-d_config_knobs["phi_IR1"] = 0.000
-
-d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = -0.13 #-1.0  # 1.000
-d_config_knobs["on_x2v"] = 200.000
-d_config_knobs["on_sep2v"] = 0.000
-d_config_knobs["phi_IR2"] = 90.000
-
-d_config_knobs["on_x5"] = 160.000
-d_config_knobs["on_sep5"] = 0.0
-d_config_knobs["phi_IR5"] = -90.000
-
-d_config_knobs["on_x8h"] = 0.000
-d_config_knobs["on_sep8h"] = -0.0  # -1.000
-d_config_knobs["on_x8v"] = 200.000
-d_config_knobs["on_sep8v"] = 0.000
-d_config_knobs["phi_IR8"] = 180.000
-'''
-'''
-#########old but for the noise!!!!!
-# Exp. configuration in IR1, IR2, IR5 and IR8 wrong
 d_config_knobs["on_disp"] = 0.000
 d_config_knobs["vrf400"] = 12.0
 
@@ -161,100 +124,45 @@ d_config_knobs["on_sep8h"] = -0.01 # -1.000
 d_config_knobs["on_x8v"] = 200.000
 d_config_knobs["on_sep8v"] = 0.0
 d_config_knobs["phi_IR8"] = 180.000
-
-'''
-
 ###########
+'''
+# Exp. configuration in IR1, IR2, IR5 and IR8
+d_config_knobs["on_disp"] = 0.000
+d_config_knobs["vrf400"] = 12.0
 
-# optics 2024 proton optics.22 120cm flattop correct from tracking!!!
-if False:
-    d_config_knobs["on_disp"] = 0.000
-    d_config_knobs["vrf400"] = 12.0
-
-    d_config_knobs["on_x1"] = 160.000
-    d_config_knobs["on_sep1"] = 0.0
-    d_config_knobs["phi_IR1"] = 90.000
-
-    d_config_knobs["on_x2h"] = 0.000
-    d_config_knobs["on_sep2h"] = -1.0 # 1.000 -0.1 #
-    d_config_knobs["on_x2v"] = 200.000
-    d_config_knobs["on_sep2v"] = 0.000
-    d_config_knobs["phi_IR2"] = 90.000
-
-    d_config_knobs["on_x5"] = 160.000
-    d_config_knobs["on_sep5"] = 0.0
-    d_config_knobs["phi_IR5"] = 0.000
-
-    d_config_knobs["on_x8h"] = -200.000
-    d_config_knobs["on_sep8h"] = 0.0 #-1.000 # -0.01
-    d_config_knobs["on_x8v"] = 0.0
-    d_config_knobs["on_sep8v"] = -1.0 #-0.01
-    d_config_knobs["phi_IR8"] = 180.000
-
-# 2025 proton optics.46 
-
-# 120cm 2025 correct stable beams opticsfile.23
-if True:
-    # Exp. configuration in IR1, IR2, IR5 and IR8
-    d_config_knobs["on_disp"] = 0.000
-    d_config_knobs["vrf400"] = 12.0
-
-    d_config_knobs["on_x1"] = 160.000 #120.0 #
-    d_config_knobs["on_sep1"] =  0.0  #-0.550
-    d_config_knobs["phi_IR1"] = 0.000
-
-    d_config_knobs["on_x2h"] = 0.000
-    d_config_knobs["on_sep2h"] = -1.000 # 1.000
-    d_config_knobs["on_x2v"] = 200.000
-    d_config_knobs["on_sep2v"] = 0.000
-    d_config_knobs["phi_IR2"] = 90.000
-
-    d_config_knobs["on_x5"] = 160.000 #120.0 #
-    d_config_knobs["on_sep5"] =  0.0 #0.550 
-    d_config_knobs["phi_IR5"] = -90.000
-
-    d_config_knobs["on_x8h"] = 0.000 #here should be -200 #-170.000 
-    d_config_knobs["on_sep8h"] = -1.000 #-0.01 # 0.0 #
-    d_config_knobs["on_x8v"] = 200.000
-    d_config_knobs["on_sep8v"] = 0.000 #0.0
-    d_config_knobs["phi_IR8"] = 180.000
-
-"""
-# VdM
-d_config_knobs["on_x1"] = 0.0 #160.0 #170.000
-d_config_knobs["on_sep1"] = 0.#-2.000
+d_config_knobs["on_x1"] = 160.000
+d_config_knobs["on_sep1"] = 0.0
 d_config_knobs["phi_IR1"] = 90.000
 
-d_config_knobs["on_x2h"] = 145.0 #0.000
-d_config_knobs["on_sep2h"] = 0.0 #-3.500  # 1.000
-d_config_knobs["on_x2v"] = 145.0 #170.000
+d_config_knobs["on_x2h"] = 0.000
+d_config_knobs["on_sep2h"] = -1.0 # 1.000
+d_config_knobs["on_x2v"] = 200.000
 d_config_knobs["on_sep2v"] = 0.000
 d_config_knobs["phi_IR2"] = 90.000
 
-d_config_knobs["on_x5"] = 0.0 #170.000
-d_config_knobs["on_sep5"] = 0.0 #2.000
+d_config_knobs["on_x5"] = 160.000
+d_config_knobs["on_sep5"] = 0.0
 d_config_knobs["phi_IR5"] = 0.000
 
-d_config_knobs["on_x8h"] = -300.0 #-170.000
-d_config_knobs["on_sep8h"] = 0.000  # -1.000
-d_config_knobs["on_x8v"] = 0.000
-d_config_knobs["on_sep8v"] = 0.0 #-3.500
+d_config_knobs["on_x8h"] = -200.000 #here should be -200 #-170.000 
+d_config_knobs["on_sep8h"] = 0.0 # -1.000 #-0.01
+d_config_knobs["on_x8v"] =  0.0 # 200.000
+d_config_knobs["on_sep8v"] = -1.000 #0.0
 d_config_knobs["phi_IR8"] = 180.000
-"""
-# Octupoles
-d_config_knobs["i_oct_b1"] = -500.0
-d_config_knobs["i_oct_b2"] = -500.0
 
+'''
+# Octupoles
+d_config_knobs["i_oct_b1"] = 400.0
+d_config_knobs["i_oct_b2"] = 400.0 
 
 ### leveling configuration
 
 # Leveling in IP 1/5
-
 d_config_leveling_ip1_5 = {"constraints": {}}
-d_config_leveling_ip1_5["luminosity"] = 2.3e34 #for the noise simulations #2.3e34  # type: ignore 0.008e35 #
-d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore True #
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.6e11 #0.9e11 #
-d_config_leveling_ip1_5["constraints"]["max_PU"] = 70 #62
+d_config_leveling_ip1_5["luminosity"] = 2.1e34  # type: ignore
+d_config_leveling_ip1_5["skip_leveling"] = True  # type: ignore
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
 
 
 # Define dictionary for the leveling settings
@@ -268,7 +176,7 @@ d_config_leveling = {
 
 # Leveling parameters (ignored if skip_leveling is True)
 d_config_leveling["ip2"]["separation_in_sigmas"] = 5
-d_config_leveling["ip8"]["luminosity"] = 2.0e33 #0.005e34 #
+d_config_leveling["ip8"]["luminosity"] = 2.0e33
 
 ### Beam beam configuration
 
@@ -276,9 +184,9 @@ d_config_leveling["ip8"]["luminosity"] = 2.0e33 #0.005e34 #
 d_config_beambeam = {"mask_with_filling_pattern": {}}
 
 # Beam settings
-d_config_beambeam["num_particles_per_bunch"] = 1.26e11 #1.05e11 # # type: ignore 1.8e11 #0.9e11 
-d_config_beambeam["nemitt_x"] = 2.25e-6  # type: ignore #2.4e-6 #
-d_config_beambeam["nemitt_y"] = 2.25e-6  # type: ignore #2.4e-6 #
+d_config_beambeam["num_particles_per_bunch"] = 1.6e11  # type: ignore
+d_config_beambeam["nemitt_x"] = 1.8e-6  # type: ignore
+d_config_beambeam["nemitt_y"] = 1.8e-6  # type: ignore
 
 # Filling scheme (in json format)
 # The scheme should consist of a json file containing two lists of booleans (one for each beam),
@@ -289,13 +197,9 @@ d_config_beambeam["nemitt_y"] = 2.25e-6  # type: ignore #2.4e-6 #
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
 #filling_scheme_path = os.path.abspath(
-#    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
+#    "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
 #)
-
-#filling_scheme_path = "../filling_scheme/2025_4x36_converted.json"
-#filling_scheme_path = "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
-#filling_scheme_path = "../filling_scheme/VdM_fill9639.json"
-filling_scheme_path = "../filling_scheme/25ns_2460b_2448_2089_2227_144bpi_20inj_fill10709.json"
+filling_scheme_path = "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
@@ -318,7 +222,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 # Add luminosity configuration
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
-d_config_collider["skip_leveling"] = True #False #
+d_config_collider["skip_leveling"] = True
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
@@ -334,7 +238,7 @@ d_config_simulation = {}
 d_config_simulation["n_turns"] = int(1e4)
 
 # Initial off-momentum
-d_config_simulation["delta_max"] = 0. #change back!!! 27.0e-5 #
+d_config_simulation["delta_max"] = 0.0 #27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
@@ -346,7 +250,7 @@ d_config_simulation["beam"] = "lhcb1"
 # configuration.
 # ==================================================================================================
 dump_collider = True
-dump_config_in_collider = False
+dump_config_in_collider = True
 
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
@@ -356,12 +260,12 @@ dump_config_in_collider = False
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
 array_qx = [62.31]#np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = [60.32]#np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qy = [60.32] #np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "all"  # "upper_triangle"  # 'lower_triangle', 'all'
+keep = "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -410,7 +314,6 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
     d_config_simulation["collider_file"] = "../collider.json.zip"
     d_config_simulation['children'] = f'xtrack_{track:04}'
-
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "config_simulation": copy.deepcopy(d_config_simulation),
@@ -419,6 +322,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "dump_collider": dump_collider,
         "dump_config_in_collider": dump_config_in_collider,
     }
+    
 
 # ==================================================================================================
 # --- Simulation configuration
@@ -430,7 +334,7 @@ config = yaml.safe_load(open("config.yaml"))
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-#config["root"]["setup_env_script"] = os.getcwd() + "/../../source_python.sh"
+config["root"]["setup_env_script"] = '/afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate'
 
 
 # Recursively define the context for the simulations
@@ -446,7 +350,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan_gpu"#_extra2"
+study_name = "example_tunescan_gpu"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
@@ -483,5 +387,26 @@ else:
 # From python objects we move the nodes to the filesystem.
 start_time = time.time()
 root.make_folders(generate_run)
+'''
+# Tar the forders
+for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
+    print(idx_job)
+    base_name = f'base_collider/xtrack_{idx_job:04d}'
+
+    # Ensure the directory exists before archiving
+    if os.path.isdir(base_name):
+        # Create the tar.gz archive inside the same directory
+        archive_path = shutil.make_archive(base_name, 'gztar', root_dir=base_name)
+
+        # Move the archive inside its own directory
+        archive_name = os.path.basename(archive_path)  # Extract filename
+        #shutil.move(archive_path, os.path.join(base_name, archive_name))
+        #print(f"Archived: {os.path.join(base_name, archive_name)}")
+        print(f"Archived: {archive_path}")
+    else:
+        print(f"Skipping {base_name}, directory does not exist.")
+'''
 print("The tree folders are ready.")
 print(f"--- {time.time() - start_time} seconds ---")
+
+# %%

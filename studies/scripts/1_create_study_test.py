@@ -1,15 +1,17 @@
 # ==================================================================================================
 # --- Imports
 # ==================================================================================================
-# %%
+# Standard library imports
 import copy
 import itertools
 import os
 import time
-import shutil
 
+# Third party imports
 import numpy as np
 import yaml
+
+# Local imports
 from generate_run_file import (
     generate_run_sh,
     generate_run_sh_htc,
@@ -36,8 +38,7 @@ d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_par
 d_config_particles["n_angles"] = 5
 
 # Number of split for parallelization
-d_config_particles["n_split"] = 5
-
+d_config_particles["n_split"] = 50
 
 # ==================================================================================================
 # --- Optics collider parameters (generation 1)
@@ -55,14 +56,17 @@ d_config_mad = {"beam_config": {"lhcb1": {}, "lhcb2": {}}, "links": {}}
 # Optic file path (version, and round or flat)
 
 ### For run III
-d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
-d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2024/opticsfile.22"
+#d_config_mad["links"]["acc-models-lhc"] = "/afs/cern.ch/eng/lhc/optics/runIII"
+#d_config_mad["links"]["acc-models-lhc"] = "optics"
+d_config_mad["links"]["acc-models-lhc"] = "runIII"
+#d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.46"
+d_config_mad["optics_file"] = "acc-models-lhc/RunIII_dev/Proton_2025/NomH_RPV/opticsfile.23"
 d_config_mad["ver_hllhc_optics"] = None
 d_config_mad["ver_lhc_run"] = 3.0
 
 
 # Beam energy (for both beams)
-beam_energy_tot = 6800.0
+beam_energy_tot = 6800
 d_config_mad["beam_config"]["lhcb1"]["beam_energy_tot"] = beam_energy_tot
 d_config_mad["beam_config"]["lhcb2"]["beam_energy_tot"] = beam_energy_tot
 
@@ -84,6 +88,7 @@ d_config_tune_and_chroma = {
     "qy": {},
     "dqx": {},
     "dqy": {},
+   # "knob_names":{}
 }
 for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["qx"][beam] = 62.31
@@ -91,8 +96,12 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqx"][beam] = 20.0
     d_config_tune_and_chroma["dqy"][beam] = 20.0
 
+#d_config_tune_and_chroma["knob_names"]["lhcb1"] = {}
+#d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_1"] = "kqtf.b1"
+#d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_2"] = "kqtd.b1"
+
 # Value to be added to linear coupling knobs
-d_config_tune_and_chroma["delta_cmr"] = 0.0  # type: ignore
+d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
 d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 
 ### Knobs configuration
@@ -101,27 +110,24 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 d_config_knobs = {}
 
 # Exp. configuration in IR1, IR2, IR5 and IR8
-d_config_knobs["on_disp"] = 0.000
-d_config_knobs["vrf400"] = 12.0
-
 d_config_knobs["on_x1"] = 160.000
 d_config_knobs["on_sep1"] = 0.0
-d_config_knobs["phi_IR1"] = 90.000
+d_config_knobs["phi_IR1"] = 0.000
 
 d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = -1.0 # 1.000
+d_config_knobs["on_sep2h"] = -1.0  # 1.000
 d_config_knobs["on_x2v"] = 200.000
 d_config_knobs["on_sep2v"] = 0.000
 d_config_knobs["phi_IR2"] = 90.000
 
 d_config_knobs["on_x5"] = 160.000
 d_config_knobs["on_sep5"] = 0.0
-d_config_knobs["phi_IR5"] = 0.000
+d_config_knobs["phi_IR5"] = -90.000
 
-d_config_knobs["on_x8h"] = -170.000
-d_config_knobs["on_sep8h"] = -0.01 # -1.000
+d_config_knobs["on_x8h"] = 0.000
+d_config_knobs["on_sep8h"] = -0.01  # -1.000
 d_config_knobs["on_x8v"] = 200.000
-d_config_knobs["on_sep8v"] = 0.0
+d_config_knobs["on_sep8v"] = 0.000
 d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
@@ -132,10 +138,9 @@ d_config_knobs["i_oct_b2"] = 400.0
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
-d_config_leveling_ip1_5["luminosity"] = 2.1e34  # type: ignore
-d_config_leveling_ip1_5["skip_leveling"] = False #True  # type: ignore
-d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.8e11
-d_config_leveling_ip1_5["constraints"]["max_PU"] = 70
+d_config_leveling_ip1_5["luminosity"] = 2.3e34  # type: ignore
+d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.6e11
+d_config_leveling_ip1_5["constraints"]["max_PU"] = 62
 
 
 # Define dictionary for the leveling settings
@@ -169,9 +174,13 @@ d_config_beambeam["nemitt_y"] = 1.8e-6  # type: ignore
 # In this page, get the fill number of your fill of interest, and use it to replace the XXXX in the
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
-filling_scheme_path = os.path.abspath(
-    "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
-)
+#filling_scheme_path = os.path.abspath(
+#    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
+#)
+
+#filling_scheme_path = "../filling_scheme/2025_4x36_converted.json"
+filling_scheme_path = "../filling_scheme/25ns_2352b_2340_2004_2133_108bpi_24inj_converted.json"
+
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
@@ -194,7 +203,6 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 # Add luminosity configuration
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
-d_config_collider["skip_leveling"] = False
 
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
@@ -221,8 +229,8 @@ d_config_simulation["beam"] = "lhcb1"
 # Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
 # configuration.
 # ==================================================================================================
-dump_collider = True
-dump_config_in_collider = True
+dump_collider = False
+dump_config_in_collider = False
 
 # ==================================================================================================
 # --- Machine parameters being scanned (generation 2)
@@ -232,12 +240,12 @@ dump_config_in_collider = True
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
 array_qx = [62.31]#np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = [60.32] #np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qy = [60.32]#np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
 # of the script
-keep = "upper_triangle"  # 'lower_triangle', 'all'
+keep = "all"  # "upper_triangle"  # 'lower_triangle', 'all'
 # ==================================================================================================
 # --- Make tree for the simulations (generation 1)
 #
@@ -285,7 +293,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
     d_config_simulation["collider_file"] = "../collider.json.zip"
-    d_config_simulation['children'] = f'xtrack_{track:04}'
+
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
         "config_simulation": copy.deepcopy(d_config_simulation),
@@ -294,21 +302,18 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
         "dump_collider": dump_collider,
         "dump_config_in_collider": dump_config_in_collider,
     }
-   
-        
 
 # ==================================================================================================
 # --- Simulation configuration
 # ==================================================================================================
 # Load the tree_maker simulation configuration
-
 config = yaml.safe_load(open("config.yaml"))
 
 # # Set the root children to the ones defined above
 config["root"]["children"] = children
 
 # Set miniconda environment path in the config
-config["root"]["setup_env_script"] = '/afs/cern.ch/work/a/aradosla/private/example_DA_study_mine/miniforge/bin/activate'
+#config["root"]["setup_env_script"] = os.getcwd() + "/../../source_python.sh"
 
 
 # Recursively define the context for the simulations
@@ -324,7 +329,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan_gpu"
+study_name = "example_tunescan_test"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
@@ -340,7 +345,6 @@ else:
 
 # Move to the folder that will contain the tree
 os.chdir(f"../scans/{study_name}")
-
 
 # Clean the id_job file
 id_job_file_path = "id_job.yaml"
@@ -362,26 +366,5 @@ else:
 # From python objects we move the nodes to the filesystem.
 start_time = time.time()
 root.make_folders(generate_run)
-
-# Tar the forders
-for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_qx, array_qy)):
-    print(idx_job)
-    base_name = f'base_collider/xtrack_{idx_job:04d}'
-
-    # Ensure the directory exists before archiving
-    if os.path.isdir(base_name):
-        # Create the tar.gz archive inside the same directory
-        archive_path = shutil.make_archive(base_name, 'gztar', root_dir=base_name)
-
-        # Move the archive inside its own directory
-        archive_name = os.path.basename(archive_path)  # Extract filename
-        #shutil.move(archive_path, os.path.join(base_name, archive_name))
-        #print(f"Archived: {os.path.join(base_name, archive_name)}")
-        print(f"Archived: {archive_path}")
-    else:
-        print(f"Skipping {base_name}, directory does not exist.")
-
 print("The tree folders are ready.")
 print(f"--- {time.time() - start_time} seconds ---")
-
-# %%

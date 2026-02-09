@@ -22,6 +22,8 @@ import pandas as pd
 import ruamel.yaml
 import tree_maker
 import cupy as cp
+import nafflib as NAFFlib
+import matplotlib.pyplot as plt
 
 # Import user-defined modules
 import xmask as xm
@@ -35,6 +37,7 @@ from misc import (
     load_and_check_filling_scheme,
     luminosity_leveling_ip1_5,
     return_fingerprint,
+    fma,
 )
 
 # Initialize yaml reader
@@ -508,12 +511,15 @@ def configure_collider(
         #time = np.arange(0, num_turns / sampling_frequency, 1 / sampling_frequency)
         sine_wave = np.zeros_like(time)
         for freq, amp in zip(frequencies[:len(amplitudes)], amplitudes):
-            sine_wave += amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
+            sine_wave +=  1 * amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
         return sine_wave
 
     if config_sim['white_noise']:
         A = np.loadtxt(config_sim['noise_file_A'])
+        #A = A[17:18]
         f = np.loadtxt(config_sim['noise_file_f'])  # Frequency
+        f  = np.array(f) + 8
+        print(f'Frequency used for exciter: {f} Hz')
         phi = config_sim['phi']  # Phase
         samples = create_sine_wave(f, A, time)
 
@@ -521,8 +527,8 @@ def configure_collider(
         A = config_sim['amplitude']  # Amplitude
         f = config_sim['frequency']  # Frequency
         phi = config_sim['phi']  # Phase
-        samples = A * np.sin(2 * np.pi * f * time + phi)
-    
+        #samples = A * np.sin(2 * np.pi * f * time + phi)
+
     # Initialize the exciter
     exciter = xt.Exciter(
         _context=context,  # Assuming context is passed correctly
@@ -532,15 +538,14 @@ def configure_collider(
         frev=sampling_frequency,
         knl=[config_sim["knl"]]
     )
-
     
     # Insert the exciter into the specified line and index
+    
     collider['lhcb1'].insert_element(
         element=exciter,
         name='RF_KO_EXCITER',
         index= config_sim["index"]
     )
-    
     
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
@@ -644,305 +649,74 @@ def configure_collider(
 # ==================================================================================================
 # --- Function to prepare particles distribution for tracking
 # ==================================================================================================
-def prepare_particle_distribution(collider, context, config_sim):
+
+def prepare_particle_distribution(collider, context, config_sim, config_bb):
     beam = config_sim["beam"]
 
-    #particle_df = pd.read_parquet(config_sim["particle_file"])
     particle_df = pd.read_parquet(config_sim["particle_file"])
 
-    print(particle_df.x)
+    r_vect = particle_df["normalized amplitude in xy-plane"].values
+    theta_vect = particle_df["angle in xy-plane [deg]"].values * np.pi / 180  # type: ignore # [rad]
 
+    A1_in_sigma = r_vect * np.cos(theta_vect)
+    A2_in_sigma = r_vect * np.sin(theta_vect)
 
     particles = collider[beam].build_particles(
-        x=particle_df.x.values,
-        y=particle_df.y.values,
-        px = particle_df.px.values,
-        py = particle_df.py.values,
-        zeta = particle_df.zeta.values,
-        delta=particle_df.delta.values,
+        x_norm=A1_in_sigma,
+        y_norm=A2_in_sigma,
+        delta=config_sim["delta_max"],
+        scale_with_transverse_norm_emitt=(config_bb["nemitt_x"], config_bb["nemitt_y"]),
         _context=context,
     )
 
     particle_id = particle_df.particle_id.values
-
     return particles, particle_id
-
-# ==================================================================================================
-# --- Function to do the FFT of the particles
-# ==================================================================================================
-
-
-
-def cmp_fft(df, specific_particle, frev=11245.5,repeat_fft=1):
-    fourier =  np.fft.fft(df[df['particle_id'] == specific_particle].x_phys)
-    fourier = fourier/len(fourier)*2.0
-    fourier = np.concatenate([fourier]*repeat_fft)
-    freqs   = np.linspace(0, frev*repeat_fft, len(fourier))
-    return pd.Series([freqs, fourier.real, fourier.imag])
-
-
 
 
 # ==================================================================================================
 # --- Function to do the tracking
 # ==================================================================================================
-def track(collider, particles, config_sim, config_bb, particle_id, save_input_particles=False):
+
+def track(collider, particles, particle_id, config_sim, config_bb, save_input_particles=False):
     # Get beam being tracked
     config, config_mad = read_configuration("config.yaml")
     context = get_context(config)
     beam = config_sim["beam"]
 
-    # Optimize line for tracking (not working for now)
-    # collider[beam].optimize_for_tracking()
-
     # Save initial coordinates if requested
     if save_input_particles:
-        pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")              # here save the initial distribution
+        pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")  # Save the initial distribution
 
     # Track
     num_turns = config_sim["n_turns"]
     a = time.time()
 
     collider[beam].optimize_for_tracking()
-        
-   # Determine the number of intervals for storing data every 1000 turns
-    ndata = 1000
-    norm_intervals = int(num_turns // ndata)
-    num_particles = int(len(particles.x))
-
-    # Preallocate arrays for physical coordinates
-    x_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    y_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    zeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    px_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    py_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    pzeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    state_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    #particles_id_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    turns_totnorm = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    
 
     a = time.time()
+
+    collider[beam].track(particles, num_turns=num_turns, turn_by_turn_monitor=True, freeze_longitudinal=True)
+ 
+    x_phys = collider[beam].record_last_track.x.flatten()
+    y_phys = collider[beam].record_last_track.y.flatten()
+    particle_id_all = collider[beam].record_last_track.particle_id.flatten() # particle_id #
+    turns_totnorm = collider[beam].record_last_track.at_turn.flatten()
     
-    
-    for i in range(num_turns):
-       
-        c = time.time()
-        collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=False)
-
-        # Store particle data every 1000 turns
-        if (i + 1) % ndata == 0:
-            interval_index = (i + 1) // ndata - 1
-
-            # Store physical coordinates
-            x_phys[interval_index, :] = cp.asarray(particles.x)
-            y_phys[interval_index, :] = cp.asarray(particles.y)
-            zeta_phys[interval_index, :] = cp.asarray(particles.zeta)
-            px_phys[interval_index, :] = cp.asarray(particles.px)
-            py_phys[interval_index, :] = cp.asarray(particles.py)
-            pzeta_phys[interval_index, :] = cp.asarray(particles.delta)
-            state_all[interval_index, :] = cp.asarray(particles.state)
-            turns_totnorm[interval_index, :] = cp.ones(num_particles, dtype=cp.int32) * (i + 1)
-            #particles_id_all[interval_index, :] = cp.asarray(particles.particle_id)
-
-            d = time.time()
-            print(f'Turn {i+1}, time {d-c}s')
-
-    # Convert results back to CPU and flatten arrays
-    x_phys = cp.asnumpy(x_phys).flatten()
-    y_phys = cp.asnumpy(y_phys).flatten()
-    zeta_phys = cp.asnumpy(zeta_phys).flatten()
-    px_phys = cp.asnumpy(px_phys).flatten()
-    py_phys = cp.asnumpy(py_phys).flatten()
-    pzeta_phys = cp.asnumpy(pzeta_phys).flatten()
-    state_all = cp.asnumpy(state_all).flatten()
-    turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
-    #particles_id_all = cp.asnumpy(particles_id_all).flatten()
-
-
     # Convert results to DataFrame
     result_phys = pd.DataFrame({
         "x_phys": x_phys,
         "y_phys": y_phys,
-        "zeta_phys": zeta_phys,
-        "px_phys": px_phys,
-        "py_phys": py_phys,
-        "pzeta_phys": pzeta_phys,
-        "state": state_all,
-        "at_turn": turns_totnorm, #"particle_id": particles_id_all #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
-        "particles_id_all": np.tile(particle_id, int(num_turns/ndata)) #particles_id_all
+        "particle_id": particle_id_all, # np.tile(particle_id, int(num_turns)),
+        "at_turn": turns_totnorm  # np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
     })
 
-   
-    #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
-    #result_norm.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_norm0.parquet')
-
+  
     b = time.time()
-    print(f"Elapsed time: {b-a} s")
+    print(f"Elapsed time: {b - a} s")
 
     return result_phys
-    
-    """
 
-    def track(collider, particles, config_sim, config_bb, save_input_particles=False):   just move that!!!!!!!!!!!!! delete tab
-    # Get beam being tracked
-    config, config_mad = read_configuration("config.yaml")
-    context = get_context(config)
-    beam = config_sim["beam"]
 
-    # Optimize line for tracking (not working for now)
-    # collider[beam].optimize_for_tracking()
-
-    # Save initial coordinates if requested
-    if save_input_particles:
-        pd.DataFrame(particles.to_dict()).to_parquet("input_particles_new.parquet")              # here save the initial distribution
-
-    # Track
-    num_turns = config_sim["n_turns"]
-    a = time.time()
-
-    collider[beam].optimize_for_tracking()
-    collider[beam].track(particles, num_turns=num_turns, turn_by_turn_monitor=True, freeze_longitudinal=True)
-    # List to store the intervals
-    save_intervals = []
-
-    # Create intervals from 0 to 200, 1000 to 1200, etc.
-    for start_turn in range(0, num_turns, 1000):
-        end_turn = min(start_turn + 200, num_turns)  # Ensure end_turn doesn't exceed num_turns
-        save_intervals.append((start_turn, end_turn))
-
-    # Now, create an array with all the turns from the intervals
-    all_turns = []
-
-    # Populate all_turns with the individual turns within each interval
-    for start_turn, end_turn in save_intervals:
-        all_turns.extend(range(start_turn, end_turn + 1))  # Include end_turn by adding +1
-
-    # Convert to numpy array if needed
-    all_turns = np.array(all_turns)
-    num_particles = int(len(particles.x))
-    norm_intervals = len(all_turns)
-
-    # Preallocate arrays for physical coordinates
-    x_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    y_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    zeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    px_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    py_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    pzeta_phys = cp.empty((norm_intervals, num_particles), dtype=cp.float64)
-    state_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    particles_id_all = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    turns_totnorm = cp.empty((norm_intervals, num_particles), dtype=cp.int32)
-    
-
-    a = time.time()
-
-    for turn in range(num_turns):
-        counter = 0
-        # Store particle data every 1000 turns
-        '''
-        if (i + 1) % 100 == 0:
-            interval_index = (i + 1) // 100 - 1
-
-            # Store physical coordinates
-            x_phys[interval_index, :] = cp.asarray(particles.x)
-            y_phys[interval_index, :] = cp.asarray(particles.y)
-            zeta_phys[interval_index, :] = cp.asarray(particles.zeta)
-            px_phys[interval_index, :] = cp.asarray(particles.px)
-            py_phys[interval_index, :] = cp.asarray(particles.py)
-            pzeta_phys[interval_index, :] = cp.asarray(particles.delta)
-            state_all[interval_index, :] = cp.asarray(particles.state)
-            particles_id_all[interval_index, :] = cp.asarray(particles.particle_id)
-            turns_totnorm[interval_index, :] = cp.asarray(particles.at_turn)
-
-        '''
-        
-        # Check if the current turn is within one of the dynamically generated intervals
-        collider[beam].track(particles, num_turns=1, turn_by_turn_monitor=True, freeze_longitudinal=False)
-        
-        for j in all_turns:
-            counter = counter + 1
-            if j == turn:
-                c = time.time()
-                # Save the data for all particles for the current interval
-                x_phys[counter - 1, :] = cp.asarray(particles.x)
-                y_phys[counter - 1, :] = cp.asarray(particles.y)
-                zeta_phys[counter - 1, :] = cp.asarray(particles.zeta)
-                px_phys[counter - 1, :] = cp.asarray(particles.px)
-                py_phys[counter - 1, :] = cp.asarray(particles.py)
-                pzeta_phys[counter - 1, :] = cp.asarray(particles.delta)
-                state_all[counter - 1, :] = cp.asarray(particles.state)
-                particles_id_all[counter - 1, :] = cp.asarray(particles.particle_id)
-                turns_totnorm[counter - 1, :] = cp.asarray(particles.at_turn)
-                d = time.time()
-                print(f'Turn {turn+1}, time {d-c}s')
-        
-            print(f'Turn {turn+1}, time {d-c}s')
-
-    # Convert results back to CPU and flatten arrays
-    x_phys = cp.asnumpy(x_phys).flatten()
-    y_phys = cp.asnumpy(y_phys).flatten()
-    zeta_phys = cp.asnumpy(zeta_phys).flatten()
-    px_phys = cp.asnumpy(px_phys).flatten()
-    py_phys = cp.asnumpy(py_phys).flatten()
-    pzeta_phys = cp.asnumpy(pzeta_phys).flatten()
-    state_all = cp.asnumpy(state_all).flatten()
-    particles_id_all = cp.asnumpy(particles_id_all).flatten()
-    turns_totnorm = cp.asnumpy(turns_totnorm).flatten()
-
-    """
-    """
-    x_phys = collider['lhcb1'].record_last_track.x
-    y_phys = collider['lhcb1'].record_last_track.y
-    px_phys = collider['lhcb1'].record_last_track.px
-    py_phys = collider['lhcb1'].record_last_track.py
-    zeta_phys = collider['lhcb1'].record_last_track.zeta
-    pzeta_phys = collider['lhcb1'].record_last_track.delta
-    state_all = collider['lhcb1'].record_last_track.state
-    turns_totnorm = collider['lhcb1'].record_last_track.at_turn
-    particles_id_all = collider['lhcb1'].record_last_track.particle_id
-
-    # Convert results to DataFrame
-    result_phys = pd.DataFrame({
-        "x_phys": x_phys.flatten(),
-        "y_phys": y_phys.flatten(),
-        "zeta_phys": zeta_phys.flatten(),
-        "px_phys": px_phys.flatten(),
-        "py_phys": py_phys.flatten(),
-        "pzeta_phys": pzeta_phys.flatten(),
-        "state": state_all.flatten(),
-        "at_turn": turns_totnorm.flatten(), #"particle_id": particles_id_all #np.repeat(np.arange(1, (norm_intervals) * 1000, 1000), num_particles)
-        "particle_id": particles_id_all.flatten()
-    })
-
-    # Save the FFTs
-    idx = np.arange(0, len(np.unique(result_phys['particle_id'])))
-  
-    fourier_tot_real = []
-    fourier_tot_imag = []
-    # FFT average
-    for idd in idx:
-        try:
-            freqs, fourier_real, fourier_imag= cmp_fft(result_phys, specific_particle = idd, frev=11245.5, repeat_fft=2)
-    
-
-            fourier_tot_real.append(fourier_real)
-            fourier_tot_imag.append(fourier_imag)
-   
-        except Exception as e:
-            print(f'Error! {e}') 
-    
-    dff = pd.DataFrame({'fourier_real': fourier_tot_real, 'fourier_imag': fourier_tot_imag})
-    aux = dff.apply(lambda x: x.fourier_real + 1j*x.fourier_imag, axis=1).mean()
-    df_final = pd.DataFrame({'freqs': freqs, 'fourier_real': np.real(aux), 'fourier_imag': np.imag(aux)})
-    #result_phys.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_phys0.parquet')
-    #result_norm.to_parquet('/eos/user/a/aradosla/SWAN_projects/Noise_sim/result_norm0.parquet')
-
-    b = time.time()
-    print(f"Elapsed time: {b-a} s")
-
-    return df_final
-    """
 
 
 # ==================================================================================================
@@ -973,8 +747,7 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    #new_folder = '50_Hz_noise_simulation_excitation_realtry_1m particles'
-    new_folder = '50_Hz_120cm_correct_1Mturns_WITH_excitation_WITH_beambeam_chroma20_oct400'
+    new_folder = 'FMA_studies_FLATTOP/FMA44_nominal_nonoise_2025_160_noise' #'Separation_adjust/FMA_1.6e11_2024_120cm_400Aoct_right_knobs_150um' #'FMA_colliding120cm_2025_no_coupling_no_delta_VdM0.9_noise10times'
     new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
@@ -990,19 +763,22 @@ def configure_and_track(config_path="config.yaml"):
 
     # Prepare particle distribution
     print('Now preparing distribution!')
-    particles, particle_id = prepare_particle_distribution(collider, context, config_sim)
+    particles, particle_id = prepare_particle_distribution(collider, context, config_sim, config_bb)
 
     # Track
     print('Now tracking!')
-    #fft_average = track(collider, particles, config_sim, config_bb)
-    particles_phys = track(collider, particles, config_sim, config_bb, particle_id)
+    particles_phys  = track(collider, particles, particle_id, config_sim, config_bb)
 
-    particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
-    #fft_average.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fft_average.parquet")
+
+    #particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
+
    
-    print('The parquet should be saved')
+    fma_result = fma(particles_phys)
+    fma_result.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fma.parquet")
+    #fma_result.to_parquet(f"fma_{child}.parquet")
     # Get particles dictionnary
-    
+    print('The parquet should be saved')
+
 
     # Remove the correction folder, and potential C files remaining
     with contextlib.suppress(Exception):

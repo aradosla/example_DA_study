@@ -108,7 +108,7 @@ config_collider:
       max_intensity: 1.8e11
       max_PU: 70
 
-  skip_leveling: false
+  skip_leveling: true
   config_lumi_leveling:
     ip2:
       separation_in_sigmas: 5
@@ -198,17 +198,19 @@ config_simulation:
   index: mb.b9r3.b1  #mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
   std_dev: 1e-8
   white_noise: True
-  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/corrected_A.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
-  noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_f.txt
+  #noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/corrected_A.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
+  #noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_f.txt
+  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_A_FLATTOP120cm1.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
+  noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_f_FLATTOP120cm.txt
 
   # Tracking
-  n_turns: 20000 # number of turns to track
+  n_turns: 10000 # number of turns to track
 
   # Beam to track
   beam: lhcb1 #lhcb1 or lhcb2
 
 # Save collider or not
-dump_collider: false
+dump_collider: true
 dump_config_in_collider: false
 
 # Context for the simulation
