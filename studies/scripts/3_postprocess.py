@@ -30,9 +30,9 @@ def get_particles_data(root):
             try:
                 eos_base = "/eos/user/a/aradosla/xtrack"
 
-                df_output = pd.read_parquet(f"{eos_base}/{node_child.name}/output_particles.parquet")
+                #df_output = pd.read_parquet(f"{eos_base}/{node_child.name}/output_particles.parquet")
                
-                #df_output = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
+                df_output = pd.read_parquet(f"{node_child.get_abs_path()}/output_particles.parquet")
             except Exception as e:
                 print(e)
                 logging.warning(
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     start = time.time()
 
     # Load Data
-    study_name = "example_tunescan"
+    study_name = "example_tunescan_full"
     fix = f"/../scans/{study_name}"
     root = tree_maker.tree_from_json(fix[1:] + "/tree_maker.json")
     # Add suffix to the root node path to handle scans that are not in the root directory

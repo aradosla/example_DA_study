@@ -49,7 +49,7 @@
         - tree_maker.json
         - tree_maker.log
         - config_final.yaml
-      context: 'cupy' #cpu # opencl # how to run the simulation
+      context: "cpu" # "cupy" # opencl # how to run the simulation
       run_on: "htc" # 'local_pc' # 'htc_docker' #'htc' #'slurm' #'slurm_docker'
       # Following parameter is ignored when run_on is not htc or htc_docker
       htc_job_flavor: "tomorrow" # optional parameter to define job flavor, default is espresso

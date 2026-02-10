@@ -34,9 +34,11 @@ class ClusterSubmission:
             "slurm_docker",
         ]:
             self.request_GPUs = 1
+            self.request_CPUs = 4
             self.slurm_queue_statement = ""
         else:
             self.request_GPUs = 0
+            self.request_CPUs = 4
             self.slurm_queue_statement = "#SBATCH --partition=slurm_hpc_acc"
         self.eos_python = root.parameters["eos_python"]
 
@@ -112,6 +114,7 @@ class ClusterSubmission:
                     lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f"request_CPUs = {self.request_CPUs}\n"
                     + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
@@ -132,6 +135,7 @@ class ClusterSubmission:
                     lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f"request_CPUs = {self.request_CPUs}\n"
                     + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
@@ -602,6 +606,6 @@ def submit_jobs(study_name, print_uncompleted_jobs=False):
 # Load the tree from a yaml and submit the jobs that haven't been completed yet
 if __name__ == "__main__":
     # Define study
-    study_name = "example_tunescan"
+    study_name = "example_tunescan_full"
     # Submit jobs
     submit_jobs(study_name)

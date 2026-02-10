@@ -1,10 +1,23 @@
 import yaml
 
-
+'''
 def generate_run_sh(node, generation_number):
     python_command = node.root.parameters["generations"][generation_number]["job_executable"]
     file_string = (
         f"#!/bin/bash\n"
+     
+
+        # -------------------------------
+        # CuPy / GPU cache fix (MUST be first)
+        # -------------------------------
+        "export CUPY_CACHE_DIR=$(mktemp -d /tmp/cupy_cache_XXXXXX)\n"
+        "export CUPY_CACHE_IN_MEMORY=0\n"
+
+        # Optional but VERY robust: keep everything off AFS
+        "export HOME=/tmp/$USER\n"
+        "mkdir -p \"$HOME\"\n"
+
+
         f"export PYTHONNOUSERSITE=1\n"
         f"unset PYTHONPATH\n"
         "unset CONDA_PYTHON_EXE\n"
@@ -17,8 +30,8 @@ def generate_run_sh(node, generation_number):
         "export PATH=/usr/bin:/bin\n"
         f"mkdir my_env\n"
         f"tar -xvzf envs.tar.gz -C my_env\n"
-        f"source my_env/bin/activate\n"
-        "echo \"Using Python: $(which python)\"\n"
+        #f"source my_env/bin/activate\n"
+        #"echo \"Using Python: $(which python)\"\n"
         "echo $PYTHONPATH\n"
         "unset PYTHONPATH\n"
         "echo $PYTHONPATH\n"
@@ -49,6 +62,61 @@ def generate_run_sh(node, generation_number):
         file_string += (
             f"xrdcp -rf particles {eos_path}/\n"
             f"xrdcp -f collider.json.zip {eos_path}/collider.json.zip"
+        )
+
+    return file_string
+
+'''
+def generate_run_sh(node, generation_number):
+    python_command = node.root.parameters["generations"][generation_number]["job_executable"]
+
+    file_string = (
+        "#!/bin/bash\n"
+
+        # -------------------------------
+        # CuPy / GPU cache fix (MUST be first)
+        # -------------------------------
+        "export CUPY_CACHE_DIR=$(mktemp -d /tmp/cupy_cache_XXXXXX)\n"
+        "export CUPY_CACHE_IN_MEMORY=0\n"
+
+        # Keep everything off AFS
+        "export HOME=/tmp/$USER\n"
+        "mkdir -p \"$HOME\"\n"
+        "export XDG_CACHE_HOME=/tmp/$USER/.cache\n"
+        "export XDG_CONFIG_HOME=/tmp/$USER/.config\n"
+
+        "export PYTHONNOUSERSITE=1\n"
+        "unset PYTHONPATH\n"
+        "unset CONDA_PYTHON_EXE\n"
+        "unset LD_LIBRARY_PATH\n"
+        "unset SHLIB_PATH\n"
+        "unset CMAKE_INCLUDE_PATH\n"
+        "unset SRM_PATH\n"
+        "unset MODULES_RUN_QUARANTINE\n"
+        "unset MANPATH\n"
+        "export PATH=/usr/bin:/bin\n"
+
+        "mkdir my_env\n"
+        "tar -xvzf envs.tar.gz -C my_env\n"
+
+        "echo \"Files: $(ls)\"\n"
+        "for f in *.zip; do\n"
+        "  echo \"Unzipping $f\"\n"
+        "  unzip \"$f\"\n"
+        "done\n"
+
+        f"my_env/bin/python {python_command} > output_python.txt 2> error_python.txt\n"
+        "rm -rf final_* modules optics_repository optics_toolkit tools tracking_tools temp\n"
+    )
+
+    if (
+        "use_eos_for_large_files" in node.root.parameters
+        and node.root.parameters["use_eos_for_large_files"]
+    ):
+        eos_path = node.root.parameters["eos_path"].rstrip("/")
+        file_string += (
+            f"xrdcp -rf particles {eos_path}/\n"
+            f"xrdcp -f collider.json.zip {eos_path}/collider.json.zip\n"
         )
 
     return file_string

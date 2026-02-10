@@ -165,8 +165,8 @@ d_config_beambeam["nemitt_y"] = 2.42e-6  # type: ignore
 # URL below before downloading:
 # https://lpc.web.cern.ch/cgi-bin/schemeInfo.py?fill=XXXX&fmt=json
 #filling_scheme_path = os.path.abspath("filling_scheme/ions_filling_scheme_2025.json")
-#filling_scheme_path = "../filling_scheme/ions_filling_scheme_2025.json"
-filling_scheme_path = "../filling_scheme/25ns_2760b_2748_2492_2574_288bpi_13inj_800ns_bs200ns_converted.json"
+filling_scheme_path = "../filling_scheme/ions_filling_scheme_2025.json"
+#filling_scheme_path = "../filling_scheme/25ns_2760b_2748_2492_2574_288bpi_13inj_800ns_bs200ns_converted.json"
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
@@ -200,7 +200,7 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 10000
+d_config_simulation["n_turns"] = 1e6
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 24.0e-5
@@ -224,8 +224,8 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = np.round(np.arange(62.305, 62.330, 0.005), decimals=4)[:]
-array_qy = np.round(np.arange(60.305, 60.330, 0.005), decimals=4)[:]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:]
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:]
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end
@@ -278,6 +278,7 @@ for idx_job, (track, qx, qy) in enumerate(itertools.product(track_array, array_q
     # Complete the dictionnary for the tracking
     d_config_simulation["particle_file"] = f"../particles/{track:02}.parquet"
     d_config_simulation["collider_file"] = "../collider.json.zip"
+    d_config_simulation['children'] = f'xtrack_{track:04}'
 
     # Add a child to the second generation, with all the parameters for the collider and tracking
     children["base_collider"]["children"][f"xtrack_{idx_job:04}"] = {
@@ -314,7 +315,7 @@ set_context(children, 1, config)
 # --- Build tree and write it to the filesystem
 # ==================================================================================================
 # Define study name
-study_name = "example_tunescan"
+study_name = "example_tunescan_full"
 
 # Creade folder that will contain the tree
 if not os.path.exists(f"../scans/{study_name}"):
