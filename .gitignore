@@ -28,6 +28,7 @@ studies/scans/**/tree_maker.json
 studies/scans/**/tree_maker.log
 !studies/scans/**/da.parquet
 !studies/scans/.gitkeep
+studies/optics/optics.zip
 
 # filling_schemes
 !studies/filling_scheme/*
