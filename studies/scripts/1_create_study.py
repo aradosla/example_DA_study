@@ -209,8 +209,11 @@ d_config_simulation["delta_max"] = 24.0e-5
 d_config_simulation["beam"] = "lhcb1"
 
 # Tolerances tune and coupling
-d_config_simulation['atol_tune'] = 1e-4
-d_config_simulation['atol_coupling'] = 5e-3
+d_config_simulation["tol_qx"] = 1e-4
+d_config_simulation["tol_qy"] = 1e-4
+d_config_simulation["tol_dqx"] = 0.05
+d_config_simulation["tol_dqy"] = 0.05
+d_config_simulation["tol_cminus"] = 1e-4
 
 # ==================================================================================================
 # --- Dump collider and collider configuration

@@ -4,6 +4,7 @@ import os
 import xmask as xm
 import numpy as np
 import xtrack as xt
+from pathlib import Path
 from scipy.constants import c as clight
 from scipy.optimize import minimize_scalar
 
@@ -629,42 +630,95 @@ def return_fingerprint(line_name, collider):
     return out
 
 
-def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True):
-    # Tunings
-    for line_name in ["lhcb1", "lhcb2"]:
-        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
-    
-        targets = {
-                "qx": conf_knobs_and_tuning["qx"][line_name],
-                "qy": conf_knobs_and_tuning["qy"][line_name],
-                "dqx": conf_knobs_and_tuning["dqx"][line_name],
-                "dqy": conf_knobs_and_tuning["dqy"][line_name],
-            }
-        try:
-            xm.machine_tuning(
-                line=collider[line_name],
-                enable_closed_orbit_correction=True,
-                enable_linear_coupling_correction=match_linear_coupling_to_zero,
-                enable_tune_correction=True,
-                enable_chromaticity_correction=True,
-                knob_names=knob_names,
-                targets=targets,
-                line_co_ref=collider[line_name + "_co_ref"],
-                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
-        )
-        except:
-            knob_names['q_knob_1']= 'kqtf.b1'
-            knob_names['q_knob_2']= 'kqtd.b1'
-            xm.machine_tuning(
-                line=collider[line_name],
-                enable_closed_orbit_correction=True,
-                enable_linear_coupling_correction=match_linear_coupling_to_zero,
-                enable_tune_correction=True,
-                enable_chromaticity_correction=True,
-                knob_names=knob_names,
-                targets=targets,
-                line_co_ref=collider[line_name + "_co_ref"],
-                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
-        )
 
-    return collider
+def machine_tuning(line, config_sim,
+        enable_closed_orbit_correction=False,
+        enable_linear_coupling_correction=False,
+        enable_tune_correction=False,
+        enable_chromaticity_correction=False,
+        knob_names=None,
+        targets=None,
+        line_co_ref=None, co_corr_config=None,
+        verbose=False):
+        
+    # Default tolerances
+    defaults = {
+        'tol_qx': 1e-4,
+        'tol_qy': 1e-4,
+        'tol_dqx': 0.05,
+        'tol_dqy': 0.05,
+        'tol_cminus': 1e-4,
+    }
+
+    for key, value in defaults.items():
+        if config_sim.get(key) is None:
+            config_sim[key] = value
+
+    # Correct closed orbit
+    if enable_closed_orbit_correction:
+        print(f'Correcting closed orbit')
+        assert line_co_ref is not None
+        assert co_corr_config is not None
+        if isinstance(co_corr_config, (str, Path)):
+            with open(co_corr_config, 'r') as fid:
+                co_corr_config = json.load(fid)
+
+        line._xmask_correct_closed_orbit(
+                                reference=line_co_ref,
+                                correction_config=co_corr_config)
+
+    if enable_linear_coupling_correction:
+        assert knob_names is not None
+        assert 'c_minus_knob_1' in knob_names
+        assert 'c_minus_knob_2' in knob_names
+        # Match coupling
+        print(f'Matching linear coupling')
+        line.match(verbose=verbose,
+            vary=[
+                xt.Vary(name=knob_names['c_minus_knob_1'],
+                        limits=[-0.5e-2, 0.5e-2], step=1e-5),
+                xt.Vary(name=knob_names['c_minus_knob_2'],
+                        limits=[-0.5e-2, 0.5e-2], step=1e-5)],
+            targets=[xt.Target('c_minus', 0, tol=config_sim['tol_cminus'])])
+
+    # Match tune and chromaticity
+    if enable_tune_correction or enable_chromaticity_correction:
+
+        vary = []
+        match_targets = []
+
+        if enable_tune_correction:
+            assert knob_names is not None
+            assert 'q_knob_1' in knob_names
+            assert 'q_knob_2' in knob_names
+            assert targets is not None
+            assert 'qx' in targets
+            assert 'qy' in targets
+
+            vary.append(xt.Vary(knob_names['q_knob_1'], step=1e-5))
+            vary.append(xt.Vary(knob_names['q_knob_2'], step=1e-5))
+            match_targets.append(xt.Target('qx', targets['qx'], tol=config_sim['tol_qx']))
+            match_targets.append(xt.Target('qy', targets['qy'], tol=config_sim['tol_qy']))
+
+        if enable_chromaticity_correction:
+            assert knob_names is not None
+            assert 'dq_knob_1' in knob_names
+            assert 'dq_knob_2' in knob_names
+            assert targets is not None
+            assert 'dqx' in targets
+            assert 'dqy' in targets
+
+            vary.append(xt.Vary(knob_names['dq_knob_1'], step=1e-2))
+            vary.append(xt.Vary(knob_names['dq_knob_2'], step=1e-2))
+            match_targets.append(xt.Target('dqx', targets['dqx'], tol=config_sim['tol_dqx']))
+            match_targets.append(xt.Target('dqy', targets['dqy'], tol=config_sim['tol_dqy']))
+
+        print(f'Matching tune and chromaticity')
+        print('Tolerances')
+        print('Tolerance tune qx = ' ,config_sim['tol_qx'])
+        print('Tolerance tune qy = ', config_sim['tol_qy'])
+        print('Tolerance chroma qx = ', config_sim['tol_dqx'])
+        print('Tolerance chroma qy = ', config_sim['tol_dqx'])
+        print('Tolerance c_minus = ', config_sim['tol_cminus'])
+        line.match(verbose=verbose, vary=vary, targets=match_targets)
+

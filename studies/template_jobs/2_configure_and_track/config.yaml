@@ -234,8 +234,11 @@ config_simulation:
 
   # Beam to track
   beam: "lhcb1" #lhcb1 or lhcb2
-  atol_tune: 1e-4
-  atol_coupling: 5e-3
+  tol_qx: 1e-4
+  tol_qy: 1e-4
+  tol_dqx: 0.05
+  tol_dqy: 0.05
+  tol_cminus: 1e-4
 
 # Save collider or not
 dump_collider: false
