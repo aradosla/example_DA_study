@@ -106,7 +106,7 @@ def get_context(configuration):
         return xo.ContextCpu(omp_num_threads= 4)
     else:
         logging.warning("context not recognized, using cpu")
-        return xo.ContextCpu()
+        return xo.ContextCpu(omp_num_threads= 4)
 
 
 context = get_context(config_gen_2)
