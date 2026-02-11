@@ -717,8 +717,8 @@ def machine_tuning(line, config_sim,
         print('Tolerances')
         print('Tolerance tune qx = ' ,config_sim['tol_qx'])
         print('Tolerance tune qy = ', config_sim['tol_qy'])
-        print('Tolerance chroma qx = ', config_sim['tol_dqx'])
-        print('Tolerance chroma qy = ', config_sim['tol_dqx'])
+        print('Tolerance chroma dqx = ', config_sim['tol_dqx'])
+        print('Tolerance chroma dqy = ', config_sim['tol_dqy'])
         print('Tolerance c_minus = ', config_sim['tol_cminus'])
         line.match(verbose=verbose, vary=vary, targets=match_targets)
 
