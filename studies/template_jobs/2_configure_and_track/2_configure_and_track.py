@@ -485,7 +485,7 @@ print(f"Linear coupling added: delta_cmr = {conf_knobs_and_tuning['delta_cmr']}"
 # --- Rematch tune and chromaticity without coupling correction
 # ==================================================================================================
 print("Rematching tune and chromaticity (keeping linear coupling)...")
-collider = match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=False)
+collider = match_tune_and_chroma(collider, config_sim, conf_knobs_and_tuning, match_linear_coupling_to_zero=False)
 print("Rematch completed")
 
 # ==================================================================================================
