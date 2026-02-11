@@ -6,6 +6,25 @@ import pandas as pd
 from scipy.interpolate import griddata
 from scipy.ndimage import gaussian_filter
 
+params = {'xtick.labelsize': 28,
+'ytick.labelsize': 28,
+'font.size': 30,
+'figure.autolayout': True,
+'figure.figsize': (15, 10),
+'axes.titlesize' : 35,
+'axes.labelsize' : 35,
+'lines.linewidth' : 2,
+'lines.markersize' : 0.1,
+'legend.fontsize': 28,
+'mathtext.fontset': 'stix',
+'font.family': 'STIXGeneral'}
+plt.rcParams['figure.dpi'] = 100
+plt.rcParams.update(params)
+
+plt.rcParams['figure.dpi'] = 100
+
+ft_mine = 20
+lw_mine = 2
 
 df_da = pd.read_parquet("/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scans/example_tunescan_full/da.parquet")
 
@@ -48,16 +67,16 @@ def plot_tunescan(df_da, title, var_x = 'qx', var_y = 'qy', var_z = 'normalized 
     cf = plt.pcolormesh(x2,y2,z2, cmap=cm.RdBu)
     minDA = 3.0
     maxDA = 9.0
-    #minDA = 8.0
-    #maxDA = 20.0
+    minDA = 4.0
+    maxDA = 14.0
     plt.clim(minDA, maxDA)
     cbar = plt.colorbar(cf,  pad=0.01)
     cbar.set_label(r'Minimum DA $(\rm \sigma)$', rotation=90)
 
     #add contour lines
 
-    levels = [2.0, 3.0, 4.0, 5.0, 5.5,6.0, 6.5, 7.0, 8.0, 9.0]
-    #levels = np.arange(8,20)
+    #levels = [2.0, 3.0, 4.0, 5.0, 5.5,6.0, 6.5, 7.0, 8.0, 9.0]
+    levels = np.arange(4,14)
 
     ct = plt.contour(x1, y1, z1, levels, colors='k', linewidths=2, label=r'Dynamic Aperture ($\rm \sigma$)')
     #show_values(cf, fontsize=9)
@@ -73,7 +92,7 @@ def plot_tunescan(df_da, title, var_x = 'qx', var_y = 'qy', var_z = 'normalized 
     x = np.linspace(0.3045, 0.3305, num=20)
     y = np.linspace(0.3045, 0.3305, num=20)
 
-    '''
+    
     for y in range(len(y1)):
         for x in range(len(x1)):
             #print(x,y)
@@ -82,7 +101,7 @@ def plot_tunescan(df_da, title, var_x = 'qx', var_y = 'qy', var_z = 'normalized 
                     horizontalalignment='center',
                     verticalalignment='center',fontsize=8,color='k'
                     )
-    '''
+    
     x = np.linspace(0.305, 0.330, num=20)
     y = np.linspace(0.305, 0.330, num=20)
     plt.xlim(62.305-5e-4, 62.330-0.0005)

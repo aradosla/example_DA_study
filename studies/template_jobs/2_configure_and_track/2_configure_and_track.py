@@ -22,7 +22,6 @@ import ruamel.yaml
 import tree_maker
 
 # Import user-defined modules
-import xmask as xm
 import xmask.lhc as xlhc
 import xobjects as xo
 import xtrack as xt
@@ -32,6 +31,7 @@ from misc import (
     get_worst_bunch,
     load_and_check_filling_scheme,
     luminosity_leveling_ip1_5,
+    match_tune_and_chroma,
     #return_fingerprint,
 )
 import os
@@ -53,7 +53,7 @@ def read_configuration(config_path="config.yaml"):
     # Read configuration for simulations
     with open(config_path, "r") as fid:
         config_gen_2 = ryaml.load(fid)
-
+        
     # Also read configuration from previous generation
     try:
         with open("../" + config_path, "r") as fid:
@@ -71,6 +71,7 @@ print("=== Config Gen 1 (MAD config) ===")
 print(f"Keys: {list(config_gen_1.keys())}")
 print("\n=== Config Gen 2 (Simulation config) ===")
 print(f"Keys: {list(config_gen_2.keys())}")
+print("### Configuration gen 2 ###", config_gen_2)
 
 
 # ==================================================================================================
@@ -220,45 +221,9 @@ for line_name in ["lhcb1", "lhcb2"]:
     print(f"  c_minus = {tw.c_minus:.6f}")
 
 
-def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True):
-    # Tunings
-    for line_name in ["lhcb1", "lhcb2"]:
-        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
-    
-        targets = {
-                "qx": conf_knobs_and_tuning["qx"][line_name],
-                "qy": conf_knobs_and_tuning["qy"][line_name],
-                "dqx": conf_knobs_and_tuning["dqx"][line_name],
-                "dqy": conf_knobs_and_tuning["dqy"][line_name],
-            }
-        try:
-            xm.machine_tuning(
-                line=collider[line_name],
-                enable_closed_orbit_correction=True,
-                enable_linear_coupling_correction=match_linear_coupling_to_zero,
-                enable_tune_correction=True,
-                enable_chromaticity_correction=True,
-                knob_names=knob_names,
-                targets=targets,
-                line_co_ref=collider[line_name + "_co_ref"],
-                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
-        )
-        except:
-            knob_names['q_knob_1']= 'kqtf.b1'
-            knob_names['q_knob_2']= 'kqtd.b1'
-            xm.machine_tuning(
-                line=collider[line_name],
-                enable_closed_orbit_correction=True,
-                enable_linear_coupling_correction=match_linear_coupling_to_zero,
-                enable_tune_correction=True,
-                enable_chromaticity_correction=True,
-                knob_names=knob_names,
-                targets=targets,
-                line_co_ref=collider[line_name + "_co_ref"],
-                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
-        )
-
-    return collider
+# ==================================================================================================
+# --- Match tune chroma from misc.py
+# ==================================================================================================
 
 print("Matching tune and chromaticity (with linear coupling correction to zero)...")
 collider = match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True)
@@ -487,6 +452,11 @@ print("Rematch completed")
 # --- Function to assert that tune, chromaticity and linear coupling are correct before beam-beam
 #     configuration
 # ==================================================================================================
+atol_tune = config_sim['atol_tune']
+atol_coupling = config_sim['atol_coupling']
+print("Tune tolerance = ", atol_tune)
+print("Coupling tolerance = ", atol_coupling)
+
 def assert_tune_chroma_coupling(collider, conf_knobs_and_tuning):
     results = {}
     for line_name in ["lhcb1", "lhcb2"]:
@@ -498,11 +468,11 @@ def assert_tune_chroma_coupling(collider, conf_knobs_and_tuning):
             "dqy": tw.dqy,
             "c_minus": tw.c_minus,
         }
-        assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], atol=1e-4), (
+        assert np.isclose(tw.qx, conf_knobs_and_tuning["qx"][line_name], atol=atol_tune), (
             f"tune_x is not correct for {line_name}. Expected"
             f" {conf_knobs_and_tuning['qx'][line_name]}, got {tw.qx}"
         )
-        assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], atol=1e-4), (
+        assert np.isclose(tw.qy, conf_knobs_and_tuning["qy"][line_name], atol=atol_tune), (
             f"tune_y is not correct for {line_name}. Expected"
             f" {conf_knobs_and_tuning['qy'][line_name]}, got {tw.qy}"
         )
@@ -526,7 +496,7 @@ def assert_tune_chroma_coupling(collider, conf_knobs_and_tuning):
         assert np.isclose(
             tw.c_minus,
             conf_knobs_and_tuning["delta_cmr"],
-            atol=5e-3,
+            atol=atol_coupling,
         ), (
             f"linear coupling is not correct for {line_name}. Expected"
             f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"

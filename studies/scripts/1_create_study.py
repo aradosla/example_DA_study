@@ -208,6 +208,10 @@ d_config_simulation["delta_max"] = 24.0e-5
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
 
+# Tolerances tune and coupling
+d_config_simulation['atol_tune'] = 1e-4
+d_config_simulation['atol_coupling'] = 5e-3
+
 # ==================================================================================================
 # --- Dump collider and collider configuration
 #

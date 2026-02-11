@@ -1,7 +1,7 @@
 # Imports
 import json
 import os
-
+import xmask as xm
 import numpy as np
 import xtrack as xt
 from scipy.constants import c as clight
@@ -627,3 +627,44 @@ def return_fingerprint(line_name, collider):
     out += "\n\n"
 
     return out
+
+
+def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True):
+    # Tunings
+    for line_name in ["lhcb1", "lhcb2"]:
+        knob_names = conf_knobs_and_tuning["knob_names"][line_name]
+    
+        targets = {
+                "qx": conf_knobs_and_tuning["qx"][line_name],
+                "qy": conf_knobs_and_tuning["qy"][line_name],
+                "dqx": conf_knobs_and_tuning["dqx"][line_name],
+                "dqy": conf_knobs_and_tuning["dqy"][line_name],
+            }
+        try:
+            xm.machine_tuning(
+                line=collider[line_name],
+                enable_closed_orbit_correction=True,
+                enable_linear_coupling_correction=match_linear_coupling_to_zero,
+                enable_tune_correction=True,
+                enable_chromaticity_correction=True,
+                knob_names=knob_names,
+                targets=targets,
+                line_co_ref=collider[line_name + "_co_ref"],
+                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
+        )
+        except:
+            knob_names['q_knob_1']= 'kqtf.b1'
+            knob_names['q_knob_2']= 'kqtd.b1'
+            xm.machine_tuning(
+                line=collider[line_name],
+                enable_closed_orbit_correction=True,
+                enable_linear_coupling_correction=match_linear_coupling_to_zero,
+                enable_tune_correction=True,
+                enable_chromaticity_correction=True,
+                knob_names=knob_names,
+                targets=targets,
+                line_co_ref=collider[line_name + "_co_ref"],
+                co_corr_config=conf_knobs_and_tuning["closed_orbit_correction"][line_name],
+        )
+
+    return collider
