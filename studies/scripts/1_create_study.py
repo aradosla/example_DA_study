@@ -95,9 +95,11 @@ for beam in ["lhcb1", "lhcb2"]:
     d_config_tune_and_chroma["dqx"][beam] = 20.0
     d_config_tune_and_chroma["dqy"][beam] = 20.0
 
+'''
 d_config_tune_and_chroma["knob_names"]["lhcb1"] = {}
 d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_1"] = "kqtf.b1"
 d_config_tune_and_chroma["knob_names"]["lhcb1"]["q_knob_2"] = "kqtd.b1"
+'''
 
 # Value to be added to linear coupling knobs
 d_config_tune_and_chroma["delta_cmr"] = 0.001  # type: ignore
@@ -114,7 +116,7 @@ d_config_knobs["on_sep1"] = 0.0
 d_config_knobs["phi_IR1"] = 0.000
 
 d_config_knobs["on_x2h"] = 0.000
-d_config_knobs["on_sep2h"] = -1.0  # 1.000
+d_config_knobs["on_sep2h"] = -0.1 #-1.0  # 1.000
 d_config_knobs["on_x2v"] = 200.000
 d_config_knobs["on_sep2v"] = 0.000
 d_config_knobs["phi_IR2"] = 90.000
@@ -124,20 +126,21 @@ d_config_knobs["on_sep5"] = 0.0
 d_config_knobs["phi_IR5"] = -90.000
 
 d_config_knobs["on_x8h"] = 0.000
-d_config_knobs["on_sep8h"] = -0.01  # -1.000
+d_config_knobs["on_sep8h"] = -0.00018 #-0.01  # -1.000
 d_config_knobs["on_x8v"] = 200.000
 d_config_knobs["on_sep8v"] = 0.000
 d_config_knobs["phi_IR8"] = 180.000
 
 # Octupoles
-d_config_knobs["i_oct_b1"] = 400.0
-d_config_knobs["i_oct_b2"] = 400.0
+d_config_knobs["i_oct_b1"] = -500.0
+d_config_knobs["i_oct_b2"] = -500.0
 
 ### leveling configuration
 
 # Leveling in IP 1/5
 d_config_leveling_ip1_5 = {"constraints": {}}
-d_config_leveling_ip1_5["luminosity"] = 2.3e34  # type: ignore
+d_config_leveling_ip1_5["luminosity"] = 2.1e34  # type: ignore
+d_config_leveling_ip1_5["skip_leveling"] = False  # type: ignore True #
 d_config_leveling_ip1_5["constraints"]["max_intensity"] = 1.6e11
 d_config_leveling_ip1_5["constraints"]["max_PU"] = 62
 
@@ -176,7 +179,7 @@ d_config_beambeam["nemitt_y"] = 1.8e-6  # type: ignore
 #filling_scheme_path = os.path.abspath(
 #    "../filling_scheme/25ns_2464b_2452_1842_1821_236bpi_12inj_hybrid.json"
 #)
-filling_scheme_path = "../filling_scheme/2025_4x36_converted.json"
+filling_scheme_path = "../filling_scheme/25ns_2460b_2448_2089_2227_144bpi_20inj_fill10709.json"
 # Add to config file
 d_config_beambeam["mask_with_filling_pattern"]["pattern_fname"] = filling_scheme_path
 
@@ -199,7 +202,7 @@ d_config_collider["config_knobs_and_tuning"]["knob_settings"] = d_config_knobs
 # Add luminosity configuration
 d_config_collider["config_lumi_leveling_ip1_5"] = d_config_leveling_ip1_5
 d_config_collider["config_lumi_leveling"] = d_config_leveling
-
+d_config_collider["skip_leveling"] = False #
 # Add beam beam configuration
 d_config_collider["config_beambeam"] = d_config_beambeam
 
@@ -211,13 +214,21 @@ d_config_collider["config_beambeam"] = d_config_beambeam
 d_config_simulation = {}
 
 # Number of turns to track
-d_config_simulation["n_turns"] = 100
+d_config_simulation["n_turns"] = 1000000
 
 # Initial off-momentum
 d_config_simulation["delta_max"] = 27.0e-5
 
 # Beam to track (lhcb1 or lhcb2)
 d_config_simulation["beam"] = "lhcb1"
+
+# Tolerances tune and coupling
+d_config_simulation["tol_qx"] = 1e-4 # 1e-4
+d_config_simulation["tol_qy"] = 1e-4 # 1e-4
+d_config_simulation["tol_dqx"] = 0.05
+d_config_simulation["tol_dqy"] = 0.05
+d_config_simulation["tol_cminus"] = 1e-3 #1e-4
+d_config_simulation["tol_qknobs_step"] = 1e-6 # 1e-4
 
 # ==================================================================================================
 # --- Dump collider and collider configuration
@@ -235,8 +246,8 @@ dump_config_in_collider = False
 # optimal DA (e.g. tune, chroma, etc).
 # ==================================================================================================
 # Scan tune with step of 0.001 (need to round to correct for numpy numerical instabilities)
-array_qx = [62.31]#np.round(np.arange(62.305, 62.330, 0.001), decimals=4)[:5]
-array_qy = [60.32]#np.round(np.arange(60.305, 60.330, 0.001), decimals=4)[:5]
+array_qx = np.round(np.arange(62.305, 62.330, 0.001), decimals=4)
+array_qy = np.round(np.arange(60.305, 60.330, 0.001), decimals=4)
 
 # In case one is doing a tune-tune scan, to decrease the size of the scan, we can ignore the
 # working points too close to resonance. Otherwise just delete this variable in the loop at the end

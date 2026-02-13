@@ -37,6 +37,7 @@ class ClusterSubmission:
             self.slurm_queue_statement = ""
         else:
             self.request_GPUs = 0
+            self.request_CPUs = 4
             self.slurm_queue_statement = "#SBATCH --partition=slurm_hpc_acc"
         self.eos_python = root.parameters["eos_python"]
 
@@ -112,6 +113,7 @@ class ClusterSubmission:
                     lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f"request_CPUs = {self.request_CPUs}\n"
                     + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
@@ -132,6 +134,7 @@ class ClusterSubmission:
                     lambda path_node, job_flavour: f"initialdir = {path_node}\n"
                     + f"executable = {path_node}/run.sh\n"
                     + f"request_GPUs = {self.request_GPUs}\n"
+                    + f"request_CPUs = {self.request_CPUs}\n"
                     + f'+JobFlavour  = "{job_flavour}"\n'
                     + "queue\n"
                 ),
