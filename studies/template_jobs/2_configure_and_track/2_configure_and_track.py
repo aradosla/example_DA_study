@@ -175,10 +175,67 @@ def install_beam_beam(collider, config_collider):
     return collider, config_bb
 
 
+########################## Exciter ######################################
+if noise:
+    # Insert exciter element 
+    sampling_frequency = config_sim['sampling_frequency']  # Sampling frequency in Hz
+    num_turns = config_sim["n_turns"]
+    total_time = num_turns/sampling_frequency  # Total time in seconds
+    time = np.arange(0, total_time, 1 / sampling_frequency)
+    '''
+    if config_sim['white_noise']:
+        std_dev = config_sim['std_dev']
+        np.random.seed(0)
+        samples = np.random.normal(0, std_dev, len(time))
+    '''
+    def create_sine_wave(frequencies, amplitudes,time):
+        #time = np.arange(0, num_turns / sampling_frequency, 1 / sampling_frequency)
+        sine_wave = np.zeros_like(time)
+        for freq, amp in zip(frequencies[:len(amplitudes)], amplitudes):
+            sine_wave += 1 * amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
+        return sine_wave
+
+    if config_sim['white_noise']:
+        A = np.loadtxt(config_sim['noise_file_A'])
+        f = np.loadtxt(config_sim['noise_file_f'])  # Frequency
+        #mask = (f < 7570) | (f > 7860)
+        #f = f[mask]
+        #A = A[mask]
+        phi = config_sim['phi']  # Phase
+        samples = create_sine_wave(f, A, time)
+
+    else:
+        A = config_sim['amplitude']  # Amplitude
+        f = config_sim['frequency']  # Frequency
+        phi = config_sim['phi']  # Phase
+        samples = A * np.sin(2 * np.pi * f * time + phi)
+
+    # Initialize the exciter
+    exciter = xt.Exciter(
+        _context=context,  # Assuming context is passed correctly
+        samples=samples,
+        sampling_frequency=sampling_frequency,
+        duration=num_turns / sampling_frequency,
+        frev=sampling_frequency,
+        #knl = [0]
+        knl=[config_sim["knl"]]
+    )
+
+    # Insert the exciter into the specified line and index
+
+    collider['lhcb1'].insert_element(
+        element=exciter,
+        name='RF_KO_EXCITER',
+        index= config_sim["index"]
+    )
+
+
+
 collider, config_bb = install_beam_beam(collider, config_collider)
 print("Beam-beam interactions installed")
 print(f"Number of particles per bunch: {config_bb['num_particles_per_bunch']:.2e}")
 print(f"Sigma_z: {config_bb['sigma_z']} m")
+
 
 # %% Build trackers
 collider.build_trackers()
