@@ -28,7 +28,7 @@ config_collider:
 
       # Magnets of the experiments
       on_alice_normalized: 1
-      on_lhcb_normalized: 1
+      on_lhcb_normalized: 1 #-1
       on_sol_atlas: 0
       on_sol_cms: 0
       on_sol_alice: 0
@@ -77,11 +77,11 @@ config_collider:
         q_knob_2: dqy.b2_sq
         dq_knob_1: dqpx.b2_sq
         dq_knob_2: dqpy.b2_sq
-        c_minus_knob_1: c_minus_re_b2
-        c_minus_knob_2: c_minus_im_b2
+        c_minus_knob_1: c_minus_re_b2 # 2024, 2025 #cmrs.b2_sq #2026 #c_minus_re_b2
+        c_minus_knob_2: c_minus_im_b2 #cmis.b2_sq #
 
   config_beambeam:
-    skip_beambeam: false
+    skip_beambeam: true
     bunch_spacing_buckets: 10
     num_slices_head_on: 11
     num_long_range_encounters_per_side:
@@ -99,14 +99,14 @@ config_collider:
       i_bunch_b2:  # Same. A value for i_bunch_b1 and i_bunch_b2 must be specified if pattern_fname is specified
 
   config_lumi_leveling_ip1_5:
-    skip_leveling: false
+    skip_leveling: true
     luminosity: 2.1e+34
     num_colliding_bunches: null # This will be set automatically according to the filling scheme
     vary:
       - num_particles_per_bunch
     constraints:
       max_intensity: 1.8e11
-      max_PU: 70
+      max_PU: 64
 
   skip_leveling: true
   config_lumi_leveling:
@@ -188,21 +188,6 @@ config_simulation:
   # Initial off-momentum
   delta_max: 27.e-5
 
- # Exciter
-  amplitude: 1.
-  frequency: 3000. #300.
-  phi: 0.
-  sampling_frequency: 11245.5
-  #knl: 0.0000000006 #0.000012 
-  knl: 1. #0.000012 
-  index: mb.b9r3.b1  #mq.11r3.b1 #mq.11r3.b1 # 'mq.7r3.b1..1_exit' #quadrupole  #'mb.b9r3.b1' #dipole
-  std_dev: 1e-8
-  white_noise: True
-  #noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/corrected_A.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
-  #noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_f.txt
-  noise_file_A : /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_A_FLATTOP120cm1.txt #/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz/studies/scripts/noise_file_A.txt
-  noise_file_f: /afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hz_parallel/studies/scripts/noise_file_f_FLATTOP120cm.txt
-
   # Tracking
   n_turns: 10000 # number of turns to track
 
@@ -212,6 +197,7 @@ config_simulation:
 # Save collider or not
 dump_collider: true
 dump_config_in_collider: false
+new_folder: FMA_studies
 
 # Context for the simulation
 context: 'cupy' #"cpu" # opencl

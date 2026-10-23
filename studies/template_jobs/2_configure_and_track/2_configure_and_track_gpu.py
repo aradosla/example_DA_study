@@ -36,6 +36,7 @@ from misc import (
     get_worst_bunch,
     load_and_check_filling_scheme,
     luminosity_leveling_ip1_5,
+    machine_tuning,
     return_fingerprint,
     fma,
 )
@@ -141,8 +142,7 @@ def set_knobs(config_collider, collider):
 
     return collider, conf_knobs_and_tuning
 
-
-def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True):
+def match_tune_and_chroma(collider, config_sim, conf_knobs_and_tuning, match_linear_coupling_to_zero=True):
     # Tunings
     for line_name in ["lhcb1", "lhcb2"]:
         knob_names = conf_knobs_and_tuning["knob_names"][line_name]
@@ -154,8 +154,8 @@ def match_tune_and_chroma(collider, conf_knobs_and_tuning, match_linear_coupling
             "dqy": conf_knobs_and_tuning["dqy"][line_name],
         }
 
-        xm.machine_tuning(
-            line=collider[line_name],
+        machine_tuning(
+            line=collider[line_name], config_sim = config_sim,
             enable_closed_orbit_correction=True,
             enable_linear_coupling_correction=match_linear_coupling_to_zero,
             enable_tune_correction=True,
@@ -494,58 +494,6 @@ def configure_collider(
     else:
         collider = xt.Multiline.from_json(config_sim["collider_file"])
      
-
-    ########################## Exciter ######################################
-
-    # Insert exciter element 
-    sampling_frequency = config_sim['sampling_frequency']  # Sampling frequency in Hz
-    num_turns = config_sim["n_turns"]
-    total_time = num_turns/sampling_frequency  # Total time in seconds
-    time = np.arange(0, total_time, 1 / sampling_frequency)
-
-    #if config_sim['white_noise']:
-    #    std_dev = config_sim['std_dev']
-    #    np.random.seed(0)
-    #    samples = np.random.normal(0, std_dev, len(time))
-    def create_sine_wave(frequencies, amplitudes,time):
-        #time = np.arange(0, num_turns / sampling_frequency, 1 / sampling_frequency)
-        sine_wave = np.zeros_like(time)
-        for freq, amp in zip(frequencies[:len(amplitudes)], amplitudes):
-            sine_wave +=  1 * amp * np.sin(2 * np.pi * freq * time)  # Add each frequency with the correct amplitude
-        return sine_wave
-
-    if config_sim['white_noise']:
-        A = np.loadtxt(config_sim['noise_file_A'])
-        #A = A[17:18]
-        f = np.loadtxt(config_sim['noise_file_f'])  # Frequency
-        f  = np.array(f) + 8
-        print(f'Frequency used for exciter: {f} Hz')
-        phi = config_sim['phi']  # Phase
-        samples = create_sine_wave(f, A, time)
-
-    else:
-        A = config_sim['amplitude']  # Amplitude
-        f = config_sim['frequency']  # Frequency
-        phi = config_sim['phi']  # Phase
-        #samples = A * np.sin(2 * np.pi * f * time + phi)
-
-    # Initialize the exciter
-    exciter = xt.Exciter(
-        _context=context,  # Assuming context is passed correctly
-        samples=samples,
-        sampling_frequency=sampling_frequency,
-        duration=num_turns / sampling_frequency,
-        frev=sampling_frequency,
-        knl=[config_sim["knl"]]
-    )
-    
-    # Insert the exciter into the specified line and index
-    
-    collider['lhcb1'].insert_element(
-        element=exciter,
-        name='RF_KO_EXCITER',
-        index= config_sim["index"]
-    )
     
     # Install beam-beam
     collider, config_bb = install_beam_beam(collider, config_collider)
@@ -560,7 +508,7 @@ def configure_collider(
 
     # Match tune and chromaticity
     collider = match_tune_and_chroma(
-        collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=True
+        collider, config_sim, conf_knobs_and_tuning, match_linear_coupling_to_zero=True
     )
 
     config_bb = set_filling_and_bunch_tracked(config_bb, ask_worst_bunch=False)
@@ -602,7 +550,7 @@ def configure_collider(
 
     # Rematch tune and chromaticity
     collider = match_tune_and_chroma(
-        collider, conf_knobs_and_tuning, match_linear_coupling_to_zero=False
+        collider, config_sim, conf_knobs_and_tuning, match_linear_coupling_to_zero=False
     )
 
     # Assert that tune, chromaticity and linear coupling are correct one last time
@@ -747,8 +695,8 @@ def configure_and_track(config_path="config.yaml"):
     )
 
     child = config_sim['children']
-    new_folder = 'FMA_studies_FLATTOP/FMA44_nominal_nonoise_2025_160_noise' #'Separation_adjust/FMA_1.6e11_2024_120cm_400Aoct_right_knobs_150um' #'FMA_colliding120cm_2025_no_coupling_no_delta_VdM0.9_noise10times'
-    new_directory = f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}"
+    new_folder = config_gen_2['new_folder']
+    new_directory = f"{new_folder}/{child}"
     Path(new_directory).mkdir(parents=True, exist_ok=True)
 
     # Compute collider fingerprint
@@ -769,12 +717,8 @@ def configure_and_track(config_path="config.yaml"):
     print('Now tracking!')
     particles_phys  = track(collider, particles, particle_id, config_sim, config_bb)
 
-
-    #particles_phys.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/output_particles_phys.parquet")
-
-   
     fma_result = fma(particles_phys)
-    fma_result.to_parquet(f"/eos/user/a/aradosla/SWAN_projects/{new_folder}/{child}/fma.parquet")
+    fma_result.to_parquet(f"{new_folder}/{child}/fma.parquet")
     #fma_result.to_parquet(f"fma_{child}.parquet")
     # Get particles dictionnary
     print('The parquet should be saved')
