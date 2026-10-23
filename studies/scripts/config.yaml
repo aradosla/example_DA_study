@@ -16,7 +16,7 @@
         - config.yaml
         - optics_specific_tools.py
         #- ir7_strengths.madx
-        - "/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hzfma/studies/optics/optics.zip"
+        #- "/afs/cern.ch/work/a/aradosla/private/example_DA_study_50Hzfma/studies/optics/optics.zip"
       files_to_return:
         - collider.json.zip
         - output_python.txt
