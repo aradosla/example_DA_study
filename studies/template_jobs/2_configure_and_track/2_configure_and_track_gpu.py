@@ -376,7 +376,7 @@ def assert_tune_chroma_coupling(collider, conf_knobs_and_tuning):
         assert np.isclose(
             tw.c_minus,
             conf_knobs_and_tuning["delta_cmr"],
-            atol=5e-3,
+            atol=2e-4,
         ), (
             f"linear coupling is not correct for {line_name}. Expected"
             f" {conf_knobs_and_tuning['delta_cmr']}, got {tw.c_minus}"

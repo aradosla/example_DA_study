@@ -31,7 +31,7 @@ d_config_particles = {}
 
 # Radius of the initial particle distribution
 d_config_particles["r_min"] = 0
-d_config_particles["r_max"] = 10
+d_config_particles["r_max"] = 6
 d_config_particles["n_r"] = 2 * 16 * (d_config_particles["r_max"] - d_config_particles["r_min"])
 
 # Number of angles for the initial particle distribution
@@ -111,16 +111,16 @@ d_config_tune_and_chroma["delta_cmi"] = 0.0  # type: ignore
 # Define dictionary for the knobs settings
 d_config_knobs = {}
 
-d_config_knobs["on_disp"] = 1.000
-d_config_knobs["vrf400"] = 6.4 #12.0
+#d_config_knobs["on_disp"] = 1.000
+d_config_knobs["vrf400"] = 5.5 #12.0
 
 
 # 2026 Protons
-if True:
+if False:
     
     # Exp. configuration in IR1, IR2, IR5 and IR8
-    d_config_knobs["vrf400"] = 6.4
-    d_config_knobs["on_disp"] = 1
+    d_config_knobs["vrf400"] = 5.5
+    #d_config_knobs["on_disp"] = 1
     d_config_knobs["on_x1"] = 170.000
     d_config_knobs["on_sep1"] = -2.0
     d_config_knobs["phi_IR1"] = 90.000
@@ -136,14 +136,14 @@ if True:
     d_config_knobs["phi_IR5"] = 0.000
 
     d_config_knobs["on_x8h"] = -170.000
-    d_config_knobs["on_sep8h"] = 0.000 
+    d_config_knobs["on_sep8h"] = -3.500 
     d_config_knobs["on_x8v"] = 0.000
     d_config_knobs["on_sep8v"] = -3.500
     d_config_knobs["phi_IR8"] = 180.000
 
-    # Octupoles
-    d_config_knobs["i_oct_b1"] = -55.0
-    d_config_knobs["i_oct_b2"] = -55.0
+# Octupoles
+d_config_knobs["i_oct_b1"] = -20.0
+d_config_knobs["i_oct_b2"] = -20.0
 
 ### leveling configuration
 
@@ -247,7 +247,7 @@ d_config_simulation["tol_qknobs_step"] = 1e-5
 # Below, the user chooses if the gen 2 collider must be dumped, along with the corresponding
 # configuration.
 # ==================================================================================================
-dump_collider = True
+dump_collider = False
 dump_config_in_collider = False
 new_folder = "/eos/user/a/aradosla/SWAN_projects/FMA_studies_FLATTOP/Injection_2026_example" 
 

@@ -70,15 +70,15 @@ config_collider:
         q_knob_2: dqy.b1_sq
         dq_knob_1: dqpx.b1_sq
         dq_knob_2: dqpy.b1_sq
-        c_minus_knob_1: c_minus_re_b1
-        c_minus_knob_2: c_minus_im_b1
+        c_minus_knob_1: cmrs.b1_sq #c_minus_re_b1
+        c_minus_knob_2: cmis.b1_sq  #c_minus_im_b1
       lhcb2:
         q_knob_1: dqx.b2_sq
         q_knob_2: dqy.b2_sq
         dq_knob_1: dqpx.b2_sq
         dq_knob_2: dqpy.b2_sq
-        c_minus_knob_1: c_minus_re_b2 # 2024, 2025 #cmrs.b2_sq #2026 #c_minus_re_b2
-        c_minus_knob_2: c_minus_im_b2 #cmis.b2_sq #
+        c_minus_knob_1: cmrs.b2_sq # c_minus_re_b2 # 2024, 2025 #cmrs.b2_sq #2026 #c_minus_re_b2
+        c_minus_knob_2: cmis.b2_sq # c_minus_im_b2 #
 
   config_beambeam:
     skip_beambeam: true
